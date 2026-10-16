@@ -1,14 +1,14 @@
 # Tevyon (open)
 
 An open-source AI image and video studio built on the **Comfy Developer Platform**. One Comfy API key gives you
-FLUX 3, MiniMax H3, LTX-2.5, Kling 3.0 and Veo 3.1 through the **Comfy Router**, wrapped in what a paid studio
+FLUX 3, Seedance 2.5, MiniMax H3, LTX-2.5, Kling 3.0 and Veo 3.1 through the **Comfy Router**, plus **Recast** (keep a clip's motion and camera, swap the scene),, wrapped in what a paid studio
 sells: a price before every job, credits that are reserved, charged on success and refunded in full on failure, a
 prompt writer per model, a planning chat (the Director), and an agent layer where Claude, scripts and the CLI can
 do anything the web studio can.
 
 Built for Comfy's *Open Source* challenge, October 2026. Licensed under Apache-2.0.
 
-**Demo (66 s):** [docs/demo.mp4](docs/demo.mp4): the studio, a real FLUX 3 image and Veo 3.1 clip, the CLI and the MCP server.
+**Demo (56 s):** [docs/demo.mp4](docs/demo.mp4): the studio, the price before every job, a real Recast run, the Director, prompt skills, MCP and the CLI. Voice: ElevenLabs v4 Turbo through the Comfy Router. Music: “Product Launch” by lNPLUSMUSIC (Pixabay Content License). The fashion still and the night-drive clip are the author's own footage, shown as material a user brings in.
 
 ## What is in here
 
@@ -16,7 +16,7 @@ Built for Comfy's *Open Source* challenge, October 2026. Licensed under Apache-2
 |---|---|
 | **Studio** (`platform/`) | Next.js 16 app: image studio, video studio (text or start image), Director chat, assets, community, credits. |
 | **Job engine** (`platform/src/core/`) | Framework-free, test-driven core: one generic job API (`POST /api/jobs/{job_type}`), a worker with database claims (no job goes to a model twice), credits in three steps, webhooks, consent for real people, AI labels in every file. |
-| **Comfy Router provider** (`platform/src/core/providers/comfy.ts`) | Queues jobs at `api.comfy.org/v2/models/{provider}/{model}/requests`, polls to `COMPLETED`, keeps every result file (links or inline base64), maps the router's error buckets to its own codes, and never sends a job twice once it may have been queued. |
+| **Comfy Router provider** (`platform/src/core/providers/comfy.ts`) | Queues jobs at `api.comfy.org/v2/models/{provider}/{model}/requests`, polls to `COMPLETED`, keeps every result file (links or inline base64), maps the router's error buckets to its own codes, and never sends a job twice once it may have been queued. Reference videos (Recast) go to **Comfy's asset store** first and reach the router as signed links. |
 | **Register** (`platform/src/core/catalog.ts`) | One entry per model: public name, parameter schema (zod), price formula in Comfy credits, router id. Adding a model is one entry plus a prompt skill. |
 | **Prompt skills** (`platform/skills/`) | One `SKILL.md` per model family. The server writes each prompt with the model's skill before the job goes out (`prompt_mode: "auto"`), or takes yours as is (`"exact"`). |
 | **MCP server** (`/api/mcp`) | Streamable HTTP with OAuth 2.1 (PKCE, dynamic client registration, device flow): `list_models`, `get_price`, `generate`, `get_job`, `ask_director` and more. Every paid call carries the price the user saw (`max_credits`) and an idempotency key. |
