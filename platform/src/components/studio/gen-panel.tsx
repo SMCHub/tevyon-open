@@ -28,7 +28,7 @@ export function GpModes<T extends string>({ modes, value, onChange, label }: {
 }
 
 /** The chosen model in one row: cover, name, tagline and the switch (a picker) on the right. */
-export function GpModel({ cover, name, tagline, kicker = "Modell", children }: { cover: string | null; name: string; tagline?: string; kicker?: string; children?: React.ReactNode }) {
+export function GpModel({ cover, name, tagline, kicker = "Model", children }: { cover: string | null; name: string; tagline?: string; kicker?: string; children?: React.ReactNode }) {
   return (
     <div className="gp-model">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -43,7 +43,7 @@ export function GpModel({ cover, name, tagline, kicker = "Modell", children }: {
   );
 }
 
-/** One step: number, title, what it needs on the right (e.g. «4–30 s», «optional», «2/9»), then its content. */
+/** One step: number, title, what it needs on the right (e.g. "4–30 s", "optional", "2/9"), then its content. */
 export function GpStep({ n, title, meta, done = false, children }: { n?: number; title: string; meta?: React.ReactNode; done?: boolean; children: React.ReactNode }) {
   return (
     <section className={`gp-step${done ? " is-done" : ""}`}>
@@ -75,20 +75,20 @@ export function GpPrompt({ value, onChange, placeholder, onSubmit, max = 4000, r
         }}
       />
       <span className="gp-prompt__foot">
-        <span>{onSubmit ? "⌘↵ startet" : ""}</span>
+        <span>{onSubmit ? "⌘↵ to start" : ""}</span>
         <span>{value.length}/{max}</span>
       </span>
     </div>
   );
 }
 
-/** Settings folded to one line («8 s · 720p · 16:9 · Ton») until opened. */
+/** Settings folded to one line ("8 s · 720p · 16:9 · Sound") until opened. */
 export function GpSettings({ summary, children, defaultOpen = false }: { summary: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <section className={`gp-settings${open ? " is-open" : ""}`}>
       <button type="button" className="gp-settings__head" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span className="gp-step__title">Einstellungen</span>
+        <span className="gp-step__title">Settings</span>
         <span className="gp-settings__sum">{summary}</span>
         <ChevronDown className="gp-settings__chev" aria-hidden="true" />
       </button>
@@ -99,7 +99,7 @@ export function GpSettings({ summary, children, defaultOpen = false }: { summary
 
 /** The model's settings as a row of pills (format, resolution, length, sound), each opening its own choice. */
 export function GpOptions({ children }: { children: React.ReactNode }) {
-  return <div className="gp-opts" role="group" aria-label="Einstellungen">{children}</div>;
+  return <div className="gp-opts" role="group" aria-label="Settings">{children}</div>;
 }
 
 /** The consent line, compact. */
@@ -115,7 +115,7 @@ export function GpConsent({ checked, onChange, children }: { checked: boolean; o
 /**
  * Sticky footer: what will be made (summary) and the button with the price. The balance lives in the account menu only
  *.
- * `missing` replaces the label while something is still needed («Video fehlt»), so the button says why it waits.
+ * `missing` replaces the label while something is still needed ("Video missing"), so the button says why it waits.
  */
 export function GpFooter({ summary, label, busy, missing, price, priceHint, disabled, onGo, title, notice }: {
   summary?: string; label: string; busy: boolean; missing?: string | null; price: number | null; priceHint?: string;
@@ -126,20 +126,20 @@ export function GpFooter({ summary, label, busy, missing, price, priceHint, disa
       {notice}
       {summary && <p className="gp-foot__sum">{summary}</p>}
       <button type="button" className="gp-go" onClick={onGo} disabled={disabled} title={title}>
-        <span className="gp-go__label">{busy ? "Startet …" : missing ?? label}</span>
+        <span className="gp-go__label">{busy ? "Starting…" : missing ?? label}</span>
         <span className="gp-go__price">{price !== null ? <><TokenGlyph />{price}</> : <span className="gp-go__hint">{priceHint ?? "…"}</span>}</span>
       </button>
     </footer>
   );
 }
 
-/** «8 s · 720p · 16:9 · Ton» from a job's options (only what is set). */
+/** "8 s · 720p · 16:9 · Sound" from a job's options (only what is set). */
 export function gpSummary(opts: Record<string, unknown>): string {
   const parts: string[] = [];
   if (typeof opts.duration === "number") parts.push(`${opts.duration} s`);
   if (typeof opts.resolution === "string") parts.push(opts.resolution);
   if (typeof opts.aspect_ratio === "string") parts.push(opts.aspect_ratio);
-  if (opts.generate_audio === true) parts.push("Ton");
-  if (opts.generate_audio === false) parts.push("ohne Ton");
+  if (opts.generate_audio === true) parts.push("Sound");
+  if (opts.generate_audio === false) parts.push("No sound");
   return parts.join(" · ");
 }

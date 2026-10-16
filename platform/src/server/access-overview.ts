@@ -3,7 +3,7 @@ import type { RecipeTag } from "../core/jobs";
 import type { JobFailure, JobRecord, JobStatus } from "../core/repository";
 
 /**
- * What the «API & MCP» console shows: every key and connection with what it spent in the last 24 hours, and the
+ * What the “API & MCP” console shows: every key and connection with what it spent in the last 24 hours, and the
  * latest jobs that agents and the CLI started. Only Tachyon terms: no written prompt, no vendor handle or detail.
  */
 export type AccessKey = ApiKeyView & { spent24h: number };

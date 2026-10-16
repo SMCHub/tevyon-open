@@ -115,7 +115,7 @@ export type SkillBook = {
 };
 
 /**
- * Builds the skill book and enforces the rule «no generation without a prompt skill»:
+ * Builds the skill book and enforces the rule “no generation without a prompt skill”:
  * every job type in the register has exactly one prompt skill, and no prompt skill names an unknown job type.
  * Throws at boot, so a model added to the catalog without a skill cannot go live.
  */

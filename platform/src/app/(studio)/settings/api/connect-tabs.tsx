@@ -44,12 +44,12 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
 }
 
 function Status({ con }: { con: AccessKey | undefined }) {
-  if (!con) return <p className="ac-status" data-on="false"><i aria-hidden="true" /><span>Noch nicht verbunden</span></p>;
+  if (!con) return <p className="ac-status" data-on="false"><i aria-hidden="true" /><span>Not connected yet</span></p>;
   return (
     <p className="ac-status" data-on="true">
       <i aria-hidden="true" />
       <span>
-        Verbunden als «{con.name}»{con.lastUsedAt ? <> · zuletzt aktiv <RelativeTime ms={con.lastUsedAt} /></> : " · noch nie benutzt"}
+        Connected as “{con.name}”{con.lastUsedAt ? <> · last active <RelativeTime ms={con.lastUsedAt} /></> : " · never used"}
       </span>
     </p>
   );
@@ -81,7 +81,7 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
 
   return (
     <div className="ac-connect">
-      <div className="ac-tabs" role="tablist" aria-label="Client wählen" ref={list} onKeyDown={onKey} style={{ "--i": index, "--n": TABS.length } as React.CSSProperties}>
+      <div className="ac-tabs" role="tablist" aria-label="Choose a client" ref={list} onKeyDown={onKey} style={{ "--i": index, "--n": TABS.length } as React.CSSProperties}>
         <span className="ac-tabs__glow" aria-hidden="true" />
         {TABS.map((t) => {
           const on = Boolean(connectionOf(t.id, keys));
@@ -103,7 +103,7 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
               {on && (
                 <>
                   <i className="ac-tabs__dot" aria-hidden="true" />
-                  <span className="ac-sr">, verbunden</span>
+                  <span className="ac-sr">, connected</span>
                 </>
               )}
             </button>
@@ -116,19 +116,19 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
           <>
             <Status con={connectionOf("claude-code", keys)} />
             <ol className="ac-steps">
-              <Step n={1} title="Server hinzufügen">
-                <CodeBlock code={`claude mcp add --transport http --scope user tevyon ${endpoint}`} label="Befehl für Claude Code kopieren" />
+              <Step n={1} title="Add the server">
+                <CodeBlock code={`claude mcp add --transport http --scope user tevyon ${endpoint}`} label="Copy command for Claude Code" />
               </Step>
-              <Step n={2} title="Im Browser anmelden">
-                <p>In Claude Code <code>/mcp</code> öffnen, «tevyon» wählen und «Authenticate». Tevyon öffnet sich, du erlaubst den Zugriff.</p>
+              <Step n={2} title="Sign in in the browser">
+                <p>In Claude Code, open <code>/mcp</code>, choose “tevyon” and “Authenticate”. Tevyon opens and you allow access.</p>
               </Step>
-              <Step n={3} title="Loslegen">
-                <p>Zum Beispiel: «Erstelle mit Tevyon ein Kinobild, Tokio bei Regen, 16:9.» Claude nennt dir den Preis, bevor etwas startet.</p>
+              <Step n={3} title="Get started">
+                <p>For example: “Use Tevyon to make a cinematic still, Tokyo in the rain, 16:9.” Claude tells you the price before anything starts.</p>
               </Step>
             </ol>
             <details className="ac-alt">
-              <summary>Lieber mit API-Schlüssel statt Browser-Login</summary>
-              <CodeBlock code={withKey(keyShown)} copy={withKey(keyCopied)} label="Befehl mit Schlüssel kopieren" />
+              <summary>Use an API key instead of the browser login</summary>
+              <CodeBlock code={withKey(keyShown)} copy={withKey(keyCopied)} label="Copy command with key" />
             </details>
           </>
         )}
@@ -136,16 +136,16 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
         {tab === "claude-ai" && (
           <>
             <Status con={connectionOf("claude-ai", keys)} />
-            {local && <p className="ac-notice">claude.ai erreicht nur öffentliche HTTPS-Adressen. Mit <code>{origin}</code> geht das noch nicht, nach dem Deploy schon.</p>}
+            {local && <p className="ac-notice">claude.ai only reaches public HTTPS addresses. <code>{origin}</code> does not work yet; after the deploy it will.</p>}
             <ol className="ac-steps">
-              <Step n={1} title="Connector anlegen">
-                <p>In claude.ai oder Claude Desktop: Einstellungen → Connectors → «Benutzerdefinierten Connector hinzufügen».</p>
+              <Step n={1} title="Add a connector">
+                <p>In claude.ai or Claude Desktop: Settings → Connectors → “Add custom connector”.</p>
               </Step>
-              <Step n={2} title="Adresse eintragen">
-                <CodeBlock code={endpoint} label="MCP-Adresse kopieren" />
+              <Step n={2} title="Enter the address">
+                <CodeBlock code={endpoint} label="Copy MCP address" />
               </Step>
-              <Step n={3} title="Verbinden und erlauben">
-                <p>Claude öffnet Tevyon zur Anmeldung, du erlaubst den Zugriff. Danach erscheint die Verbindung hier als App.</p>
+              <Step n={3} title="Connect and allow">
+                <p>Claude opens Tevyon to sign in and you allow access. The connection then shows up here as an app.</p>
               </Step>
             </ol>
           </>
@@ -155,16 +155,16 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
           <>
             <Status con={connectionOf("cursor", keys)} />
             <ol className="ac-steps">
-              <Step n={1} title="In ~/.cursor/mcp.json eintragen">
-                <CodeBlock lang="json" code={JSON.stringify({ mcpServers: { tevyon: { url: endpoint } } }, null, 2)} label="MCP-Konfiguration kopieren" />
+              <Step n={1} title="Add to ~/.cursor/mcp.json">
+                <CodeBlock lang="json" code={JSON.stringify({ mcpServers: { tevyon: { url: endpoint } } }, null, 2)} label="Copy MCP configuration" />
               </Step>
-              <Step n={2} title="Anmelden">
-                <p>Beim ersten Aufruf fragt Cursor nach der Anmeldung im Browser. Windsurf und VS Code funktionieren gleich.</p>
+              <Step n={2} title="Sign in">
+                <p>On first use, Cursor asks you to sign in in the browser. Windsurf and VS Code work the same way.</p>
               </Step>
             </ol>
             <details className="ac-alt">
-              <summary>Mit API-Schlüssel im Header</summary>
-              <CodeBlock lang="json" code={cursorWithKey(freshKey ? maskKey(freshKey) : "<dein Schlüssel>")} copy={cursorWithKey(freshKey ?? "<dein Schlüssel>")} label="Konfiguration mit Schlüssel kopieren" />
+              <summary>With an API key in the header</summary>
+              <CodeBlock lang="json" code={cursorWithKey(freshKey ? maskKey(freshKey) : "<your key>")} copy={cursorWithKey(freshKey ?? "<your key>")} label="Copy configuration with key" />
             </details>
           </>
         )}
@@ -173,16 +173,16 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
           <>
             <Status con={connectionOf("cli", keys)} />
             <ol className="ac-steps">
-              <Step n={1} title="Installieren">
-                <CodeBlock code="cd cli && npm install && npm link" label="Installationsbefehl kopieren" />
-                <p className="ac-hint">Bald als npm-Paket. Node 22.18 oder neuer.</p>
+              <Step n={1} title="Install">
+                <CodeBlock code="cd cli && npm install && npm link" label="Copy install command" />
+                <p className="ac-hint">Soon as an npm package. Node 22.18 or newer.</p>
               </Step>
-              <Step n={2} title="Anmelden">
-                <CodeBlock code="tevyon login" label="Login-Befehl kopieren" />
-                <p className="ac-hint">Die CLI zeigt einen Code und öffnet Tevyon im Browser. Du bestätigst, die CLI bekommt ihren eigenen Schlüssel.</p>
+              <Step n={2} title="Sign in">
+                <CodeBlock code="tevyon login" label="Copy login command" />
+                <p className="ac-hint">The CLI shows a code and opens Tevyon in the browser. You confirm, and the CLI gets its own key.</p>
               </Step>
-              <Step n={3} title="Erstellen">
-                <CodeBlock code={`tevyon generate flux_3_image "Tokio bei Regen, Neonlicht" --aspect-ratio 16:9`} label="Beispiel kopieren" />
+              <Step n={3} title="Create">
+                <CodeBlock code={`tevyon generate flux_3_image "Tokyo in the rain, neon light" --aspect-ratio 16:9`} label="Copy example" />
               </Step>
             </ol>
           </>
@@ -190,19 +190,19 @@ export function ConnectTabs({ origin, keys, freshKey }: { origin: string; keys: 
 
         {tab === "rest" && (
           <>
-            <p className="ac-status" data-on="neutral"><i aria-hidden="true" /><span>Dieselbe Job-API wie Studio, MCP und CLI</span></p>
+            <p className="ac-status" data-on="neutral"><i aria-hidden="true" /><span>The same job API as the studio, MCP and CLI</span></p>
             <ol className="ac-steps">
-              <Step n={1} title="Modelle und Preise">
-                <CodeBlock code={`curl ${origin}/api/catalog`} label="Befehl kopieren" />
+              <Step n={1} title="Models and prices">
+                <CodeBlock code={`curl ${origin}/api/catalog`} label="Copy command" />
               </Step>
-              <Step n={2} title="Job starten">
+              <Step n={2} title="Start a job">
                 <CodeBlock
-                  code={`curl -X POST ${origin}/api/jobs/flux_3_image \\\n  -H "Authorization: Bearer $TEVYON_API_KEY" \\\n  -H "Idempotency-Key: $(uuidgen)" \\\n  -H "Content-Type: application/json" \\\n  -d '{"params":{"prompt":"Tokio bei Regen"},"maxCredits":7}'`}
-                  label="Befehl kopieren"
+                  code={`curl -X POST ${origin}/api/jobs/flux_3_image \\\n  -H "Authorization: Bearer $TEVYON_API_KEY" \\\n  -H "Idempotency-Key: $(uuidgen)" \\\n  -H "Content-Type: application/json" \\\n  -d '{"params":{"prompt":"Tokyo in the rain"},"maxCredits":7}'`}
+                  label="Copy command"
                 />
               </Step>
-              <Step n={3} title="Status abfragen">
-                <CodeBlock code={`curl -H "Authorization: Bearer $TEVYON_API_KEY" "${origin}/api/jobs?ids=<job-id>"`} label="Befehl kopieren" />
+              <Step n={3} title="Check the status">
+                <CodeBlock code={`curl -H "Authorization: Bearer $TEVYON_API_KEY" "${origin}/api/jobs?ids=<job-id>"`} label="Copy command" />
               </Step>
             </ol>
           </>

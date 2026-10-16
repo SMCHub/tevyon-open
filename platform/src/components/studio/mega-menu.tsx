@@ -15,8 +15,8 @@ import "./mega-menu.css";
 
 export type { Menu } from "./mega-data";
 
-const BADGE: Record<Badge, string> = { top: "Top", neu: "Neu" };
-const LABEL: Record<Menu, string> = { image: "Bild", video: "Video" };
+const BADGE: Record<Badge, string> = { top: "Top", neu: "New" };
+const LABEL: Record<Menu, string> = { image: "Image", video: "Video" };
 /** As long as the closing blind runs in mega-menu.css (.mg.is-closing). */
 const CLOSE_MS = 380;
 const TRIGGER = '[aria-controls="hd-mega"][aria-expanded="true"]';
@@ -37,7 +37,7 @@ type Props = {
 };
 
 /**
- * The header's mega menus in the grammar of our template (Bulletproof, as on Entdecken): the panel drops like a blind
+ * The header's mega menus in the grammar of our template (Bulletproof, as on Explore): the panel drops like a blind
  * from under the bar and dims the page, its lines rise one after another, lists dim the rows the pointer is not on,
  * and a poster on the right follows the row under the pointer with its picture, its name in giant type and its price.
  * Menus switch in place: the content slides in from the side of the word the pointer came from.
@@ -166,7 +166,7 @@ export function MegaPanel({ menu, header, ref, onEnter, onLeave, onNavigate }: P
         className={`mg mg--${place?.mode ?? "flush"}${closing ? " is-closing" : ""}`}
         style={style}
         role="region"
-        aria-label={`Menü ${LABEL[shown]}`}
+        aria-label={`${LABEL[shown]} menu`}
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
         onKeyDown={onKeyDown}
@@ -187,13 +187,13 @@ export function MegaPanel({ menu, header, ref, onEnter, onLeave, onNavigate }: P
 /** What the poster shows: a tool or a model (with its cover and price). */
 type Item = { key: string; title: string; desc: string; href: string; eyebrow: string; badge: Badge | null; price: string | null; image?: string };
 
-/** Bild and Video: the tools as a numbered index, the models by family with their price, the poster beside them. */
+/** Image and Video: the tools as a numbered index, the models by family with their price, the poster beside them. */
 function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: CatalogEntry[]; prices: Map<string, Price> | null; onNavigate: () => void }) {
   const tools = kindTools(kind);
   const families = menuFamilies(catalog, kind);
   const count = families.reduce((n, f) => n + f.models.length, 0);
   const base = kind === "image" ? "/image" : "/video";
-  const toolItem = (t: MenuTool): Item => ({ key: `t:${t.title}`, title: t.title, desc: t.desc, href: t.href, eyebrow: "Werkzeug", badge: t.badge ?? null, price: null });
+  const toolItem = (t: MenuTool): Item => ({ key: `t:${t.title}`, title: t.title, desc: t.desc, href: t.href, eyebrow: "Tool", badge: t.badge ?? null, price: null });
   const modelItem = (m: CatalogEntry, f: MenuFamily<CatalogEntry>): Item => ({
     key: `m:${m.jobType}`,
     title: m.model,
@@ -213,8 +213,8 @@ function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: 
   return (
     <>
       <div className="mg-kind">
-        <section className="mg-col" aria-label="Werkzeuge">
-          <p className="mg-head">Werkzeuge <span className="mg-head__count">{pad(tools.length)}</span></p>
+        <section className="mg-col" aria-label="Tools">
+          <p className="mg-head">Tools <span className="mg-head__count">{pad(tools.length)}</span></p>
           <ol className="mg-index" style={{ "--longest": longest } as React.CSSProperties}>
             {tools.map((t, i) => {
               const key = `t:${t.title}`;
@@ -237,12 +237,12 @@ function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: 
             })}
           </ol>
           {SOON[kind].length > 0 && (
-            <p className="mg-soon"><span className="mg-soon__label">Bald</span>{SOON[kind].map((s) => <span key={s}>{s}</span>)}</p>
+            <p className="mg-soon"><span className="mg-soon__label">Soon</span>{SOON[kind].map((s) => <span key={s}>{s}</span>)}</p>
           )}
         </section>
 
-        <section className="mg-col" aria-label="Modelle">
-          <p className="mg-head">Modelle <span className="mg-head__count">{count ? pad(count) : ""}</span><span className="mg-head__end">Credits</span></p>
+        <section className="mg-col" aria-label="Models">
+          <p className="mg-head">Models <span className="mg-head__count">{count ? pad(count) : ""}</span><span className="mg-head__end">Credits</span></p>
           <div className="mg-families">
             {families.map((f, fi) => (
               <div key={f.key} className="mg-family" style={{ "--i": fi + 1 } as React.CSSProperties}>
@@ -256,8 +256,8 @@ function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: 
                         <span className="mg-model__name">
                           <span className="mg-model__label">{m.model}</span>
                           {m.badge && <span className={`mg-badge mg-badge--${m.badge}`}>{BADGE[m.badge]}</span>}
-                          {m.status === "paused" && <span className="tag">Pausiert</span>}
-                          {m.status === "deprecated" && <span className="tag">Läuft aus</span>}
+                          {m.status === "paused" && <span className="tag">Paused</span>}
+                          {m.status === "deprecated" && <span className="tag">Retiring</span>}
                         </span>
                         <span className="mg-model__price">{m.status === "paused" ? "" : price}</span>
                         <span className="mg-model__desc">{f.maker ? splitTagline(m.tagline).text : m.tagline}</span>
@@ -294,13 +294,13 @@ function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: 
       <footer className="mg-foot">
         <p className="mg-foot__note">
           {kind === "image"
-            ? "Preise in Credits, vor jedem Start sichtbar. Neue Modelle erscheinen hier von selbst."
-            : "Preise in Credits, vor jedem Start sichtbar. Schlägt ein Clip fehl, gehen die Credits zurück."}
+            ? "Prices in Credits, shown before every start. New models appear here automatically."
+            : "Prices in Credits, shown before every start. If a clip fails, the Credits come back."}
         </p>
         <div className="mg-foot__actions">
-          <Link href="/assets" className="mg-link" onClick={onNavigate}>Alle Ergebnisse <ArrowUpRight aria-hidden="true" /></Link>
+          <Link href="/assets" className="mg-link" onClick={onNavigate}>All results <ArrowUpRight aria-hidden="true" /></Link>
           <Link href={base} className="mg-cta" onClick={onNavigate}>
-            <span className="mg-cta__text">{kind === "image" ? "Bild erstellen" : "Video erstellen"}</span>
+            <span className="mg-cta__text">{kind === "image" ? "Create image" : "Create video"}</span>
             <span className="mg-cta__arrow"><ArrowRight aria-hidden="true" /></span>
           </Link>
         </div>
@@ -319,7 +319,7 @@ function Poster({ items, current, onNavigate }: { items: Item[]; current: Item; 
   const len = Math.max(...lines.map((l, i) => [...l].length + (i % 2 ? 0.8 : 0)), 4);
   const images = [...new Set(items.map((i) => i.image).filter((s): s is string => Boolean(s)))];
   return (
-    <Link href={current.href} className="mg-poster theme-dark" onClick={onNavigate} aria-label={`${current.title} öffnen`}>
+    <Link href={current.href} className="mg-poster theme-dark" onClick={onNavigate} aria-label={`Open ${current.title}`}>
       {images.map((src) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img key={src} className={`mg-poster__img${src === current.image ? " is-on" : ""}`} src={src} alt="" decoding="async" />

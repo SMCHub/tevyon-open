@@ -1,5 +1,5 @@
 /* ---------- Header: a resizable glass bar ----------
-   After the Aceternity «Resizable Navbar» and the 21st.dev «Tubelight Navbar», in Tevyon's monochrome. At the top it
+   After the Aceternity "Resizable Navbar" and the 21st.dev "Tubelight Navbar", in Tevyon's monochrome. At the top it
    spans the page, transparent; once the page moves it draws in to a floating glass pill. A pill of light glides under
    the hovered area, a small lamp marks the page you are on; search (⌘K), theme and account sit on the right.
    72 px stay reserved, so sticky bars below keep their place. Menus open in portals (mega-menu.tsx, account, sheet). */
@@ -80,7 +80,7 @@
 .acct__item.is-soon:hover { background: none; }
 .acct__menu .acct__theme { margin: 0; padding: 10px; border-top: 1px solid var(--line); }
 
-/* ---------- Small screens: a sheet from the right (shadcn «Sheet») ---------- */
+/* ---------- Small screens: a sheet from the right (shadcn "Sheet") ---------- */
 .hd-sheet { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: flex-end; background: rgb(0 0 0 / calc(0.42 * var(--shadow-k))); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: hd-fade 0.2s ease; }
 .hd-sheet__panel { display: flex; flex-direction: column; gap: 16px; width: min(360px, 100%); height: 100%; padding: 16px; overflow-y: auto; border-left: 1px solid rgb(var(--hi) / calc(0.16 * var(--hi-k))); background: rgb(var(--panel) / 0.97); box-shadow: -30px 0 80px rgb(0 0 0 / calc(0.4 * var(--shadow-k))); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); animation: hd-sheet-in 0.32s var(--ease); }
 .hd-sheet__panel > * { flex-shrink: 0; }

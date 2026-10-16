@@ -196,7 +196,7 @@ describe("tachyon mcp server", () => {
     });
   });
 
-  it("has a card in the «API & MCP» console for every tool, read-only ones marked as reading", async () => {
+  it("has a card in the “API & MCP” console for every tool, read-only ones marked as reading", async () => {
     const { client } = await setup();
     const { tools } = await client.listTools();
     expect(TOOL_CARDS.map((c) => c.name).sort()).toEqual(tools.map((t) => t.name).sort());
@@ -509,19 +509,19 @@ describe("tachyon mcp server", () => {
 
     it("plans with the Director and hands back its reply and priced proposals, without starting anything", async () => {
       const director = fakeDirector(() => turn([
-        { type: "text", delta: "Zwei Ideen" },
+        { type: "text", delta: "Two ideas" },
         { type: "proposals", proposals: [CUSTOM] },
-        { type: "done", reply: "Zwei Ideen für dich." },
+        { type: "done", reply: "Two ideas for you." },
         { type: "budget", allowed: true, turnsLeft: 13, share: 0.75 },
       ]));
       const { call, repo } = await setup({ director: director.dep });
-      const history = [{ role: "user", content: "Hallo" }, { role: "assistant", content: "Was drehen wir?" }];
-      const res = await call("ask_director", { message: "Ein Kinobild von Tokio", history, model: "claude-sonnet-5-5" });
+      const history = [{ role: "user", content: "Hello" }, { role: "assistant", content: "What are we making?" }];
+      const res = await call("ask_director", { message: "A cinematic shot of Tokyo", history, model: "claude-sonnet-5-5" });
 
-      expect(director.calls).toEqual([{ accountId: ACC_1, body: { history: [...history, { role: "user", content: "Ein Kinobild von Tokio" }], model: "claude-sonnet-5-5" }, key: { id: KEY_ID, dailyLimit: null } }]);
+      expect(director.calls).toEqual([{ accountId: ACC_1, body: { history: [...history, { role: "user", content: "A cinematic shot of Tokyo" }], model: "claude-sonnet-5-5" }, key: { id: KEY_ID, dailyLimit: null } }]);
       expect(res.isError).toBeFalsy();
       expect(res.structuredContent).toEqual({
-        reply: "Zwei Ideen für dich.",
+        reply: "Two ideas for you.",
         model: "Claude Sonnet 5.5",
         proposals: [
           { type: "custom", job_type: "test_image", kind: "image", model: "Test Image 1", prompt: CUSTOM.prompt, params: CUSTOM.params, why: CUSTOM.why, credits: 4, start: "generate" },
@@ -534,42 +534,42 @@ describe("tachyon mcp server", () => {
     it("hands back the short replies the user can send next, as the studio shows them", async () => {
       const director = fakeDirector(() => turn([
         { type: "proposals", proposals: [CUSTOM] },
-        { type: "suggestions", suggestions: ["Mach es düsterer", "Lieber 9:16 für TikTok"] },
-        { type: "done", reply: "Ich mache dir ein Kinobild von Tokio im Regen." },
+        { type: "suggestions", suggestions: ["Make it darker", "9:16 for TikTok instead"] },
+        { type: "done", reply: "I am making you a cinematic shot of Tokyo in the rain." },
       ]));
       const { call } = await setup({ director: director.dep });
-      const res = await call("ask_director", { message: "Ein Kinobild von Tokio" });
+      const res = await call("ask_director", { message: "A cinematic shot of Tokyo" });
 
-      expect(res.structuredContent).toMatchObject({ suggestions: ["Mach es düsterer", "Lieber 9:16 für TikTok"] });
+      expect(res.structuredContent).toMatchObject({ suggestions: ["Make it darker", "9:16 for TikTok instead"] });
       expect(res.content[0]!.text).toMatch(/suggestions/);
     });
 
     it("passes the user's photo on and says what a message with one of the strongest models cost", async () => {
-      const director = fakeDirector(() => turn([{ type: "proposals", proposals: [CUSTOM] }, { type: "done", reply: "Mit deinem Foto." }, { type: "charged", credits: 16 }]));
+      const director = fakeDirector(() => turn([{ type: "proposals", proposals: [CUSTOM] }, { type: "done", reply: "With your photo." }, { type: "charged", credits: 16 }]));
       const { call } = await setup({ director: director.dep });
       const photo = `/api/media/uploads/${ACC_1}/dog.png`;
       const res = await call("ask_director", { message: "Mach was Virales", photo, model: "claude-opus-5-5" });
 
       expect(director.calls[0]!.body).toEqual({ history: [{ role: "user", content: "Mach was Virales" }], model: "claude-opus-5-5", photo });
-      expect(res.structuredContent).toMatchObject({ reply: "Mit deinem Foto.", charged: 16 });
+      expect(res.structuredContent).toMatchObject({ reply: "With your photo.", charged: 16 });
       expect(res.structuredContent).not.toHaveProperty("budget");
       expect(res.content[0]!.text).toMatch(/16 credits/);
     });
 
     it("passes the Director's refusals on with their code and the reply for the user", async () => {
       for (const error of ["director_paid_only", "insufficient_credits", "director_budget", "foreign_input"]) {
-        const director = fakeDirector(() => ({ ok: false, error, reply: `Antwort zu ${error}` }));
+        const director = fakeDirector(() => ({ ok: false, error, reply: `Reply to ${error}` }));
         const { call } = await setup({ director: director.dep });
-        const res = await call("ask_director", { message: "Hallo" });
+        const res = await call("ask_director", { message: "Hello" });
         expect(res.isError).toBe(true);
-        expect(res.content[0]!.text).toBe(`${error}: Antwort zu ${error}`);
+        expect(res.content[0]!.text).toBe(`${error}: Reply to ${error}`);
       }
     });
 
     it("reports a turn that broke off", async () => {
       const director = fakeDirector(() => turn([{ type: "text", delta: "Moment" }, { type: "error", error: "director_unavailable", message: "x" }]));
       const { call } = await setup({ director: director.dep });
-      const res = await call("ask_director", { message: "Hallo" });
+      const res = await call("ask_director", { message: "Hello" });
       expect(res.isError).toBe(true);
       expect(res.content[0]!.text).toMatch(/^director_unavailable: /);
     });
@@ -586,7 +586,7 @@ describe("tachyon mcp server", () => {
         stop: (reason) => void (stopped = reason ?? "left"),
       }));
       const { call } = await setup({ director: { ...director.dep, deadlineMs: 20 } });
-      const res = await call("ask_director", { message: "Hallo" });
+      const res = await call("ask_director", { message: "Hello" });
       expect(res.isError).toBe(true);
       expect(res.content[0]!.text).toMatch(/^director_timeout: /);
       expect(stopped).toBe("failed");
@@ -619,14 +619,14 @@ describe("tachyon mcp server", () => {
           return { share: 1, paying: false, models: [] };
         },
       }));
-      const foreign = await wired.start(ACC_1, { history: [{ role: "user", content: "Hallo" }], photo: `/api/media/uploads/${ACC_2}/x.png` });
+      const foreign = await wired.start(ACC_1, { history: [{ role: "user", content: "Hello" }], photo: `/api/media/uploads/${ACC_2}/x.png` });
       expect(foreign).toMatchObject({ ok: false, error: "foreign_input" });
-      const unknown = await wired.start(ACC_1, { history: [{ role: "user", content: "Hallo" }], model: "gpt-0" });
+      const unknown = await wired.start(ACC_1, { history: [{ role: "user", content: "Hello" }], model: "gpt-0" });
       expect(unknown).toMatchObject({ ok: false, error: "unknown_model" });
       expect(started).toEqual([]);
       const key = { id: KEY_ID, dailyLimit: 300 };
-      await wired.start(ACC_1, { history: [{ role: "user", content: "Hallo" }], photo: `/api/media/uploads/${ACC_1}/x.png` }, undefined, key);
-      expect(started).toMatchObject([{ history: [{ role: "user", content: "Hallo" }], photo: `/api/media/uploads/${ACC_1}/x.png`, hasPhoto: true }]);
+      await wired.start(ACC_1, { history: [{ role: "user", content: "Hello" }], photo: `/api/media/uploads/${ACC_1}/x.png` }, undefined, key);
+      expect(started).toMatchObject([{ history: [{ role: "user", content: "Hello" }], photo: `/api/media/uploads/${ACC_1}/x.png`, hasPhoto: true }]);
       await wired.overview(ACC_1, key);
       expect(keys).toEqual([key, key]);
     });
@@ -634,10 +634,10 @@ describe("tachyon mcp server", () => {
     it("hands the key and its daily limit to the Director, which holds paid messages to it like jobs", async () => {
       const director = fakeDirector(() => ({ ok: false, error: "key_limit_reached", reply: "Limit erreicht.", limit: 300, used: 290 }));
       const { call } = await setup({ director: director.dep, dailyLimit: 300 });
-      const res = await call("ask_director", { message: "Hallo", model: "claude-opus-5-5" });
+      const res = await call("ask_director", { message: "Hello", model: "claude-opus-5-5" });
       expect(director.calls[0]!.key).toEqual({ id: KEY_ID, dailyLimit: 300 });
       expect(res.isError).toBe(true);
-      expect(res.content[0]!.text).toBe("key_limit_reached: This key may spend 300 credits per 24 hours and 290 are used. The owner can raise the limit in Tevyon Studio → «API & MCP».");
+      expect(res.content[0]!.text).toBe("key_limit_reached: This key may spend 300 credits per 24 hours and 290 are used. The owner can raise the limit in Tevyon Studio → \"API & MCP\".");
       await call("list_director_models");
       expect(director.overviews).toEqual([{ accountId: ACC_1, key: { id: KEY_ID, dailyLimit: 300 } }]);
     });

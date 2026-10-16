@@ -101,14 +101,14 @@ export function WallTitle({ words }: { words: [string, string] }) {
 /**
  * The one tile of every wall (image and video studio, Explore, community): only the picture at rest, plus a small
  * `badge` top left where the kind matters (a clip, a preset). Hover or keyboard focus shows its `facts` as one quiet
- * mark at the foot («Mode · Format 3:4»), no shade; a click opens it large in the shared preview. Marks use the
+ * mark at the foot ("Mode · Format 3:4"), no shade; a click opens it large in the shared preview. Marks use the
  * result cards' chip (`.card__chip`, studio.css), so own results and examples read alike. Actions (like, report,
  * the creator's page) live in the preview, never on the tile.
  */
 export function Shot({ media, title, facts, badge, onOpen }: { media: React.ReactNode; title: string; facts?: string[]; badge?: React.ReactNode; onOpen: () => void }) {
   return (
     <article className="wall-shot">
-      <button type="button" className="wall-shot__hit" onClick={onOpen} aria-label={`${title}: gross ansehen`}>
+      <button type="button" className="wall-shot__hit" onClick={onOpen} aria-label={`${title}: view large`}>
         {media}
       </button>
       {badge && <span className="card__chips" aria-hidden="true"><span className="card__chip">{badge}</span></span>}

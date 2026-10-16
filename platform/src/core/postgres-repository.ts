@@ -87,7 +87,7 @@ async function lapsed(q: Query, accountId: string, at: Date): Promise<number> {
 
 /**
  * Under the account lock: takes `credits` for `owner` (a job id or a debit ref) and books the part that running plan
- * grants pay, earliest expiry first (repository.ts «AllocationOrder»). `available` is what the account had before.
+ * grants pay, earliest expiry first (repository.ts “AllocationOrder”). `available` is what the account had before.
  */
 async function allocate(q: Query, accountId: string, owner: string, credits: number, available: number, order: AllocationOrder, at: Date) {
   if (credits <= 0) return;

@@ -9,7 +9,7 @@ export function visibilityOf(mine: ReadonlyMap<string, OwnPublication>, jobId: s
   return p?.publishedAt != null ? "public" : "private";
 }
 
-/** «Prompt übernehmen»: the creation's own studio with its model, prompt and format set (draft.tsx reads them). */
+/** “Use prompt”: the creation's own studio with its model, prompt and format set (draft.tsx reads them). */
 export function takeHref(c: Creation): string | null {
   if (!c.prompt) return null;
   const q = new URLSearchParams({ model: c.jobType, prompt: c.prompt, ...(c.aspect ? { aspect: c.aspect } : {}) });
@@ -23,9 +23,9 @@ export const creationHeight = (c: Creation) => 1 / ratio(c.aspect ?? (c.kind ===
 export function creationEntry(c: Creation): PreviewEntry {
   const take = takeHref(c);
   const marketing = c.preset?.id.startsWith("ms:") ?? false;
-  // A bare number is a pixel size (FLUX «768»); named sizes («2K», «720p») stay as they are.
+  // A bare number is a pixel size (FLUX “768”); named sizes (“2K”, “720p”) stay as they are.
   const size = c.resolution && /^\d+$/.test(c.resolution) ? `${c.resolution} px` : c.resolution;
-  const facts = [c.aspect, c.duration ? `${c.duration} s` : null, size, c.audio ? "Mit Ton" : null, "KI-generiert"].filter((f): f is string => Boolean(f));
+  const facts = [c.aspect, c.duration ? `${c.duration} s` : null, size, c.audio ? "With audio" : null, "AI-generated"].filter((f): f is string => Boolean(f));
   const preset = c.preset ? ` · ${marketing ? "" : "Preset "}${c.preset.title}${c.preset.wish ? `: ${c.preset.wish}` : ""}` : "";
   return {
     url: c.media.url,
@@ -33,36 +33,36 @@ export function creationEntry(c: Creation): PreviewEntry {
     ...(typeof c.audio === "boolean" ? { audio: c.audio } : {}),
     chip: "Community",
     title: c.model,
-    text: `Von ${c.creator.name} (@${c.creator.handle})${preset}`,
+    text: `By ${c.creator.name} (@${c.creator.handle})${preset}`,
     ...(c.prompt ? { prompt: c.prompt } : {}),
     facts,
-    ...(take ? { action: { label: "Prompt übernehmen", href: take } } : {}),
+    ...(take ? { action: { label: "Use prompt", href: take } } : {}),
   };
 }
 
 /** What the owner reads about a creation that moderation took out of the community. */
 export function hiddenText(reason: string | undefined): string {
-  return !reason || reason === "reports" ? "Nach Meldungen ausgeblendet, wird geprüft." : `Ausgeblendet: ${reason}`;
+  return !reason || reason === "reports" ? "Hidden after reports, under review." : `Hidden: ${reason}`;
 }
 
 /** The first letter of a name, for the round avatar. */
 export const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "?";
 
 export const PROFILE_ERROR: Record<string, string> = {
-  invalid_handle: "Der Handle hat 3 bis 20 Zeichen: Kleinbuchstaben, Ziffern und _, mit mindestens einem Buchstaben.",
-  reserved_handle: "Diesen Handle vergeben wir nicht. Wähle einen anderen.",
-  handle_taken: "Dieser Handle ist schon vergeben.",
-  invalid_name: "Der Name hat 1 bis 40 Zeichen.",
-  reserved_name: "Der Name darf nicht nach Tevyon klingen.",
-  invalid_bio: "«Über dich» hat höchstens 160 Zeichen.",
-  terms_required: "Bitte bestätige die Community-Regeln.",
-  studio_only: "Das Profil lässt sich nur im Studio ändern.",
-  storage_unavailable: "Die Community ist gerade nicht erreichbar. Versuch es gleich noch einmal.",
+  invalid_handle: "A handle has 3 to 20 characters: lowercase letters, digits and _, with at least one letter.",
+  reserved_handle: "This handle isn't available. Choose another one.",
+  handle_taken: "This handle is already taken.",
+  invalid_name: "A name has 1 to 40 characters.",
+  reserved_name: "The name must not sound like Tevyon.",
+  invalid_bio: "“About you” has at most 160 characters.",
+  terms_required: "Please accept the Community rules.",
+  studio_only: "The profile can only be changed in the Studio.",
+  storage_unavailable: "The Community can't be reached right now. Please try again in a moment.",
 };
 
 export const PUBLISH_ERROR: Record<string, string> = {
-  not_ready: "Teilen lassen sich nur fertige Ergebnisse.",
-  not_found: "Dieses Ergebnis gibt es nicht mehr.",
-  hidden: "Nach Meldungen ausgeblendet. Wir prüfen es; so lange bleibt es privat.",
-  storage_unavailable: "Die Community ist gerade nicht erreichbar. Versuch es gleich noch einmal.",
+  not_ready: "Only finished results can be shared.",
+  not_found: "This result no longer exists.",
+  hidden: "Hidden after reports. We're reviewing it; until then it stays private.",
+  storage_unavailable: "The Community can't be reached right now. Please try again in a moment.",
 };

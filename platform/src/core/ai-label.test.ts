@@ -68,7 +68,7 @@ describe("machine-readable AI label (AI Act Art. 50)", () => {
       [new Uint8Array([0xff, 0xd8]), "image/jpeg"],
       [new Uint8Array(new TextEncoder().encode("RIFF\u0004\u0000\u0000\u0000WEBP")), "image/webp"],
       [new Uint8Array([0, 0, 0, 8, 102, 114, 101, 101]), "video/mp4"],
-      // ftyp, then an mdat «to the end of the file» (size 0): an appended box would end up inside the video data.
+      // ftyp, then an mdat “to the end of the file” (size 0): an appended box would end up inside the video data.
       [new Uint8Array([0, 0, 0, 12, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 0, 0, 109, 100, 97, 116, 1, 2, 3]), "video/mp4"],
       [new Uint8Array([1, 2, 3]), "image/gif"],
     ] as const) {

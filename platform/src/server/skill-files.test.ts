@@ -26,22 +26,22 @@ describe("skills folder", () => {
   });
 
   // Skills are written by hand; the register is the truth. These keep the text from naming what is not offered
-  // (review 15.10.2026: «Seedance 1.5 Pro», «Nano Banana 2.1», «Cheapest: Seedream 4.5» for 4:5).
+  // (review 15.10.2026: “Seedance 1.5 Pro”, “Nano Banana 2.1”, “Cheapest: Seedream 4.5” for 4:5).
   const texts = () =>
     bundle.allFiles
       .filter((f) => f.endsWith(".md"))
-      // Sources name vendor documents («Seedream 4.0–4.5 prompt guide»), not models on offer.
+      // Sources name vendor documents (“Seedream 4.0–4.5 prompt guide”), not models on offer.
       .map((f) => ({ file: f, text: readFileSync(path.join(SKILLS_DIR, f), "utf8").split(/\n## Sources\b/)[0]! }));
 
   it("names only models the register offers (outside its sources)", () => {
     const names = catalog.list().map((d) => d.model);
     const TIER = /(?: (?:Pro|Fast|Mini|Lite|Max|Flex|Klein|Prime|Flash|Std|Flare|Sunburst|Image|Video))+$/;
-    // A family is a model name up to its version («Seedance» of «Seedance 2.0»), or without one, up to its tier
-    // («Nano Banana» of «Nano Banana Pro»).
+    // A family is a model name up to its version (“Seedance” of “Seedance 2.0”), or without one, up to its tier
+    // (“Nano Banana” of “Nano Banana Pro”).
     const families = [...new Set(names.map((n) => n.match(/^(.*?)[ .]?\d/)?.[1] ?? n.replace(TIER, "")))];
     const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const mention = new RegExp(`\\b(?:${families.map(esc).join("|")})[ .]?\\d+(?:\\.\\d+)?(?![\\d,])(?:${TIER.source.slice(0, -1)})?`, "g");
-    // A generation («Veo 3», «FLUX.2») is fine where a model of it is on offer; a version nobody offers is not.
+    // A generation (“Veo 3”, “FLUX.2”) is fine where a model of it is on offer; a version nobody offers is not.
     const known = (n: string) => names.some((x) => x === n || (x.startsWith(n) && /^[ .\d]/.test(x.slice(n.length))));
     const unknown = texts().flatMap(({ file, text }) =>
       [...text.matchAll(mention)].map((m) => m[0]).filter((n) => !known(n)).map((n) => `${file}: ${n}`));
@@ -53,10 +53,10 @@ describe("skills folder", () => {
     const names = catalog.list().map((d) => d.model);
     const known = (n: string) => names.some((x) => x === n || (x.startsWith(n) && /^[ .\d]/.test(x.slice(n.length))));
     const unknown = bundle.skills.filter((s) => s.kind === "prompt").flatMap((skill) => {
-      // The families this skill serves, as model names spell them («Seedance», «GPT Image»).
+      // The families this skill serves, as model names spell them (“Seedance”, “GPT Image”).
       const served = catalog.list().filter((d) => book.promptSkillFor(d.jobType, d.family).name === skill.name).map((d) => d.model);
       const families = [...new Set(served.map((n) => n.match(/^(.*?)[ .]?\d/)?.[1]).filter((f): f is string => Boolean(f)))];
-      // Bare versions in lists such as «2.0, 2.0 Fast, 2.5, 1.5 Pro».
+      // Bare versions in lists such as “2.0, 2.0 Fast, 2.5, 1.5 Pro”.
       const versions = [...skill.description.matchAll(/(?<![\d.])\d+\.\d+(?![\d.])(?: (?:Pro|Fast|Mini|Lite|Max|Flex|Klein|Prime|Flash|Flare))*/g)].map((m) => m[0]);
       return versions.filter((v) => !families.some((f) => [" ", ".", ""].some((sep) => known(`${f}${sep}${v}`)))).map((v) => `${skill.name}: ${v}`);
     });

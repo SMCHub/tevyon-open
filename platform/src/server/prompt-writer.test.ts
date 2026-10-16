@@ -6,7 +6,7 @@ const skill: Skill = {
   name: "prompt-veo", version: "1.0.0", kind: "prompt", models: ["veo_3_1_lite"], description: "d",
   body: "# Veo\n\nLead with the subject, then the action.", rules: { maxChars: 1800, minWords: 8, negations: "rephrase", slots: ["subject", "action", "camera"] },
 };
-const request = { skill, kind: "video" as const, model: "Veo 3.1 Lite", prompt: "fuchs springt über eis", settings: { duration: 8, generate_audio: true } };
+const request = { skill, kind: "video" as const, model: "Veo 3.1 Lite", prompt: "fox jumps over the ice", settings: { duration: 8, generate_audio: true } };
 
 function fakeFetch(answer: { status?: number; body: unknown }) {
   const calls: { url: string; init: RequestInit }[] = [];
@@ -36,7 +36,7 @@ describe("prompt writer", () => {
     expect(system).toContain("1800");
     expect(system).toContain("subject → action → camera");
     expect(system).toContain('"duration":8');
-    expect(body.messages[1]).toEqual({ role: "user", content: "fuchs springt über eis" });
+    expect(body.messages[1]).toEqual({ role: "user", content: "fox jumps over the ice" });
   });
 
   it("states the skill's negation rule and the fixed format as hard rules, and on a second try why the first failed", async () => {
@@ -56,7 +56,7 @@ describe("prompt writer", () => {
   });
 
   it("asks that neither the vendor nor anyone else keeps the data for training", async () => {
-    // Privacy policy: «kein Training mit deinen Inhalten» also holds for this call.
+    // Privacy policy: “no training on your content” also holds for this call.
     const { f, calls } = fakeFetch({ body: reply(JSON.stringify({ prompt: "x" })) });
     await createChatPromptWriter({ apiKey: "k", fetch: f }).write(request);
     expect(JSON.parse(String(calls[0]?.init.body)).provider).toMatchObject({ data_collection: "deny" });

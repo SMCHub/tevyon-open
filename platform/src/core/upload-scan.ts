@@ -4,7 +4,7 @@ import { checkUpload } from "./uploads";
 
 /**
  * Every upload is scanned before it is stored.
- * The categories follow the usage rules (landing «Nutzungsrichtlinien»): sexual content with minors, explicit nudity,
+ * The categories follow the usage rules (landing “Acceptable Use Policy”): sexual content with minors, explicit nudity,
  * glorified real violence and gore, terror or hate propaganda, identity and official documents. Real people as such are
  * allowed (the consent box covers them); the scan never says who someone is (no biometric identification, privacy policy).
  */

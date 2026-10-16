@@ -173,7 +173,7 @@ export interface JobRepository {
 }
 
 /**
- * How a spending path takes plan credits: «plan» spends them first (jobs, Director messages), «permanent» takes bought
+ * How a spending path takes plan credits: “plan” spends them first (jobs, Director messages), “permanent” takes bought
  * credits first (a purchase that went back, an open debt) unless a refunded plan invoice names its own grant.
  */
 export type AllocationOrder = { first: "plan" | "permanent"; prefer?: string };

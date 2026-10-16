@@ -12,10 +12,10 @@ const RESEND_SECONDS = 30;
 type Step = "email" | "code" | "done";
 
 function friendly(message: string) {
-  if (/rate|too many|seconds/i.test(message)) return "Zu viele Versuche. Bitte warte kurz und versuche es erneut.";
-  if (/expired|invalid|token/i.test(message)) return "Der Code stimmt nicht oder ist abgelaufen.";
-  if (/email/i.test(message)) return "Diese E-Mail-Adresse können wir nicht verwenden.";
-  return "Das hat nicht geklappt. Bitte versuche es erneut.";
+  if (/rate|too many|seconds/i.test(message)) return "Too many attempts. Please wait a moment and try again.";
+  if (/expired|invalid|token/i.test(message)) return "The code is wrong or has expired.";
+  if (/email/i.test(message)) return "We cannot use this e-mail address.";
+  return "That did not work. Please try again.";
 }
 
 export function LoginForm() {
@@ -41,7 +41,7 @@ export function LoginForm() {
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
+      setError("Please enter a valid e-mail address.");
       return;
     }
     setBusy(true);
@@ -97,16 +97,16 @@ export function LoginForm() {
     <div className="auth" data-step={step}>
       {step === "email" && (
         <form className="auth__step" onSubmit={sendCode} noValidate>
-          <h1 className="auth__title">Anmelden</h1>
-          <p className="auth__lead">Per Code an deine E-Mail, ohne Passwort. Neu hier? Dein Konto entsteht dabei.</p>
+          <h1 className="auth__title">Sign in</h1>
+          <p className="auth__lead">With a code sent to your e-mail, no password. New here? Your account is created on the way.</p>
           <label className="auth__field">
-            <span className="auth__label">E-Mail</span>
+            <span className="auth__label">E-mail</span>
             <input
               className="auth__input"
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder="du@studio.ch"
+              placeholder="you@studio.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               aria-invalid={Boolean(error)}
@@ -114,7 +114,7 @@ export function LoginForm() {
             />
           </label>
           <button className="auth__go" type="submit" disabled={busy}>
-            <span>{busy ? "Code wird gesendet …" : "Code senden"}</span>
+            <span>{busy ? "Sending code …" : "Send code"}</span>
             {busy ? <span className="auth__spinner" aria-hidden="true" /> : <ArrowRight className="auth__arrow" aria-hidden="true" />}
           </button>
           {error && <p className="auth__error" id="auth-error" role="alert">{error}</p>}
@@ -122,24 +122,24 @@ export function LoginForm() {
             type="button"
             className="auth__link"
             onClick={() => {
-              if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Bitte zuerst deine E-Mail-Adresse eingeben.");
+              if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Please enter your e-mail address first.");
               setError(null);
               setDigits(Array(CODE_LENGTH).fill(""));
               setStep("code");
             }}
           >
-            Ich habe schon einen Code
+            I already have a code
           </button>
         </form>
       )}
 
       {step !== "email" && (
         <div className="auth__step">
-          <h1 className="auth__title">{step === "done" ? "Angemeldet" : "Code"}</h1>
+          <h1 className="auth__title">{step === "done" ? "Signed in" : "Code"}</h1>
           <p className="auth__lead">
-            {step === "done" ? "Dein Studio wird geladen …" : <>{CODE_LENGTH} Ziffern, geschickt an <strong>{email.trim()}</strong>.</>}
+            {step === "done" ? "Loading your studio …" : <>{CODE_LENGTH} digits, sent to <strong>{email.trim()}</strong>.</>}
           </p>
-          <div className="otp" role="group" aria-label={`${CODE_LENGTH}-stelliger Code`}>
+          <div className="otp" role="group" aria-label={`${CODE_LENGTH}-digit code`}>
             {digits.map((d, i) => (
               <input
                 key={i}
@@ -151,7 +151,7 @@ export function LoginForm() {
                 inputMode="numeric"
                 autoComplete={i === 0 ? "one-time-code" : "off"}
                 maxLength={CODE_LENGTH}
-                aria-label={`Ziffer ${i + 1}`}
+                aria-label={`Digit ${i + 1}`}
                 disabled={busy || step === "done"}
                 onChange={(e) => fill(i, e.target.value.slice(-CODE_LENGTH))}
                 onPaste={(e) => {
@@ -163,15 +163,15 @@ export function LoginForm() {
               />
             ))}
           </div>
-          {busy && step === "code" && <p className="auth__hint"><span className="auth__spinner" aria-hidden="true" /> Code wird geprüft …</p>}
+          {busy && step === "code" && <p className="auth__hint"><span className="auth__spinner" aria-hidden="true" /> Checking code …</p>}
           {error && <p className="auth__error" role="alert">{error}</p>}
           {step === "code" && (
             <div className="auth__links">
               <button type="button" className="auth__link" disabled={wait > 0 || busy} onClick={() => sendCode()}>
-                {wait > 0 ? `Neuer Code in ${wait} s` : "Neuen Code senden"}
+                {wait > 0 ? `New code in ${wait} s` : "Send a new code"}
               </button>
               <button type="button" className="auth__link" onClick={() => { setStep("email"); setError(null); }}>
-                Andere E-Mail
+                Other e-mail
               </button>
             </div>
           )}

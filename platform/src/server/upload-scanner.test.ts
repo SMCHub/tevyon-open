@@ -69,7 +69,7 @@ describe("upload scanner (router chat route)", () => {
     await expect(createChatUploadScanner({ apiKey: "k", fetch: down.f }).scan(image)).rejects.toThrow();
   });
 
-  it("maps an unknown category of a block to «other» and still blocks", async () => {
+  it("maps an unknown category of a block to “other” and still blocks", async () => {
     const { f } = fakeFetch({ body: reply(JSON.stringify({ allowed: false, category: "weird" })) });
     expect(await createChatUploadScanner({ apiKey: "k", fetch: f }).scan(image)).toEqual({ allowed: false, category: "other" });
   });

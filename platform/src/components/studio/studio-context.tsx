@@ -107,7 +107,7 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
 
   const start = useCallback(
     async (jobType: string, params: Record<string, unknown>, count = 1, opts: { maxCredits?: number } = {}): Promise<StartResult> => {
-      // All at once: the server writes the prompt once for identical starts, so «Anzahl 4» is about as fast as one.
+      // All at once: the server writes the prompt once for identical starts, so "count 4" is about as fast as one.
       // Each start keeps its own idempotency key and price; the reservation is atomic, so with too few credits exactly
       // as many start as are paid for.
       type Res = { ok: boolean; error?: string; credits?: number; job?: { id: string } };

@@ -12,12 +12,12 @@ type Tab = "creations" | "profiles";
 type Target = { kind: "creation"; id: string } | { kind: "profile"; id: string };
 type Action = "hide" | "unhide" | "dismiss";
 
-const WHEN = new Intl.DateTimeFormat("de-CH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const WHEN = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const LABEL = Object.fromEntries(REASONS.map((r) => [r.id, r.label])) as Record<ReportReason, string>;
 const STATE: Record<QueueCreation["state"] | QueueProfile["state"], string> = {
-  public: "Öffentlich", private: "Wieder privat", visible: "Sichtbar", hidden: "Ausgeblendet",
+  public: "Public", private: "Private again", visible: "Visible", hidden: "Hidden",
 };
-const DONE: Record<Action, string> = { hide: "Ausgeblendet. Der Urheber liest den Grund.", unhide: "Wiederhergestellt.", dismiss: "Erledigt: bleibt sichtbar." };
+const DONE: Record<Action, string> = { hide: "Hidden. The creator will see the reason.", unhide: "Restored.", dismiss: "Done: stays visible." };
 
 /**
  * What waits for the operator: creations and profiles with reports since the last review, or hidden, newest decision
@@ -52,7 +52,7 @@ export function ModerationPage() {
     }).catch(() => null);
     const d = r ? ((await r.json().catch(() => null)) as { ok?: boolean } | null) : null;
     if (!d?.ok) {
-      setNote("Das liess sich nicht speichern. Lade die Seite neu und versuch es noch einmal.");
+      setNote("That couldn't be saved. Reload the page and try again.");
       return false;
     }
     setNote(DONE[action]);
@@ -66,18 +66,18 @@ export function ModerationPage() {
       <header className="cm-head">
         <div className="cm-head__copy">
           <span className="cm-kicker">Moderation</span>
-          <h1>Meldungen und Ausgeblendetes</h1>
+          <h1>Reports and hidden items</h1>
           <p className="cm-head__sub">
-            Was gemeldet wurde, seit du zuletzt entschieden hast, und was ausgeblendet ist. Wer gemeldet hat, steht hier nie.
+            What was reported since your last decision, and what is hidden. Who reported is never shown here.
           </p>
         </div>
       </header>
 
       <div className="cm-bar">
-        <div className="cm-tabs" role="tablist" aria-label="Art">
+        <div className="cm-tabs" role="tablist" aria-label="Type">
           {(["creations", "profiles"] as const).map((t) => (
             <button key={t} type="button" role="tab" aria-selected={tab === t} className="cm-tab" onClick={() => setTab(t)}>
-              {t === "creations" ? "Kreationen" : "Profile"}
+              {t === "creations" ? "Creations" : "Profiles"}
               <span className="cm-tab__n">{queue ? count[t] : ""}</span>
             </button>
           ))}
@@ -85,14 +85,14 @@ export function ModerationPage() {
       </div>
 
       {failed ? (
-        <p className="cm-note" role="alert">Die Warteschlange ist gerade nicht erreichbar. Lade die Seite gleich noch einmal.</p>
+        <p className="cm-note" role="alert">The queue can't be reached right now. Reload the page in a moment.</p>
       ) : !queue ? (
-        <p className="cm-note" role="status">Lade die Warteschlange …</p>
+        <p className="cm-note" role="status">Loading the queue …</p>
       ) : count[tab] === 0 ? (
         <div className="cm-empty">
           <ShieldCheck aria-hidden="true" />
-          <strong>Nichts offen</strong>
-          <p>{tab === "creations" ? "Keine gemeldeten oder ausgeblendeten Kreationen." : "Keine gemeldeten oder ausgeblendeten Profile."}</p>
+          <strong>Nothing open</strong>
+          <p>{tab === "creations" ? "No reported or hidden creations." : "No reported or hidden profiles."}</p>
         </div>
       ) : (
         <ul className="md-list">
@@ -112,8 +112,8 @@ function CreationCase({ c, onDecide }: { c: QueueCreation; onDecide: Decide }) {
   const preview = usePreview();
   const open = () =>
     preview.openEntries([{
-      url: c.media.url, kind: c.kind, chip: "Moderation", title: c.handle ? `@${c.handle}` : "Kreation",
-      text: c.state === "hidden" ? `Ausgeblendet: ${c.reason === "reports" || !c.reason ? "nach Meldungen" : c.reason}` : STATE[c.state],
+      url: c.media.url, kind: c.kind, chip: "Moderation", title: c.handle ? `@${c.handle}` : "Creation",
+      text: c.state === "hidden" ? `Hidden: ${c.reason === "reports" || !c.reason ? "after reports" : c.reason}` : STATE[c.state],
       facts: c.reports.map((r) => LABEL[r.reason]),
     }]);
   return (
@@ -128,8 +128,8 @@ function CreationCase({ c, onDecide }: { c: QueueCreation; onDecide: Decide }) {
         <PreviewButton onOpen={open} className="pv-open--sm" />
       </div>
       <CaseBody
-        title={c.handle ? <Link href={`/profile/${c.handle}`}>@{c.handle}</Link> : <span>Profil gelöscht</span>}
-        sub={c.kind === "video" ? "Video" : "Bild"}
+        title={c.handle ? <Link href={`/profile/${c.handle}`}>@{c.handle}</Link> : <span>Profile deleted</span>}
+        sub={c.kind === "video" ? "Video" : "Image"}
         state={c.state}
         reason={c.reason}
         reports={c.reports}
@@ -165,14 +165,14 @@ function CaseBody({ title, sub, state, reason, reports }: {
       <p className="md-case__title">{title}<span className="md-case__sub">{sub}</span></p>
       <p className="md-case__state">
         <span className="cm-badge" data-state={state}>{STATE[state]}</span>
-        {state === "hidden" && <span>{reason === "reports" || !reason ? "nach Meldungen" : reason}</span>}
+        {state === "hidden" && <span>{reason === "reports" || !reason ? "after reports" : reason}</span>}
       </p>
       {reports.length > 0 && (
-        <ul className="md-reports" aria-label="Meldungen">
+        <ul className="md-reports" aria-label="Reports">
           {reports.map((r, i) => (
             <li key={i}>
               <strong>{LABEL[r.reason]}</strong>
-              {r.note && <span className="md-reports__note">«{r.note}»</span>}
+              {r.note && <span className="md-reports__note">“{r.note}”</span>}
               <time dateTime={new Date(r.at).toISOString()}>{WHEN.format(r.at)}</time>
             </li>
           ))}
@@ -206,7 +206,7 @@ function CaseActions({ target, hidden, reports, onDecide }: { target: Target; hi
   if (hidden) {
     return (
       <div className="md-case__actions">
-        <button type="button" className="cm-btn cm-btn--sm" onClick={() => void run("unhide")} disabled={busy}><RotateCcw aria-hidden="true" /> Wiederherstellen</button>
+        <button type="button" className="cm-btn cm-btn--sm" onClick={() => void run("unhide")} disabled={busy}><RotateCcw aria-hidden="true" /> Restore</button>
       </div>
     );
   }
@@ -214,21 +214,21 @@ function CaseActions({ target, hidden, reports, onDecide }: { target: Target; hi
     return (
       <form className="md-case__actions md-hide" onSubmit={(e) => { e.preventDefault(); if (reason.trim()) void run("hide", reason.trim()); }}>
         <label className="cm-field">
-          <span>Grund, den der Urheber liest</span>
+          <span>Reason the creator will see</span>
           <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} required autoFocus />
         </label>
         <div className="md-hide__row">
-          <button type="button" className="cm-btn cm-btn--quiet cm-btn--sm" onClick={() => setForm(false)}>Abbrechen</button>
-          <button type="submit" className="cm-btn cm-btn--primary cm-btn--sm" disabled={busy || !reason.trim()}><EyeOff aria-hidden="true" /> Ausblenden</button>
+          <button type="button" className="cm-btn cm-btn--quiet cm-btn--sm" onClick={() => setForm(false)}>Cancel</button>
+          <button type="submit" className="cm-btn cm-btn--primary cm-btn--sm" disabled={busy || !reason.trim()}><EyeOff aria-hidden="true" /> Hide</button>
         </div>
       </form>
     );
   }
   return (
     <div className="md-case__actions">
-      <button type="button" className="cm-btn cm-btn--sm" onClick={openForm} disabled={busy}><EyeOff aria-hidden="true" /> Ausblenden</button>
+      <button type="button" className="cm-btn cm-btn--sm" onClick={openForm} disabled={busy}><EyeOff aria-hidden="true" /> Hide</button>
       {reports.length > 0 && (
-        <button type="button" className="cm-btn cm-btn--quiet cm-btn--sm" onClick={() => void run("dismiss")} disabled={busy}><Check aria-hidden="true" /> Erledigt</button>
+        <button type="button" className="cm-btn cm-btn--quiet cm-btn--sm" onClick={() => void run("dismiss")} disabled={busy}><Check aria-hidden="true" /> Done</button>
       )}
     </div>
   );

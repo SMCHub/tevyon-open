@@ -4,13 +4,13 @@ import { createPgDb } from "./db";
 import { REASON_LABEL } from "./notify";
 
 const USAGE = [
-  "Aufruf: node --env-file=.env.local scripts/community.ts list",
-  "        node --env-file=.env.local scripts/community.ts hide <job-id|@handle> <grund> [--yes]",
+  "Usage:  node --env-file=.env.local scripts/community.ts list",
+  "        node --env-file=.env.local scripts/community.ts hide <job-id|@handle> <reason> [--yes]",
   "        node --env-file=.env.local scripts/community.ts unhide <job-id|@handle> [--yes]",
-  "        node --env-file=.env.local scripts/community.ts forget <e-mail> [--yes]",
+  "        node --env-file=.env.local scripts/community.ts forget <email> [--yes]",
 ].join("\n");
 
-const DATE = new Intl.DateTimeFormat("de-CH", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Zurich" });
+const DATE = new Intl.DateTimeFormat("en-US", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Zurich" });
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
@@ -30,20 +30,20 @@ export async function run(argv: string[], db: Db, log: (line: string) => void = 
   if (command === "list") {
     const { creations, profiles } = await community.queue();
     if (!creations.length && !profiles.length) {
-      log("Nichts zu prüfen: keine offenen Meldungen, nichts ausgeblendet.");
+      log("Nothing to review: no open reports, nothing hidden.");
       return 0;
     }
-    const state = (s: string, reason?: string) => (s === "hidden" ? `AUSGEBLENDET (${reason === "reports" ? "nach Meldungen" : reason})` : s === "public" || s === "visible" ? "sichtbar" : "privat");
+    const state = (s: string, reason?: string) => (s === "hidden" ? `HIDDEN (${reason === "reports" ? "after reports" : reason})` : s === "public" || s === "visible" ? "visible" : "private");
     const reports = (list: { reason: string; note: string; at: number }[]) => {
-      for (const r of list) log(`  ${DATE.format(r.at)}  ${REASON_LABEL[r.reason] ?? r.reason}${r.note ? `: «${r.note}»` : ""}`);
+      for (const r of list) log(`  ${DATE.format(r.at)}  ${REASON_LABEL[r.reason] ?? r.reason}${r.note ? `: “${r.note}”` : ""}`);
     };
     for (const c of creations) {
-      log(`${c.jobId}  @${c.handle ?? "?"}  ${c.kind === "video" ? "Video" : "Bild"}  ${state(c.state, c.reason)}  ${plural(c.reports.length, "Meldung", "Meldungen")}`);
+      log(`${c.jobId}  @${c.handle ?? "?"}  ${c.kind === "video" ? "Video" : "Image"}  ${state(c.state, c.reason)}  ${plural(c.reports.length, "report", "reports")}`);
       reports(c.reports);
-      log(`  Datei: ${c.media.url}`);
+      log(`  File: ${c.media.url}`);
     }
     for (const p of profiles) {
-      log(`@${p.handle}  ${p.name}  Profil  ${state(p.state, p.reason)}  ${plural(p.reports.length, "Meldung", "Meldungen")}`);
+      log(`@${p.handle}  ${p.name}  Profile  ${state(p.state, p.reason)}  ${plural(p.reports.length, "report", "reports")}`);
       reports(p.reports);
     }
     return 0;
@@ -53,18 +53,18 @@ export async function run(argv: string[], db: Db, log: (line: string) => void = 
     if (!target) return usage(log);
     const [user] = await db.query<{ id: string }>("select id from auth.users where lower(email) = lower($1)", [target]);
     if (!user) {
-      log(`Kein Konto mit der E-Mail ${target}.`);
+      log(`No account with the email ${target}.`);
       return 1;
     }
     const [profile, mine, stats] = await Promise.all([community.profile(user.id), community.mine(user.id), community.stats(user.id)]);
-    log(`Konto ${target} (${user.id}): ${profile ? `Profil @${profile.handle}` : "kein Profil"}, ${plural(mine.length, "Veröffentlichung", "Veröffentlichungen")}, folgt ${stats.following}, ${plural(stats.followers, "Follower", "Follower")}.`);
-    log("Löscht alles davon in der Community, dazu die Likes, Follows und Meldungen des Kontos. Konto, Jobs und Dateien bleiben.");
+    log(`Account ${target} (${user.id}): ${profile ? `profile @${profile.handle}` : "no profile"}, ${plural(mine.length, "publication", "publications")}, follows ${stats.following}, ${plural(stats.followers, "follower", "followers")}.`);
+    log("Deletes all of it from the Community, plus the account's likes, follows and reports. Account, jobs and files stay.");
     if (!yes) {
-      log("Nichts geändert. Mit --yes ausführen.");
+      log("Nothing changed. Run with --yes.");
       return 0;
     }
     await community.forgetAccount(user.id);
-    log("Erledigt.");
+    log("Done.");
     return 0;
   }
 
@@ -72,16 +72,16 @@ export async function run(argv: string[], db: Db, log: (line: string) => void = 
   const reason = rest.join(" ").trim();
   if (!target || (command === "hide" && !reason)) return usage(log);
   const handle = target.startsWith("@") ? target.slice(1).toLowerCase() : null;
-  const what = handle ? `das Profil @${handle}` : `die Kreation ${target}`;
-  log(command === "hide" ? `Ausblenden: ${what}, Grund «${reason}»` : `Wiederherstellen: ${what}`);
+  const what = handle ? `the profile @${handle}` : `the creation ${target}`;
+  log(command === "hide" ? `Hide: ${what}, reason “${reason}”` : `Restore: ${what}`);
   if (!yes) {
-    log("Nichts geändert. Mit --yes ausführen.");
+    log("Nothing changed. Run with --yes.");
     return 0;
   }
   const res = handle
     ? command === "hide" ? await community.hideProfile(handle, reason) : await community.unhideProfile(handle)
     : command === "hide" ? await community.hide(target, reason) : await community.unhide(target);
-  log(res.ok ? "Erledigt." : "Nicht gefunden.");
+  log(res.ok ? "Done." : "Not found.");
   return res.ok ? 0 : 1;
 }
 
@@ -94,7 +94,7 @@ function usage(log: (line: string) => void) {
 export async function main(argv: string[]): Promise<number> {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    console.log("DATABASE_URL fehlt.");
+    console.log("DATABASE_URL is missing.");
     return 1;
   }
   const db = createPgDb(url);

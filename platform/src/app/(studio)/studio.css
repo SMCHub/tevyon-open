@@ -45,7 +45,7 @@ svg { flex: none; }
 .masonry { columns: 260px; column-gap: 10px; }
 .masonry > * { display: block; width: 100%; margin-bottom: 10px; break-inside: avoid; }
 /* Result card: the same tile as the walls' Shot (wall.css): 4 px corners, picture only, marks as .card__chip; hover
-   shows one quiet mark at the foot («Seedream 4.5 · Format 3:4»), no shade and no buttons; every action lives in the
+   shows one quiet mark at the foot ("Seedream 4.5 · Format 3:4"), no shade and no buttons; every action lives in the
    Lightbox. */
 .card { position: relative; overflow: hidden; border-radius: 4px; background: var(--surface-2); isolation: isolate; }
 .card__hit { position: absolute; inset: 0; padding: 0; border: 0; background: none; cursor: zoom-in; }
@@ -212,7 +212,7 @@ video.insp__media { aspect-ratio: 16 / 9; object-fit: cover; }
 .composer .go .go__arrow { width: 15px; height: 15px; margin: 0; padding: 0; background: none; }
 .composer .go:hover:not(:disabled) .go__arrow { background: none; transform: none; }
 /* No line may depend on a value: the tools stay in one line on wide screens, the model name gives
-   way with «…»; on a phone they sit in fixed rows (references and model, then the options three to a row) above a
+   way with "…"; on a phone they sit in fixed rows (references and model, then the options three to a row) above a
    start button across the whole width. */
 .composer__bar > .composer__tools { flex: 1 1 auto; flex-wrap: nowrap; min-width: 0; }
 .composer__tools > .pill-group + .pop { flex: 0 1 auto; min-width: 0; }
@@ -517,7 +517,7 @@ video.insp__media { aspect-ratio: 16 / 9; object-fit: cover; }
 .mention__item img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
 .mention__item:hover, .mention__item[aria-selected="true"] { background: rgb(var(--fg) / 0.08); }
 .mention__empty { margin: 0; padding: 8px 10px; color: var(--ash); font-size: 12.5px; }
-/* «Aus Assets wählen …»: the last row, a hairline above it when references are listed. */
+/* "Choose from Assets…": the last row, a hairline above it when references are listed. */
 .mention__item + .mention__item--browse { margin-top: 2px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; }
 .mention__icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: rgb(var(--fg) / 0.06); }
 .mention__icon svg { width: 15px; height: 15px; }

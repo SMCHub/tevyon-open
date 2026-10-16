@@ -143,7 +143,7 @@ const readOnly = { readOnlyHint: true, openWorldHint: false } as const;
 
 /** What an agent reads when set_visibility cannot share a result. */
 const VISIBILITY_TEXT: Record<string, string> = {
-  profile_required: "The account has no community profile yet. A person sets it up in Tevyon Studio → Profil (name, handle, community rules); then this works.",
+  profile_required: "The account has no community profile yet. A person sets it up in Tevyon Studio → Profile (name, handle, community rules); then this works.",
   not_found: "There is no job with this id in this account.",
   not_ready: "Only a succeeded job can be shared.",
   consent_required:
@@ -168,7 +168,7 @@ function toolError(code: string, message: string): CallToolResult {
 
 /** The same words for every tool whose spending hits the key's daily limit (jobs and paid Director messages). */
 function keyLimitError(limit: number | string, used: number | string): CallToolResult {
-  return toolError("key_limit_reached", `This key may spend ${limit} credits per 24 hours and ${used} are used. The owner can raise the limit in Tevyon Studio → «API & MCP».`);
+  return toolError("key_limit_reached", `This key may spend ${limit} credits per 24 hours and ${used} are used. The owner can raise the limit in Tevyon Studio → "API & MCP".`);
 }
 
 /** Reports a wait: seconds waited of the whole wait, and the job's model and status. */
@@ -633,7 +633,7 @@ export function createTachyonMcpServer(deps: McpDeps): McpServer {
           "for free within a daily budget; the strongest models (list_director_models) cost credits per message, so never retry " +
           "a call on your own.",
         inputSchema: z.object({
-          message: z.string().min(1).max(2000).describe("The user's wish in their own words, e.g. «a viral clip of my dog as a superhero, for TikTok»."),
+          message: z.string().min(1).max(2000).describe("The user's wish in their own words, e.g. “a viral clip of my dog as a superhero, for TikTok”."),
           history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).max(20).optional()
             .describe("Earlier messages of this conversation with the Director, oldest first (its replies as assistant)."),
           model: z.string().optional().describe("A model id from list_director_models. Default: the free standard model."),

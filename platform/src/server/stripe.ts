@@ -18,18 +18,18 @@ type StripeSession = {
 };
 
 /**
- * Consent at checkout (AGB «Widerrufsrecht»): EU consumers ask for immediate performance and confirm that their right of
+ * Consent at checkout (terms, "right of withdrawal"): EU consumers ask for immediate performance and confirm that their right of
  * withdrawal ends with the first job started with the bought credits. Stripe shows it as a required checkbox; the receipt
  * repeats it (durable medium). Needs a terms-of-service URL in the Stripe dashboard (public business details).
  */
 const WAIVER =
-  "Ich verlange, dass Tevyon sofort leistet. Mir ist bewusst, dass mein Widerrufsrecht (EU) erlischt, sobald ich den ersten Job mit den gekauften Credits starte.";
+  "I ask Tevyon to perform immediately. I understand that my right of withdrawal (EU) ends as soon as I start the first job with the purchased Credits.";
 
-/** The same for a plan (AGB «Abos» and «Widerrufsrecht»): the right ends with the first job of the first month; later months are renewals. */
+/** The same for a plan (terms, "plans" and "right of withdrawal"): the right ends with the first job of the first month; later months are renewals. */
 const PLAN_WAIVER =
-  "Ich verlange, dass Tevyon sofort leistet. Mir ist bewusst, dass mein Widerrufsrecht (EU) erlischt, sobald ich den ersten Job mit den Credits des Abos starte. Das Abo verlängert sich jeden Monat, bis ich es im Konto kündige.";
+  "I ask Tevyon to perform immediately. I understand that my right of withdrawal (EU) ends as soon as I start the first job with the plan's Credits. The plan renews every month until I cancel it in my account.";
 
-const TERMS = "Es gelten die AGB von Tevyon.";
+const TERMS = "Tevyon's Terms of Service apply.";
 
 /**
  * The checkbox links Tevyon's own terms: the Stripe account (formerly App01, Tevyon since 16.10.2026) also bills other
@@ -37,7 +37,7 @@ const TERMS = "Es gelten die AGB von Tevyon.";
  */
 function linkedTerms(): string {
   const legal = (process.env.NEXT_PUBLIC_LANDING_URL ?? "https://tachyon-landing.vercel.app").replace(/\/$/, "");
-  return `Es gelten die [AGB](${legal}/agb) und die [Datenschutzerklärung](${legal}/datenschutz) von Tevyon.`;
+  return `Tevyon's [Terms of Service](${legal}/agb) and [Privacy Policy](${legal}/datenschutz) apply.`;
 }
 
 /**
@@ -59,7 +59,7 @@ const BRANDING = {
   background_color: "#F5F5F2",
 } as const;
 
-/** Joined to the account's prefix on card statements: «TEVYON* CREDITS». */
+/** Joined to the account's prefix on card statements: "TEVYON* CREDITS". */
 const STATEMENT_SUFFIX = "CREDITS";
 
 type StripeLine = {
@@ -272,7 +272,7 @@ export function createStripeGateway(opts: { secretKey: string; portalConfigurati
         line_items: { 0: { price, quantity: 1 } },
         metadata: meta,
         // Every invoice keeps a snapshot of this, so a paid month names its account without another call.
-        subscription_data: { metadata: meta, description: `Tevyon Abo: ${req.plan.credits.toLocaleString("de-CH")} Credits im Monat` },
+        subscription_data: { metadata: meta, description: `Tevyon plan: ${req.plan.credits.toLocaleString("en-US")} Credits a month` },
         consent_collection: { terms_of_service: "required" },
         custom_text: { terms_of_service_acceptance: { message: `${PLAN_WAIVER} ${linkedTerms()}` } },
         branding_settings: BRANDING,
@@ -328,7 +328,7 @@ export function createStripeGateway(opts: { secretKey: string; portalConfigurati
             price_data: {
               currency: "chf",
               unit_amount: amount,
-              product_data: { name: `${req.pack.credits.toLocaleString("de-CH")} Tevyon Credits`, description: "Für alle Bild- und Videomodelle. Gekaufte Credits verfallen nicht." },
+              product_data: { name: `${req.pack.credits.toLocaleString("en-US")} Tevyon Credits`, description: "For every image and video model. Purchased Credits never expire." },
             },
           },
         },
@@ -338,7 +338,7 @@ export function createStripeGateway(opts: { secretKey: string; portalConfigurati
         branding_settings: BRANDING,
         payment_intent_data: {
           metadata: meta,
-          description: `${req.pack.credits.toLocaleString("de-CH")} Tevyon Credits. ${WAIVER} ${TERMS}`,
+          description: `${req.pack.credits.toLocaleString("en-US")} Tevyon Credits. ${WAIVER} ${TERMS}`,
           receipt_email: req.email,
           statement_descriptor_suffix: STATEMENT_SUFFIX,
         },

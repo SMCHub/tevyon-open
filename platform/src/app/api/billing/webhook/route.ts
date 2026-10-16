@@ -2,7 +2,7 @@ import { verifyStripeSignature } from "@/core/billing";
 import { billing, stripeGateway } from "@/server/billing";
 import { toPaidSession, toReversal, type StripeInvoice, type StripeSubscription } from "@/server/stripe";
 
-/** Events that may mean «paid»: card payments complete at once, TWINT and other async methods report success later. */
+/** Events that may mean "paid": card payments complete at once, TWINT and other async methods report success later. */
 const PAID_EVENTS = new Set(["checkout.session.completed", "checkout.session.async_payment_succeeded"]);
 /** Events that take credits back (refund, dispute) or give them back (dispute won). */
 const REVERSAL_EVENTS = new Set(["charge.refunded", "charge.dispute.created", "charge.dispute.closed"]);

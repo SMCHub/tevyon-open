@@ -145,7 +145,7 @@ img.cm-avatar { object-fit: cover; background: var(--cm-muted); }
   &[data-on] { background: var(--photon); &::after { translate: 10px 0; } }
 }
 
-/* ---------- A public creation in the preview: like, the creator, «Melden» (EntryAside extra) ---------- */
+/* ---------- A public creation in the preview: like, the creator, “Report” (EntryAside extra) ---------- */
 .cm-like[aria-pressed="true"] svg { fill: currentColor; }
 .cm-like .cm-like__n { font-variant-numeric: tabular-nums; }
 

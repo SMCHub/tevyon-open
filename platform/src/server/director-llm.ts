@@ -7,7 +7,7 @@ import { chatUrl } from "./comfy";
  * The Director's language model over the provider's OpenAI-compatible chat API, streamed (server-sent events).
  * Server-only: the vendor slug and the provider never reach a client; users see the model name only.
  * - `usage: { include: true }` reports the real cost in the last chunk (daily Director budget)
- * - `provider.data_collection: "deny"` keeps prompts and photos away from providers that train on them (AGB «kein Training»)
+ * - `provider.data_collection: "deny"` keeps prompts and photos away from providers that train on them (terms “no training”)
  * - no temperature: several reasoning models reject it; reasoning effort is low, a little more for the strongest models
  */
 export function createDirectorModel(opts: { apiKey: string; model: TextModelDef; fetch?: typeof fetch }): ChatModel {

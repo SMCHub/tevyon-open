@@ -72,24 +72,24 @@ const SIGN = wordList("sign|label|poster|banner|board|billboard|screen|shirt|sch
 const BEATS = wordList("then|afterwards|after that|finally|dann|danach|anschliessend|anschließend|schliesslich|schließlich|zuletzt", "giu");
 const VERTICAL = wordList("vertical|hochformat|hochkant|vertikal|portrait (?:format|orientation)|9:16");
 const HORIZONTAL = wordList("horizontal|widescreen|querformat|breitbild|landscape (?:format|orientation)|16:9");
-/** Aspect ratios a prompt may name («2.39:1», «16:9»); times like «10:30» are not among them. */
+/** Aspect ratios a prompt may name ("2.39:1", "16:9"); times like "10:30" are not among them. */
 const RATIO = /(?<![\d.])(1:1|2:3|3:2|3:4|4:3|4:5|5:4|5:7|7:5|9:16|16:9|9:21|21:9|1:2|2:1|1\.85:1|2\.35:1|2\.39:1|2\.4:1)(?![\d.])/g;
 /** References to the start image ("the person in the image") that a rewrite must keep. */
 const IMAGE_REF = wordList("(?:in|from|of) the (?:start |input |reference )?(?:image|photo|picture)|(?:im|auf dem) (?:start)?(?:bild|foto)", "giu");
 
-/** «@Bild1», «@image 2», «@img3»: how the studio names reference images; models read "image 1". */
+/** "@image1", "@image 2", "@img3", the older "@Bild1": how the studio names reference images; models read "image 1". */
 const MENTION = /@(?:bild|image|img|ref)\s?(\d{1,2})\b/giu;
 const NUMBERED_REF = /\bimage (\d{1,2})\b/giu;
 
 /**
- * The @-mentions in the prompt without an attached image («@Bild3» with two references, or any mention on a model that
- * takes none), as «@BildN». A start frame counts as image 1 where the model has no reference list. Such a job would
+ * The @-mentions in the prompt without an attached image ("@image3" with two references, or any mention on a model that
+ * takes none), as "@imageN". A start frame counts as image 1 where the model has no reference list. Such a job would
  * reach the model without the image the prompt talks about, so it does not start.
  */
 export function unattachedMentions(params: Record<string, unknown>): string[] {
   const refs = Array.isArray(params.references) ? params.references.length : typeof params.image === "string" ? 1 : 0;
   const named = new Set([...String(params.prompt ?? "").matchAll(MENTION)].map((m) => Number(m[1])));
-  return [...named].filter((n) => n < 1 || n > refs).sort((a, b) => a - b).map((n) => `@Bild${n}`);
+  return [...named].filter((n) => n < 1 || n > refs).sort((a, b) => a - b).map((n) => `@image${n}`);
 }
 const numberedRefs = (text: string) => new Set([...text.matchAll(NUMBERED_REF)].map((m) => m[1]));
 
@@ -126,7 +126,7 @@ function orientation(aspect: unknown): "vertical" | "horizontal" | "square" | un
 function mentionsText(prompt: string): boolean {
   for (const m of prompt.matchAll(TEXT_WORDS)) {
     const before = prompt.slice(Math.max(0, (m.index ?? 0) - 24), m.index);
-    // «No on-screen text», «no other text»: guardrails at the end of a video prompt, not text to render.
+    // "No on-screen text", "no other text": guardrails at the end of a video prompt, not text to render.
     if (!/(no|without|kein\w*|ohne)\s+((on-screen|onscreen|other|burned-in|burnt-in|visible|weitere\w*|sonstige\w*)\s+)?$/i.test(before)) return true;
   }
   return false;
@@ -179,34 +179,34 @@ export function createPrompting(deps: {
     const add = (code: PromptNoteCode, level: PromptNote["level"], message: string) => notes.push({ code, level, message });
 
     if (prompt.length > rules.maxChars) {
-      add("too_long", "warn", `Zu lang für ${def.model}: ${prompt.length} von ${rules.maxChars} Zeichen. Der Prompt wird nach dem letzten ganzen Satz gekürzt.`);
+      add("too_long", "warn", `Too long for ${def.model}: ${prompt.length} of ${rules.maxChars} characters. The prompt will be cut after the last full sentence.`);
     }
     if (words(prompt) < rules.minWords) {
-      add("too_short", "info", "Kurzer Prompt: Der Prompt-Skill ergänzt Umgebung, Licht und Stil. Beschreibe sie selbst, wenn du sie festlegen willst.");
+      add("too_short", "info", "Short prompt: Tevyon adds setting, light and style. Describe them yourself if you want to decide them.");
     }
     const want = orientation(params.aspect_ratio);
     const said = VERTICAL.test(prompt) ? "vertical" : HORIZONTAL.test(prompt) ? "horizontal" : undefined;
     if (want && said && want !== said) {
-      add("aspect_conflict", "warn", `Der Prompt nennt ein anderes Format als die Einstellung ${String(params.aspect_ratio)}. Massgebend ist die Einstellung.`);
+      add("aspect_conflict", "warn", `The prompt names a different format than the ${String(params.aspect_ratio)} setting. The setting wins.`);
     }
     if (mentionsText(prompt) && !QUOTE_MARK.test(prompt)) {
-      add("text_unquoted", "info", "Soll Text im Bild stehen? Setze ihn wörtlich in Anführungszeichen, dann bleibt er exakt so.");
+      add("text_unquoted", "info", "Want text in the image? Put it in quotes and it stays exactly as written.");
     }
     if (rules.negations === "rephrase" && NEGATION.test(prompt)) {
-      add("negation", "info", `${def.model} setzt Verneinungen schlecht um. Beschreibe, was zu sehen sein soll, z. B. «leere Strasse» statt «ohne Autos».`);
+      add("negation", "info", `${def.model} handles negations poorly. Describe what should be visible, e.g. "empty street" instead of "no cars".`);
     }
     if (def.kind === "video") {
       if (!CAMERA.test(prompt)) {
-        add("camera_missing", "info", "Keine Kamera angegeben. Der Prompt-Skill wählt eine passende Einstellung, z. B. Nahaufnahme oder langsame Kamerafahrt.");
+        add("camera_missing", "info", "No camera given. Tevyon picks a fitting shot, e.g. a close-up or a slow camera move.");
       }
       if (params.generate_audio === false && hasSpeech(prompt)) {
-        add("audio_off", "warn", "Der Ton ist aus: Gesprochenes im Prompt bleibt stumm. Schalte den Ton ein oder streiche den Dialog.");
+        add("audio_off", "warn", "Sound is off: speech in the prompt stays silent. Turn sound on or remove the dialogue.");
       }
       const beats = [...prompt.matchAll(BEATS)].length;
       const duration = typeof params.duration === "number" ? params.duration : 5;
       const allowed = duration <= 5 ? 1 : duration <= 8 ? 2 : 3;
       if (beats > allowed) {
-        add("too_many_beats", "warn", `Zu viele Handlungsschritte für ${duration} Sekunden. Plane höchstens ${allowed + 1} oder wähle eine längere Dauer.`);
+        add("too_many_beats", "warn", `Too many actions for ${duration} seconds. Plan at most ${allowed + 1} or choose a longer duration.`);
       }
     }
     return { skill: id, notes };

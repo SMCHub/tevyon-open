@@ -5,7 +5,7 @@ import { defineRegister, jobType, type Register } from "./register";
 /**
  * The register of the open version: every job type runs on the Comfy Router (providers/comfy.ts), addressed by its
  * router id `{provider}/{model}`. Prices are the router's own, in Comfy credits per image or per second, as listed in
- * docs.comfy.org «Partner Nodes pricing» (checked 16.10.2026); pricing.ts turns them into credits. Adding a model is
+ * docs.comfy.org “Partner Nodes pricing” (checked 16.10.2026); pricing.ts turns them into credits. Adding a model is
  * one entry here plus a prompt skill in `skills/` that names its job type.
  */
 const ROUTER = "comfy";

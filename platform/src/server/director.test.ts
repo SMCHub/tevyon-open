@@ -8,7 +8,7 @@ import { collectTurn, createDirectorService, parseDirectorInput, type DirectorDe
 
 const ACC = "00000000-0000-4000-8000-0000000000a1";
 const OTHER = "00000000-0000-4000-8000-0000000000b2";
-const LONG = "Ideen für deinen Hund, alle im Hochformat und mit starkem Hook in der ersten Sekunde.";
+const LONG = "Ideas for your dog, all in portrait and with a strong hook in the first second.";
 
 type Script = { events?: ModelEvent[]; failAtStart?: boolean; failAfterText?: boolean; hangAfterText?: boolean };
 
@@ -69,7 +69,7 @@ async function events(res: Response) {
   return text.split("\n\n").filter(Boolean).map((block) => JSON.parse(block.replace(/^data: /, "")) as { type: string } & Record<string, unknown>);
 }
 
-const ask = (content = "Hund viral", extra: Record<string, unknown> = {}) => ({ history: [{ role: "user", content }], ...extra });
+const ask = (content = "dog viral", extra: Record<string, unknown> = {}) => ({ history: [{ role: "user", content }], ...extra });
 
 describe("Director service", () => {
   it("streams the reply and the priced proposals of the chosen model, and keeps what the turn cost to itself", async () => {
@@ -77,13 +77,13 @@ describe("Director service", () => {
       scripts: [{
         events: [
           { type: "text", delta: LONG },
-          { type: "tool_call", call: { name: "propose_custom", args: { job_type: "veo_3_1_lite", prompt: "A dog jumps through a portal", aspect_ratio: "9:16", why: "Er springt durch ein Portal" } } },
+          { type: "tool_call", call: { name: "propose_custom", args: { job_type: "veo_3_1_lite", prompt: "A dog jumps through a portal", aspect_ratio: "9:16", why: "He jumps through a portal" } } },
           { type: "usage", costUsd: 0.02, inputTokens: 3000, outputTokens: 400 },
         ],
       }],
     });
 
-    const res = await director.respond(ACC, ask("Hund viral", { model: "gemini-3-1-pro" }));
+    const res = await director.respond(ACC, ask("dog viral", { model: "gemini-3-1-pro" }));
 
     expect(res.headers.get("content-type")).toContain("text/event-stream");
     const out = await events(res);
@@ -102,21 +102,21 @@ describe("Director service", () => {
       events: [
         { type: "text", delta: LONG },
         { type: "tool_call", call: { name: "propose_custom", args: { job_type: "veo_3_1_lite", prompt: "A dog jumps through a portal", aspect_ratio: "9:16", why: "Portal" } } },
-        { type: "tool_call", call: { name: "suggest_replies", args: { replies: ["Mach es düsterer", "Lieber 16:9 für YouTube"] } } },
+        { type: "tool_call", call: { name: "suggest_replies", args: { replies: ["Make it darker", "16:9 for YouTube instead"] } } },
         { type: "usage", costUsd: 0.01 },
       ],
     });
     const { director } = setup({ scripts: [script(), script()] });
 
     const out = await events(await director.respond(ACC, ask()));
-    expect(out.find((e) => e.type === "suggestions")).toEqual({ type: "suggestions", suggestions: ["Mach es düsterer", "Lieber 16:9 für YouTube"] });
+    expect(out.find((e) => e.type === "suggestions")).toEqual({ type: "suggestions", suggestions: ["Make it darker", "16:9 for YouTube instead"] });
 
     const parsed = parseDirectorInput(ACC, ask());
     if (!parsed.ok) throw new Error(parsed.error);
     const started = await director.start(ACC, parsed.input);
     if (!started.ok) throw new Error(started.error);
     const turn = await collectTurn(started.events);
-    expect(turn.suggestions).toEqual(["Mach es düsterer", "Lieber 16:9 für YouTube"]);
+    expect(turn.suggestions).toEqual(["Make it darker", "16:9 for YouTube instead"]);
     expect(turn.proposals).toHaveLength(1);
   });
 
@@ -149,13 +149,13 @@ describe("Director service", () => {
     const { director, asked, photos } = setup();
     const own = `/api/media/uploads/${ACC}/abc-1.jpg`;
 
-    await events(await director.respond(ACC, ask("Was geht damit?", { photo: own })));
+    await events(await director.respond(ACC, ask("What can we do with this?", { photo: own })));
     const foreign = await director.respond(ACC, ask("Und damit?", { photo: `/api/media/uploads/${OTHER}/abc-2.jpg` }));
 
     expect(photos).toEqual([own]);
     expect(asked[0]!.messages.at(-1)).toEqual({
       role: "user",
-      content: [{ type: "text", text: "Was geht damit?" }, { type: "image_url", image_url: { url: "data:image/jpeg;base64,/9j/AAAA" } }],
+      content: [{ type: "text", text: "What can we do with this?" }, { type: "image_url", image_url: { url: "data:image/jpeg;base64,/9j/AAAA" } }],
     });
     expect(foreign.status).toBe(400);
     expect(await foreign.json()).toMatchObject({ error: "foreign_input" });
@@ -167,7 +167,7 @@ describe("Director service", () => {
 
     const before = await director.respond(ACC, ask());
     expect(before.status).toBe(503);
-    expect(await before.json()).toMatchObject({ ok: false, error: "director_unavailable", reply: expect.stringContaining("nicht durch") });
+    expect(await before.json()).toMatchObject({ ok: false, error: "director_unavailable", reply: expect.stringContaining("can't get through") });
     expect((await budget.status(ACC, sonnet)).share).toBe(1);
 
     const during = await events(await director.respond(ACC, ask()));
@@ -212,7 +212,7 @@ describe("Director service", () => {
     const demo = setup({ demo: true }).director;
     const res = await demo.respond(ACC, ask());
     expect(res.status).toBe(503);
-    expect(await res.json()).toMatchObject({ error: "director_demo", reply: expect.stringContaining("Demo") });
+    expect(await res.json()).toMatchObject({ error: "director_demo", reply: expect.stringContaining("demo mode") });
 
     const { director } = setup();
     for (const body of [null, {}, { history: [] }, { history: [{ role: "assistant", content: "hi" }] }]) {
@@ -225,7 +225,7 @@ describe("Director service", () => {
   it("lets the strongest models answer on bought credits: holds the cap, then charges what the turn cost", async () => {
     const { director, repo, budget } = setup({ paying: true, credits: 100, scripts: [{ events: [{ type: "text", delta: LONG }, { type: "usage", costUsd: 0.0712 }] }] });
 
-    const res = await director.respond(ACC, ask("Storyboard bitte", { model: "claude-fable-5-1" }));
+    const res = await director.respond(ACC, ask("Storyboard please", { model: "claude-fable-5-1" }));
     const out = await events(res);
 
     expect(out.at(-1)).toEqual({ type: "charged", credits: 16 });
@@ -236,7 +236,7 @@ describe("Director service", () => {
   });
 
   it("keeps the strongest models for accounts that bought credits and do not owe any", async () => {
-    for (const [standing, error, words] of [[{ paying: false }, "director_paid_only", "ersten Kauf"], [{ paying: true, owed: 300 }, "credits_owed", "300 Credits offen"]] as const) {
+    for (const [standing, error, words] of [[{ paying: false }, "director_paid_only", "first Credits purchase"], [{ paying: true, owed: 300 }, "credits_owed", "owes 300 Credits"]] as const) {
       const { director, asked } = setup(standing);
       const res = await director.respond(ACC, ask("hi", { model: "gpt-6-astra" }));
       expect(res.status).toBe(402);
@@ -251,7 +251,7 @@ describe("Director service", () => {
     const res = await director.respond(ACC, ask("hi", { model: "claude-fable-5-1" }));
 
     expect(res.status).toBe(402);
-    expect(await res.json()).toMatchObject({ error: "insufficient_credits", reply: expect.stringContaining("bis zu 33 Credits") });
+    expect(await res.json()).toMatchObject({ error: "insufficient_credits", reply: expect.stringContaining("up to 33 Credits") });
     expect(asked).toEqual([]);
     expect(await repo.balance(ACC)).toBe(20);
   });
@@ -292,17 +292,17 @@ describe("Director service", () => {
 
   it("keeps only as much history as bounds the longest turn, the newest messages first", () => {
     const long = (n: number) => Array.from({ length: n }, (_, i) => ({ role: i % 2 ? "assistant" : "user", content: `${i} `.padEnd(1_900, "x") }));
-    const parsed = parseDirectorInput(ACC, { history: [...long(19), { role: "user", content: "jetzt" }] });
+    const parsed = parseDirectorInput(ACC, { history: [...long(19), { role: "user", content: "now" }] });
     if (!parsed.ok) throw new Error(parsed.error);
 
     const total = parsed.input.history.reduce((n, m) => n + m.content.length, 0);
     expect(total).toBeLessThanOrEqual(12_000);
-    expect(parsed.input.history.at(-1)).toEqual({ role: "user", content: "jetzt" });
+    expect(parsed.input.history.at(-1)).toEqual({ role: "user", content: "now" });
     expect(parsed.input.history.length).toBe(7);
 
-    const mixed = parseDirectorInput(ACC, { history: [{ role: "user", content: "kurz" }, ...long(7), { role: "user", content: "jetzt" }] });
+    const mixed = parseDirectorInput(ACC, { history: [{ role: "user", content: "short" }, ...long(7), { role: "user", content: "now" }] });
     if (!mixed.ok) throw new Error(mixed.error);
-    expect(mixed.input.history.map((m) => m.content.slice(0, 2))).toEqual(["1 ", "2 ", "3 ", "4 ", "5 ", "6 ", "je"]);
+    expect(mixed.input.history.map((m) => m.content.slice(0, 2))).toEqual(["1 ", "2 ", "3 ", "4 ", "5 ", "6 ", "no"]);
   });
 
   it("gives a paid message back in full when the server stops it on its own deadline", async () => {
@@ -333,7 +333,7 @@ describe("Director service", () => {
     const { director } = setup({ owed: 120 });
     const res = await director.respond(ACC, ask("hi"));
     expect(res.status).toBe(402);
-    expect(await res.json()).toMatchObject({ error: "credits_owed", reply: expect.stringContaining("120 Credits offen") });
+    expect(await res.json()).toMatchObject({ error: "credits_owed", reply: expect.stringContaining("owes 120 Credits") });
     expect(await setup({ owed: 120 }).director.overview(ACC)).toMatchObject({ owed: 120 });
   });
 
@@ -347,7 +347,7 @@ describe("Director service", () => {
     await first.text();
     const refused = await free.director.respond(ACC, ask(), undefined, undefined, "net-a");
     expect(refused.status).toBe(429);
-    expect(await refused.json()).toMatchObject({ ok: false, error: "director_network_limit", reply: expect.stringContaining("Kauf") });
+    expect(await refused.json()).toMatchObject({ ok: false, error: "director_network_limit", reply: expect.stringContaining("buy Credits") });
     // Without a network (an OAuth connection, local development) nothing is counted per network.
     expect((await free.director.respond(ACC, ask())).status).toBe(200);
     expect(counted).toEqual(["net-a", "net-a"]);

@@ -9,7 +9,7 @@
 @media (max-width: 760px) { .lightbox__stage > .media:is(video, img), .lightbox > .lightbox__stage > .media-state { max-height: 100%; } }
 
 /* ---------- Side panel (15.10.2026): quiet, and it does not scroll. A meta line instead of a chip, the prompt in a
-   few lines with «Mehr», settings as key and value, small hairline pills that wrap instead of running out of the
+   few lines with “More”, settings as key and value, small hairline pills that wrap instead of running out of the
    panel. The prompt gives way first in a low window; only a very low one (or a phone) scrolls, so no action is ever
    cut off. ---------- */
 .lightbox__side { position: relative; display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 18px 20px 0; border-right: 1px solid var(--line); background: linear-gradient(180deg, rgb(var(--fg) / 0.03), rgb(var(--fg) / 0) 200px), var(--surface); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
@@ -93,7 +93,7 @@
   .lightbox__hint { display: none; }
 }
 
-/* Sound on the stage: «Ton an» while the clip plays muted, a speaker to mute it, «Ohne Ton» for clips without sound. */
+/* Sound on the stage: “Sound on” while the clip plays muted, a speaker to mute it, “No sound” for clips without sound. */
 .pv-sound { position: absolute; top: 24px; left: 24px; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 15px; border: 1px solid var(--line-strong); border-radius: 8px; background: rgb(var(--bg) / 0.78); color: var(--photon); font-size: 13px; font-weight: 600; }
 .pv-sound svg { width: 16px; height: 16px; }
 button.pv-sound { cursor: pointer; transition: background 0.2s ease, transform 0.2s var(--ease); }

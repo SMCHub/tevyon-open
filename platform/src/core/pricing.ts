@@ -1,6 +1,6 @@
 /**
  * The cost model of the open version: every model is bought through the Comfy Router, which lists its prices in Comfy
- * credits (docs.comfy.org, «Partner Nodes pricing»). A job's credits = its Comfy credits × CREDIT_MARKUP, rounded UP to
+ * credits (docs.comfy.org, “Partner Nodes pricing”). A job's credits = its Comfy credits × CREDIT_MARKUP, rounded UP to
  * a whole credit. With the default markup of 1 a Tevyon credit is a Comfy credit: the platform passes the price on.
  * An operator who sells credits sets CREDIT_MARKUP (e.g. 1.3) and the packs below.
  */

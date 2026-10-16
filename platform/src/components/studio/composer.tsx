@@ -33,7 +33,7 @@ export function Composer() {
   });
   const picker = useRefPicker(refs);
 
-  // «Aus Assets wählen …» in the @-menu: the picker opens, and the images picked there (or uploaded from the computer)
+  // "Choose from Assets…" in the @-menu: the picker opens, and the images picked there (or uploaded from the computer)
   // replace the @-word being typed with their names once they are attached.
   const browsing = useRef<{ start: number; end: number; count: number } | null>(null);
   function browse(at?: { start: number; end: number }) {
@@ -62,7 +62,7 @@ export function Composer() {
   }, [urls.length, d]);
   const canBrowse = maxRefs > 0 && refs.free > 0;
 
-  // «Als Referenz verwenden» on a result while on this page (from elsewhere, ?ref= seeds the draft): add it here,
+  // "Use as reference" on a result while on this page (from elsewhere, ?ref= seeds the draft): add it here,
   // switching to a model that takes references if needed.
   const pendingRef = useRef<string | null>(null);
   useEffect(() => {
@@ -87,7 +87,7 @@ export function Composer() {
     if (!latest.current.includes(url) && latest.current.length < maxRefs) d.setOpt("references", [...latest.current, url]);
   }, [tick, d, maxRefs]);
 
-  /** Puts «@BildN» at the caret (or replaces the @-word being typed) and keeps the caret after it. */
+  /** Puts "@imageN" at the caret (or replaces the @-word being typed) and keeps the caret after it. */
   function insertMention(n: number) {
     const el = area.current;
     const text = d.prompt;
@@ -137,17 +137,17 @@ export function Composer() {
   }, [d.prompt]);
 
   const tooExpensive = me !== null && d.total !== null && d.total > me.credits;
-  // Every image the prompt names goes along: wait for uploads, and refuse «@Bild3» without a third image.
+  // Every image the prompt names goes along: wait for uploads, and refuse "@image3" without a third image.
   const uploading = refs.pending.length > 0;
   const missing = mention ? [] : unattachedMentions(d.prompt, urls.length);
   const canGo = Boolean(d.model && d.prompt.trim() && !busy && !tooExpensive && !uploading && missing.length === 0);
   const holdText = uploading
-    ? "Referenzbild wird noch hochgeladen …"
+    ? "Reference image is still uploading…"
     : missing.length
       ? maxRefs
-        ? `${missing.join(", ")} ${missing.length === 1 ? "ist" : "sind"} nicht angehängt. Füge das Bild hinzu oder nimm den Verweis aus dem Prompt.`
+        ? `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} not attached. Add the image or remove the mention from the prompt.`
         // A model without references cannot take the image at all: only the prompt or the model can change.
-        : `${d.model?.model ?? "Dieses Modell"} nimmt keine Referenzbilder. Nimm ${missing.join(", ")} aus dem Prompt oder wähle ein Modell mit Referenzbildern.`
+        : `${d.model?.model ?? "This model"} takes no reference images. Remove ${missing.join(", ")} from the prompt or choose a model with reference images.`
       : null;
 
   async function generate() {
@@ -164,7 +164,7 @@ export function Composer() {
   }
 
   return (
-    <div className="composer" role="region" aria-label="Bild erstellen">
+    <div className="composer" role="region" aria-label="Create image">
       {error ? <p className="composer__alert" role="alert"><TriangleAlert aria-hidden="true" />{error}</p>
         : holdText && d.prompt.trim() ? <p className="composer__alert" role="status"><TriangleAlert aria-hidden="true" />{holdText}</p>
         : tooExpensive && <NotEnough need={d.total ?? 0} have={me?.credits ?? 0} className="short--composer" />}
@@ -192,7 +192,7 @@ export function Composer() {
             active={active}
             onPick={insertMention}
             onBrowse={canBrowse ? browse : undefined}
-            note={!maxRefs ? `${d.model?.model ?? "Dieses Modell"} nimmt keine Referenzbilder.` : undefined}
+            note={!maxRefs ? `${d.model?.model ?? "This model"} takes no reference images.` : undefined}
           />
         )}
         <div className="mention-field">
@@ -211,7 +211,7 @@ export function Composer() {
               browse({ start: m.start, end: e.target.selectionStart });
               return;
             }
-            // A finished name («@Bild2») closes the menu, so Enter generates again.
+            // A finished name ("@image2") closes the menu, so Enter generates again.
             const done = m && urls.some((_, i) => mentionOf(i + 1).slice(1).toLowerCase() === m.query.toLowerCase());
             setMention(done ? null : m);
             if (m) setActive(0);
@@ -223,10 +223,10 @@ export function Composer() {
             e.preventDefault();
             void refs.add(files);
           }}
-          placeholder="Beschreibe das Bild, das du dir vorstellst …"
+          placeholder="Describe the image you have in mind…"
           aria-label="Prompt"
           onKeyDown={(e) => {
-            // The menu's rows: the attached references, then «Aus Assets wählen …» when more fit.
+            // The menu's rows: the attached references, then "Choose from Assets…" when more fit.
             const rows = urls.length + (canBrowse ? 1 : 0);
             if (mention && rows > 0) {
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -256,7 +256,7 @@ export function Composer() {
         </div>
         <div className="composer__bar">
           <div className="composer__tools">
-            <span className="pill-group" aria-label="Referenzen">
+            <span className="pill-group" aria-label="References">
               <button
                 type="button"
                 className="pill-btn pill-btn--icon"
@@ -264,8 +264,8 @@ export function Composer() {
                 onClick={(e) => picker.open(e.currentTarget)}
                 aria-haspopup="dialog"
                 aria-expanded={picker.isOpen}
-                title={!maxRefs ? `${d.model?.model ?? "Dieses Modell"} nimmt keine Referenzbilder` : refs.free === 0 ? `Höchstens ${maxRefs} Referenzbilder` : "Referenzbilder hinzufügen (auch per Ziehen oder Einfügen)"}
-                aria-label="Referenzbild hinzufügen"
+                title={!maxRefs ? `${d.model?.model ?? "This model"} takes no reference images` : refs.free === 0 ? `At most ${maxRefs} reference images` : "Add reference images (or drag and drop, or paste)"}
+                aria-label="Add reference image"
               >
                 <ImagePlus />
               </button>
@@ -275,22 +275,22 @@ export function Composer() {
                 disabled={urls.length === 0 && !canBrowse}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={startMention}
-                title={urls.length ? "Referenzbild im Prompt erwähnen" : canBrowse ? "Bild aus deinen Assets erwähnen" : `${d.model?.model ?? "Dieses Modell"} nimmt keine Referenzbilder`}
-                aria-label="Referenzbild erwähnen"
+                title={urls.length ? "Mention a reference image in the prompt" : canBrowse ? "Mention an image from your Assets" : `${d.model?.model ?? "This model"} takes no reference images`}
+                aria-label="Mention reference image"
               >
                 <AtSign />
               </button>
             </span>
             <ModelPicker models={d.models} model={d.model} onChoose={d.chooseModel} />
             {d.model && <OptionPills schema={d.model.params} opts={d.opts} setOpt={d.setOpt} />}
-            <span className="stepper" aria-label="Anzahl Bilder">
-              <button type="button" aria-label="Weniger" disabled={d.count <= 1} onClick={() => d.setCount(d.count - 1)}><Minus /></button>
+            <span className="stepper" aria-label="Number of images">
+              <button type="button" aria-label="Fewer" disabled={d.count <= 1} onClick={() => d.setCount(d.count - 1)}><Minus /></button>
               <span aria-live="polite">{d.count}/4</span>
-              <button type="button" aria-label="Mehr" disabled={d.count >= 4} onClick={() => d.setCount(d.count + 1)}><Plus /></button>
+              <button type="button" aria-label="More" disabled={d.count >= 4} onClick={() => d.setCount(d.count + 1)}><Plus /></button>
             </span>
           </div>
-          <button type="button" className="go" onClick={generate} disabled={!canGo} aria-label={`Generieren: ${priceText(d.price, d.count, me?.credits ?? null)}`} title={priceText(d.price, d.count, me?.credits ?? null)}>
-            <span className="go__label">{busy ? "Startet …" : "Generieren"}</span>
+          <button type="button" className="go" onClick={generate} disabled={!canGo} aria-label={`Generate: ${priceText(d.price, d.count, me?.credits ?? null)}`} title={priceText(d.price, d.count, me?.credits ?? null)}>
+            <span className="go__label">{busy ? "Starting…" : "Generate"}</span>
             <span className="go__price"><TokenGlyph />{d.total ?? "…"}</span>
             <ArrowUp className="go__arrow" aria-hidden="true" />
           </button>

@@ -22,12 +22,12 @@ const ext = (ct: string) => ({ "image/png": "png", "image/jpeg": "jpg", "image/w
 
 function timeAgo(ms: number) {
   const s = Math.max(1, Math.round((Date.now() - ms) / 1000));
-  if (s < 60) return "gerade eben";
+  if (s < 60) return "just now";
   const m = Math.round(s / 60);
-  if (m < 60) return `vor ${m} Min.`;
+  if (m < 60) return `${m} min ago`;
   const h = Math.round(m / 60);
-  if (h < 24) return `vor ${h} Std.`;
-  return new Date(ms).toLocaleDateString("de-CH");
+  if (h < 24) return `${h} h ago`;
+  return new Date(ms).toLocaleDateString("en-US");
 }
 
 /** Preset marker of a job from an older version (the recipe prompt itself never reaches the browser). */
@@ -36,7 +36,7 @@ export function recipeOf(job: Job): { id: string; title: string; wish?: string }
   return r && typeof r.id === "string" ? { id: r.id, title: String(r.title ?? r.id), ...(typeof r.wish === "string" ? { wish: r.wish } : {}) } : undefined;
 }
 
-/** One line that describes a job: its own prompt, or «Preset · Wunsch» for a preset job. */
+/** One line that describes a job: its own prompt, or “Preset · wish” for a preset job. */
 export function jobText(job: Job): string {
   const r = recipeOf(job);
   if (!r) return String(job.params.prompt ?? "");
@@ -56,24 +56,24 @@ export function JobMedia({ job, fit = "cover", onRatio }: { job: Job; fit?: "cov
   }
   if (job.status === "failed") {
     return (
-      <div className="media-state media-state--failed" title={JOB_ERROR[job.error ?? ""] ?? "Fehlgeschlagen. Credits zurückerstattet."}>
+      <div className="media-state media-state--failed" title={JOB_ERROR[job.error ?? ""] ?? "Failed. Credits refunded."}>
         <span className="failed__icon" aria-hidden="true"><TriangleAlert /></span>
-        <span className="failed__title">{FAILED_TITLE[job.error ?? ""] ?? "Hat nicht geklappt"}</span>
-        <span className="failed__refund"><RotateCcw aria-hidden="true" />{job.credits} Credits zurück</span>
+        <span className="failed__title">{FAILED_TITLE[job.error ?? ""] ?? "Didn't work"}</span>
+        <span className="failed__refund"><RotateCcw aria-hidden="true" />{job.credits} Credits refunded</span>
       </div>
     );
   }
   return (
     <div className="media-state media-state--busy">
       <span className="shimmer" aria-hidden="true" />
-      <span className="media-state__label"><span className="ring" aria-hidden="true" />{job.status === "queued" ? "In der Warteschlange" : "Wird generiert …"}</span>
+      <span className="media-state__label"><span className="ring" aria-hidden="true" />{job.status === "queued" ? "In the queue" : "Generating …"}</span>
     </div>
   );
 }
 
-/** The quiet mark at a result tile's foot, as on the walls' Shot: «Seedream 4.5 · Format 3:4». */
+/** The quiet mark at a result tile's foot, as on the walls' Shot: “Seedream 4.5 · Format 3:4”. */
 function cardFacts(job: Job): string {
-  // No «Video» mark on the tile; the length goes here.
+  // No “Video” mark on the tile; the length goes here.
   const ar = job.params.aspect_ratio;
   const seconds = isVideo(job) && job.params.duration ? `${job.params.duration} s` : null;
   return [job.model, typeof ar === "string" && ar.includes(":") ? `Format ${ar}` : null, seconds].filter(Boolean).join(" · ");
@@ -97,12 +97,12 @@ export function JobCard({ job, onOpen, layout = "masonry" }: { job: Job; onOpen:
   const shared = visibilityOf(mine, job.id) === "public";
   return (
     <article className={`card card--${job.status}`} style={{ aspectRatio: String(aspect) }}>
-      <button type="button" className="card__hit" onClick={onOpen} aria-label={`Öffnen: ${jobText(job) || job.model}`}>
+      <button type="button" className="card__hit" onClick={onOpen} aria-label={`Open: ${jobText(job) || job.model}`}>
         <JobMedia job={job} onRatio={layout === "masonry" ? (r) => Number.isFinite(r) && r > 0 && setNatural(r) : undefined} />
       </button>
       {done && (
         <span className="card__chips" aria-hidden="true">
-          {shared && <span className="card__chip card__chip--public" title="In der Community"><Globe /></span>}
+          {shared && <span className="card__chip card__chip--public" title="In the Community"><Globe /></span>}
           {job.params.generate_audio === true && <span className="card__chip"><Volume2 /></span>}
         </span>
       )}
@@ -147,12 +147,12 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
     setNote(null);
     const res = await start(job!.jobType, job!.params, 1, { maxCredits: variantPrice ?? job!.credits });
     if (!res.ok && res.error === "price_changed" && res.credits !== undefined) setVariantPrice(res.credits);
-    setNote(res.ok ? "Variante gestartet. Sie erscheint in deinen Ergebnissen." : startErrorText(res));
+    setNote(res.ok ? "Variant started. It will appear in your results." : startErrorText(res));
   }
 
   return (
     <MediaPreview
-      label="Ergebnis"
+      label="Result"
       count={jobs.length}
       index={index}
       onIndex={onIndex}
@@ -160,9 +160,9 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
       stage={media ? <PreviewStage media={media} alt={jobText(job)} /> : <JobMedia job={job} fit="contain" />}
       aside={<>
         <header className="lb-head">
-          <span className="lb-chip">{kind === "video" ? <Clapperboard aria-hidden="true" /> : <ImageIcon aria-hidden="true" />}{kind === "video" ? "Video" : "Bild"}</span>
+          <span className="lb-chip">{kind === "video" ? <Clapperboard aria-hidden="true" /> : <ImageIcon aria-hidden="true" />}{kind === "video" ? "Video" : "Image"}</span>
           <span className="lb-time">{timeAgo(job.createdAt)}</span>
-          <button type="button" className="icon-btn lb-close" aria-label="Schliessen" onClick={onClose}><X /></button>
+          <button type="button" className="icon-btn lb-close" aria-label="Close" onClick={onClose}><X /></button>
         </header>
         <h2 className="lightbox__model">{job.model}</h2>
 
@@ -170,7 +170,7 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
           <section className="lb-prompt">
             <div className="lb-label">Preset</div>
             <p className="lb-recipe">{recipe.title}</p>
-            {recipe.wish && <PromptText key={job.id} text={`Wunsch: ${recipe.wish}`} />}
+            {recipe.wish && <PromptText key={job.id} text={`Wish: ${recipe.wish}`} />}
           </section>
         ) : String(job.params.prompt ?? "").trim() ? (
           <section className="lb-prompt">
@@ -181,7 +181,7 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
 
         {refs.length > 0 && (
           <section className="lb-refs">
-            <div className="lb-label">{Array.isArray(job.params.references) && job.params.references.length ? "Referenzbilder" : "Startbild"}</div>
+            <div className="lb-label">{Array.isArray(job.params.references) && job.params.references.length ? "Reference images" : "Start image"}</div>
             <div className="lb-refs__row">
               {refs.map((u) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -192,7 +192,7 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
         )}
 
         <section>
-          <div className="lb-label">Einstellungen</div>
+          <div className="lb-label">Settings</div>
           <dl className="lb-specs">
             {specs.map(([k, v]) => (
               <div key={k}><dt>{PARAM_LABEL[k] ?? k}</dt><dd title={showValue(k, v)}>{showValue(k, v)}</dd></div>
@@ -204,18 +204,18 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
         {/* Pills wrap instead of overflowing: two share a row where they fit, a lone one or a long label takes the row. */}
         <div className="lb-actions">
           {out && (
-            <a className="btn btn--primary" href={out.url} download={`tevyon-${job.id.slice(0, 8)}.${ext(out.contentType)}`}><Download aria-hidden="true" /><span className="lb-actions__label">Herunterladen</span></a>
+            <a className="btn btn--primary" href={out.url} download={`tevyon-${job.id.slice(0, 8)}.${ext(out.contentType)}`}><Download aria-hidden="true" /><span className="lb-actions__label">Download</span></a>
           )}
           {!recipe && (
             <>
-              <button type="button" className="btn" onClick={() => { onClose(); router.push(`/${kind}?from=${job.id}`); }}><RotateCcw aria-hidden="true" /><span className="lb-actions__label">Wiederverwenden</span></button>
+              <button type="button" className="btn" onClick={() => { onClose(); router.push(`/${kind}?from=${job.id}`); }}><RotateCcw aria-hidden="true" /><span className="lb-actions__label">Reuse</span></button>
               {out && RASTER.test(out.contentType) && (
                 <button type="button" className="btn" onClick={async () => { const err = await jobAsReference(job.id, router.push); if (err) setNote(err); else onClose(); }}>
-                  <AtSign aria-hidden="true" /><span className="lb-actions__label">Als Referenz</span>
+                  <AtSign aria-hidden="true" /><span className="lb-actions__label">As reference</span>
                 </button>
               )}
-              <button type="button" className="btn" onClick={variant} title={`Neue Variante für ${variantPrice ?? job.credits} Credits`} aria-label={`Neue Variante für ${variantPrice ?? job.credits} Credits`}>
-                <Shuffle aria-hidden="true" /><span className="lb-actions__label">Variante</span><span className="lb-price"><TokenGlyph />{variantPrice ?? job.credits}</span>
+              <button type="button" className="btn" onClick={variant} title={`New variant for ${variantPrice ?? job.credits} Credits`} aria-label={`New variant for ${variantPrice ?? job.credits} Credits`}>
+                <Shuffle aria-hidden="true" /><span className="lb-actions__label">Variant</span><span className="lb-price"><TokenGlyph />{variantPrice ?? job.credits}</span>
               </button>
             </>
           )}

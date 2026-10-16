@@ -26,7 +26,7 @@ const takesImage = (m: { params: { properties?: Record<string, unknown> } }) => 
 export function VideoStudio() {
   const { me, jobs, kindOf, start } = useStudio();
   const d = useDraft("video");
-  // ?mode=image (header menu "Bild → Video") opens with the start frame upload.
+  // ?mode=image (header menu "Image → Video") opens with the start frame upload.
   const search = useSearchParams();
   const [mode, setMode] = useState<Mode>(modeOf(search.get("mode")));
   const wanted = modeOf(search.get("mode"));
@@ -41,7 +41,7 @@ export function VideoStudio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, d.model?.jobType]);
   const [consent, setConsent] = useState(false);
-  // "Erneut verwenden" of an image-to-video job brings its start frame along.
+  // "Reuse" of an image-to-video job brings its start frame along.
   useEffect(() => {
     const img = d.opts.image;
     if (typeof img === "string" && !up.url) {
@@ -60,16 +60,16 @@ export function VideoStudio() {
   const canGo = Boolean(d.model && d.prompt.trim() && !busy && !tooExpensive && (!needsImage || (up.url && consent)));
 
   // Why the button still waits, in its own words (instead of a silent grey button).
-  const missing = !d.model ? "Modell lädt …"
-    : mode === "image" && !up.url ? "Startbild fehlt"
-    : !d.prompt.trim() ? "Text fehlt"
-    : mode === "image" && !consent ? "Einwilligung fehlt"
-    : tooExpensive ? "Zu wenig Credits"
+  const missing = !d.model ? "Loading model…"
+    : mode === "image" && !up.url ? "Start image missing"
+    : !d.prompt.trim() ? "Prompt missing"
+    : mode === "image" && !consent ? "Consent missing"
+    : tooExpensive ? "Not enough Credits"
     : null;
 
   const promptHint = mode === "image"
-    ? "Was soll passieren? z. B. Die Person lacht und dreht sich zur Kamera, Konfetti fällt"
-    : "Langsame Kamerafahrt über einen Bergsee im Morgennebel, ein Ruderboot zieht eine feine Spur …";
+    ? "What should happen? e.g. The person laughs and turns to the camera, confetti falls"
+    : "Slow camera move over a mountain lake in the morning mist, a rowing boat leaves a fine trail…";
 
   async function generate() {
     if (!canGo || !d.model) return;
@@ -95,14 +95,14 @@ export function VideoStudio() {
 
   return (
     <div className="studio studio--video">
-      <aside className="panel gp gp--compact" aria-label="Video erstellen">
+      <aside className="panel gp gp--compact" aria-label="Create video">
         <GpModes
-          label="Modus"
+          label="Mode"
           value={mode}
           onChange={setMode}
           modes={[
             { id: "text" as const, label: "Text", icon: <Type aria-hidden="true" /> },
-            { id: "image" as const, label: "Bild", icon: <ImageIcon aria-hidden="true" /> },
+            { id: "image" as const, label: "Image", icon: <ImageIcon aria-hidden="true" /> },
           ]}
         />
 
@@ -121,20 +121,20 @@ export function VideoStudio() {
 
         {mode === "image" && (
           <>
-            <GpStep n={1} title="Startbild" meta="JPG, PNG, WebP" done={Boolean(up.url)}>
-              <DropZone up={up} title="Startbild hierher ziehen oder klicken" hint="Das Video beginnt mit genau diesem Bild" />
+            <GpStep n={1} title="Start image" meta="JPG, PNG, WebP" done={Boolean(up.url)}>
+              <DropZone up={up} title="Drop a start image or click" hint="The video starts with exactly this image" />
               {up.error && <p className="note note--error">{up.error}</p>}
             </GpStep>
-            <GpStep n={2} title="Was passiert?" meta="Bewegung, Kamera" done={Boolean(d.prompt.trim())}>
+            <GpStep n={2} title="What happens?" meta="Motion, camera" done={Boolean(d.prompt.trim())}>
               <GpPrompt value={d.prompt} onChange={d.setPrompt} placeholder={promptHint} onSubmit={generate} />
             </GpStep>
             {settings}
-            <GpConsent checked={consent} onChange={setConsent}>Ich habe die Rechte am Bild und die Einwilligung aller abgebildeten Personen.</GpConsent>
+            <GpConsent checked={consent} onChange={setConsent}>I own the rights to this image and have the consent of everyone shown in it.</GpConsent>
           </>
         )}
 
         <GpFooter
-          label="Video generieren"
+          label="Generate video"
           busy={busy}
           missing={busy ? null : missing}
           price={d.total}
@@ -147,16 +147,16 @@ export function VideoStudio() {
       </aside>
 
       <section className="stage wall-page" aria-label="Videos">
-        <WallTitle words={["Meine", "Videos"]} />
+        <WallTitle words={["My", "Videos"]} />
         {videos.length ? (
-          <section className="wall-body" aria-label="Meine Videos">
+          <section className="wall-body" aria-label="My videos">
             <Columns items={videos} ratio={jobHeight} keyOf={jobKey} min={240} dense>
               {(j, i) => <JobCard job={j} onOpen={() => setOpen(i)} />}
             </Columns>
           </section>
         ) : (
           <div className="wall-empty">
-            <p className="wall-empty__text">Noch keine Videos. Schreib links einen Satz oder nimm ein Startbild.</p>
+            <p className="wall-empty__text">No videos yet. Write a sentence on the left or use a start image.</p>
           </div>
         )}
       </section>

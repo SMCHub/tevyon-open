@@ -34,7 +34,7 @@
 .mlist__facts { grid-area: facts; display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; color: rgb(var(--ash-rgb) / 0.95); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mlist__facts svg { width: 12px; height: 12px; }
 
-/* The model row of a generation panel as the trigger (variant "row"): cover, name, maker with facts, «Wechseln». */
+/* The model row of a generation panel as the trigger (variant "row"): cover, name, maker with facts, "Change". */
 .mpick > .pill-btn {
   display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 11px; width: 100%; height: auto; min-height: 54px;
   padding: 6px 8px 6px 6px; border: 1px solid var(--line); border-radius: 14px; background: rgb(var(--fg) / 0.03);

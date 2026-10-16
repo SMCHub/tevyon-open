@@ -87,13 +87,13 @@ const keyLimitOf = (key?: DirectorKey) =>
   key && typeof key.dailyLimit === "number" ? { credits: key.dailyLimit, since: Date.now() - DAY_MS } : undefined;
 
 const REPLY: Record<Exclude<DirectorError, "director_budget" | "director_paid_only" | "insufficient_credits" | "credits_owed" | "key_limit_reached">, string> = {
-  invalid_params: "Das habe ich nicht verstanden. Schreib mir, was du drehen willst.",
-  unknown_model: "Dieses Modell kenne ich nicht. Wähl eines aus der Liste.",
-  foreign_input: "Dieses Foto gehört nicht zu deinem Konto.",
-  director_busy: "Ich bin noch mit deiner letzten Nachricht beschäftigt. Einen Moment.",
-  director_demo: "Der Director ist im Demo-Modus nicht verfügbar: Es fehlt der COMFY_API_KEY.",
-  director_unavailable: "Ich komme gerade nicht durch. Versuch es gleich nochmal.",
-  director_network_limit: "Über dein Netzwerk ist das Gratis-Kontingent des Directors für heute aufgebraucht. Ab dem ersten Kauf von Credits gilt diese Grenze nicht mehr, sonst geht es morgen weiter.",
+  invalid_params: "I didn't understand that. Tell me what you want to make.",
+  unknown_model: "I don't know this model. Pick one from the list.",
+  foreign_input: "This photo does not belong to your account.",
+  director_busy: "I'm still working on your last message. One moment.",
+  director_demo: "The Director is not available in demo mode: COMFY_API_KEY is missing.",
+  director_unavailable: "I can't get through right now. Please try again in a moment.",
+  director_network_limit: "Your network has used up today's free Director allowance. This limit no longer applies once you buy Credits; otherwise it resets tomorrow.",
 };
 
 const refuse = (status: number, error: keyof typeof REPLY): Refusal => ({ ok: false, status, error, reply: REPLY[error] });
@@ -101,7 +101,7 @@ const refuse = (status: number, error: keyof typeof REPLY): Refusal => ({ ok: fa
 /** An account that owes credits (refund, dispute) gets no Director turns until new credits have paid the amount. */
 const owes = (owed: number): Refusal => ({
   ok: false, status: 402, error: "credits_owed",
-  reply: `Auf deinem Konto sind ${owed} Credits offen, aus einer Rückerstattung oder einem Zahlungsstreit. Bis sie ausgeglichen sind, pausiert der Director. Neue Credits gleichen den Betrag zuerst aus.`,
+  reply: `Your account owes ${owed} Credits from a refund or a payment dispute. The Director is paused until they are settled. New Credits pay off this amount first.`,
 });
 
 /** An upload of ours: the account in the path must be the caller's. */
@@ -177,7 +177,7 @@ export function createDirectorService(deps: DirectorDeps) {
         }
         if (!standing.paying) {
           release();
-          const reply = `${name} und die anderen stärksten Modelle gibt es ab dem ersten Kauf von Credits. Bis dahin plant Claude Sonnet 5.5 gratis mit dir.`;
+          const reply = `${name} and the other strongest models unlock with your first Credits purchase. Until then, Claude Sonnet 5.5 plans with you for free.`;
           return { ok: false, status: 402, error: "director_paid_only", reply };
         }
         const price = messageCredits(input.model);
@@ -190,12 +190,12 @@ export function createDirectorService(deps: DirectorDeps) {
         });
         if (!held.ok && held.error === "key_limit_reached") {
           release();
-          const reply = `Dieser Zugang hat sein Tageslimit von ${held.limit} Credits erreicht (${held.used} verbraucht). Eine Nachricht mit ${name} hält bis zu ${price.cap} Credits.`;
+          const reply = `This access has reached its daily limit of ${held.limit} Credits (${held.used} used). A message with ${name} holds up to ${price.cap} Credits.`;
           return { ok: false, status: 429, error: "key_limit_reached", reply, limit: held.limit, used: held.used };
         }
         if (!held.ok) {
           release();
-          const reply = `Eine Nachricht mit ${name} kostet bis zu ${price.cap} Credits, meist ${price.typical}. Dafür reicht dein Guthaben gerade nicht.`;
+          const reply = `A message with ${name} costs up to ${price.cap} Credits, usually ${price.typical}. Your balance is not enough for that right now.`;
           return { ok: false, status: 402, error: "insufficient_credits", reply };
         }
         hold = { ref };
@@ -203,7 +203,7 @@ export function createDirectorService(deps: DirectorDeps) {
         release();
         const { owed } = await deps.standing(accountId);
         if (owed > 0) return owes(owed);
-        const reply = `Dein Director-Kontingent für heute reicht nicht mehr für ${name}. Wähl ein schnelleres Modell oder komm morgen wieder.`;
+        const reply = `Your Director allowance for today is not enough for ${name}. Pick a faster model or come back tomorrow.`;
         return { ok: false, status: 429, error: "director_budget", reply };
       } else if (network && deps.freeTurns && !(await deps.standing(accountId)).paying && !(await deps.freeTurns(network))) {
         release();

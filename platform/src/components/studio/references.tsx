@@ -6,8 +6,8 @@ import { useMediaPicker } from "./media-picker";
 import { uploadImage } from "./upload";
 import "./mention-mirror.css";
 
-/** The token a reference gets in the prompt; the server turns «@Bild2» into "image 2" for the model. */
-export const mentionOf = (n: number) => `@Bild${n}`;
+/** The token a reference gets in the prompt; the server turns "@image2" into "image 2" for the model. */
+export const mentionOf = (n: number) => `@image${n}`;
 
 const MENTION = /@(?:bild|image|img|ref)\s?(\d{1,2})\b/giu;
 
@@ -22,7 +22,7 @@ export function renumberAfterRemoval(prompt: string, n: number): string {
     .replace(/ {2,}/g, " ");
 }
 
-/** The @-mentions in the prompt without an attached image, e.g. «@Bild3» with two references (the server refuses those). */
+/** The @-mentions in the prompt without an attached image, e.g. "@image3" with two references (the server refuses those). */
 export function unattachedMentions(prompt: string, attached: number): string[] {
   const named = new Set([...prompt.matchAll(MENTION)].map((m) => Number(m[1])));
   return [...named].filter((n) => n < 1 || n > attached).sort((a, b) => a - b).map(mentionOf);
@@ -54,7 +54,7 @@ const MIRRORED = [
 
 /**
  * The prompt's @-mentions marked in place: a mirror
- * of the text behind the textarea, laid out with the textarea's own font, padding and width, every «@BildN» as a
+ * of the text behind the textarea, laid out with the textarea's own font, padding and width, every "@imageN" as a
  * framed mark and one without its image dashed. The text, the caret and the selection stay the textarea's. Put both
  * in a `.mention-field`, the mirror after the textarea (React sets the textarea's ref before the mirror's layout effect
  * only in that order; the stacking comes from mention-mirror.css).
@@ -126,7 +126,7 @@ export function useReferences({ urls, max, setUrls, prompt, setPrompt }: {
     const images = files.filter((f) => f.type.startsWith("image/"));
     if (images.length === 0) return;
     const take = images.slice(0, free);
-    if (take.length < images.length) setError(`Dieses Modell nimmt höchstens ${max} Referenzbilder.`);
+    if (take.length < images.length) setError(`This model takes at most ${max} reference images.`);
     const jobs = take.map((file) => ({ id: crypto.randomUUID(), preview: URL.createObjectURL(file), file }));
     setPending((p) => [...p, ...jobs.map(({ id, preview }) => ({ id, preview }))]);
     // Upload in parallel, append in the order the user picked them.
@@ -142,7 +142,7 @@ export function useReferences({ urls, max, setUrls, prompt, setPrompt }: {
   /** Earlier uploads or results picked again: appended in the order picked, as far as there is room. */
   function addUrls(picked: string[]) {
     setError(null);
-    if (picked.length > free) setError(`Dieses Modell nimmt höchstens ${max} Referenzbilder.`);
+    if (picked.length > free) setError(`This model takes at most ${max} reference images.`);
     setUrls((prev) => [...prev, ...picked.filter((u) => !prev.includes(u))].slice(0, max));
   }
 
@@ -158,19 +158,19 @@ export function useReferences({ urls, max, setUrls, prompt, setPrompt }: {
 export function RefStrip({ refs, onMention }: { refs: ReturnType<typeof useReferences>; onMention: (n: number) => void }) {
   if (refs.urls.length === 0 && refs.pending.length === 0 && !refs.error) return null;
   return (
-    <div className="refs" aria-label="Referenzbilder">
+    <div className="refs" aria-label="Reference images">
       {refs.urls.map((url, i) => (
         <figure key={url} className="ref">
-          <button type="button" className="ref__img" onClick={() => onMention(i + 1)} title={`${mentionOf(i + 1)} in den Prompt einfügen`}>
+          <button type="button" className="ref__img" onClick={() => onMention(i + 1)} title={`Insert ${mentionOf(i + 1)} into the prompt`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt={`Referenzbild ${i + 1}`} />
+            <img src={url} alt={`Reference image ${i + 1}`} />
           </button>
           <figcaption className="ref__tag">{mentionOf(i + 1)}</figcaption>
-          <button type="button" className="ref__x" aria-label={`Referenzbild ${i + 1} entfernen`} onClick={() => refs.remove(i)}><X /></button>
+          <button type="button" className="ref__x" aria-label={`Remove reference image ${i + 1}`} onClick={() => refs.remove(i)}><X /></button>
         </figure>
       ))}
       {refs.pending.map((p) => (
-        <figure key={p.id} className="ref ref--busy" aria-label="Wird hochgeladen">
+        <figure key={p.id} className="ref ref--busy" aria-label="Uploading">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <span className="ref__img"><img src={p.preview} alt="" /></span>
           <span className="ring" aria-hidden="true" />
@@ -188,7 +188,7 @@ export function RefStrip({ refs, onMention }: { refs: ReturnType<typeof useRefer
 export function MentionMenu({ urls, query, active, onPick, onBrowse, note }: { urls: string[]; query: string; active: number; onPick: (n: number) => void; onBrowse?: () => void; note?: string }) {
   const items = urls.map((url, i) => ({ url, n: i + 1 })).filter(({ n }) => !query || String(n).startsWith(query.replace(/\D/g, "")) || mentionOf(n).toLowerCase().startsWith(`@${query.toLowerCase()}`));
   return (
-    <div className="mention" role="listbox" aria-label="Referenzbild erwähnen">
+    <div className="mention" role="listbox" aria-label="Mention reference image">
       {items.map(({ url, n }, i) => (
         <button
           key={url}
@@ -218,10 +218,10 @@ export function MentionMenu({ urls, query, active, onPick, onBrowse, note }: { u
           }}
         >
           <span className="mention__icon" aria-hidden="true"><Images /></span>
-          <span>Aus Assets wählen …</span>
+          <span>Choose from Assets…</span>
         </button>
       ) : items.length === 0 ? (
-        <p className="mention__empty">{note ?? "Erst ein Bild mit + hinzufügen, dann mit @ darauf verweisen."}</p>
+        <p className="mention__empty">{note ?? "Add an image with + first, then refer to it with @."}</p>
       ) : null}
     </div>
   );
@@ -261,7 +261,7 @@ export const ADD_REF_EVENT = "tachyon:add-reference";
 export async function jobAsReference(jobId: string, go: (href: string) => void): Promise<string | null> {
   const r = await fetch("/api/uploads/from-job", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId, index: 0 }) }).catch(() => undefined);
   const res = (await r?.json().catch(() => undefined)) as { ok: boolean; url?: string } | undefined;
-  if (!res?.ok || !res.url) return "Das Bild lässt sich gerade nicht als Referenz übernehmen.";
+  if (!res?.ok || !res.url) return "This image cannot be used as a reference right now.";
   if (window.location.pathname === "/image") window.dispatchEvent(new CustomEvent(ADD_REF_EVENT, { detail: res.url }));
   else go(`/image?ref=${encodeURIComponent(res.url)}`);
   return null;

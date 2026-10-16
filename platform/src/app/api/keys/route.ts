@@ -5,7 +5,7 @@ import { sameOrigin, sessionOnly } from "./guard";
 
 /**
  * The account's keys and apps (name, prefix, last use, limit, spend in the last 24 h) and the latest jobs agents
- * started. Never a key itself. The «API & MCP» console polls this.
+ * started. Never a key itself. The "API & MCP" console polls this.
  */
 export async function GET() {
   const account = await currentAccount();

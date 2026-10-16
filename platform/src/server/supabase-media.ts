@@ -4,7 +4,7 @@ import type { OpenedMedia } from "./file-media";
 const EXT: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/svg+xml": "svg", "video/mp4": "mp4" };
 
 /**
- * Media store in Supabase Storage (private bucket «media»), for production on Vercel, where the file system is
+ * Media store in Supabase Storage (private bucket “media”), for production on Vercel, where the file system is
  * read-only. Same keys and URLs as the file store (/api/media/<key>.<ext>), so jobs, links and the media route do not
  * change. Only the server talks to Storage, with the secret key; browsers keep loading through /api/media.
  */
@@ -36,7 +36,7 @@ export function createSupabaseMediaStore(opts: { url: string; secretKey: string;
     },
     /**
      * A short-lived https link to one stored file (Storage sign API). The vendor takes video inputs only over https
-     * (15.10.2026: «Only HTTPS URLs are allowed»), and a local server has no public address of its own.
+     * (15.10.2026: “Only HTTPS URLs are allowed”), and a local server has no public address of its own.
      */
     async signedUrl(mediaUrl, seconds) {
       const key = mediaUrl.replace(/^\/api\/media\//, "");

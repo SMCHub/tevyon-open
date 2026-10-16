@@ -16,7 +16,7 @@ export function CopyButton({ text, label, className = "" }: { text: string; labe
     }
   }
   return (
-    <button type="button" className={`ac-copy ${className}`} onClick={copy} aria-label={label} title={done ? "Kopiert" : label} data-done={done || undefined}>
+    <button type="button" className={`ac-copy ${className}`} onClick={copy} aria-label={label} title={done ? "Copied" : label} data-done={done || undefined}>
       {done ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
     </button>
   );
@@ -84,26 +84,26 @@ export function CodeBlock({ code, copy, lang = "shell", label }: { code: string;
 /** A new key as it may be seen over a shoulder: the prefix and the last four characters. Copy buttons take the real one. */
 export const maskKey = (key: string) => `${key.slice(0, 10)}${"•".repeat(22)}${key.slice(-4)}`;
 
-const rtf = new Intl.RelativeTimeFormat("de-CH", { numeric: "auto", style: "short" });
+const rtf = new Intl.RelativeTimeFormat("en-US", { numeric: "auto", style: "short" });
 
 export function relativeTime(ms: number, now = Date.now()): string {
   const s = Math.round((ms - now) / 1000);
   const abs = Math.abs(s);
-  if (abs < 45) return "gerade eben";
+  if (abs < 45) return "just now";
   if (abs < 3600) return rtf.format(Math.round(s / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(s / 3600), "hour");
   if (abs < 86400 * 30) return rtf.format(Math.round(s / 86400), "day");
-  return new Date(ms).toLocaleDateString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return new Date(ms).toLocaleDateString("en-US", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-/** «vor 3 Min.» that keeps itself current; the exact date sits in the title. Server and browser clocks may differ by a minute. */
+/** "3 min. ago" that keeps itself current; the exact date sits in the title. Server and browser clocks may differ by a minute. */
 export function RelativeTime({ ms }: { ms: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(t);
   }, []);
-  const exact = new Date(ms).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const exact = new Date(ms).toLocaleString("en-US", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   return <time dateTime={new Date(ms).toISOString()} title={exact} suppressHydrationWarning>{relativeTime(ms, now)}</time>;
 }
 
@@ -112,13 +112,13 @@ export function UsageMeter({ spent, limit }: { spent: number; limit: number | nu
   const share = limit ? Math.min(1, spent / limit) : 0;
   const state = !limit ? "free" : share >= 1 ? "full" : share >= 0.8 ? "high" : "ok";
   return (
-    <div className="ac-meter" data-state={state} title="Credits der letzten 24 Stunden">
+    <div className="ac-meter" data-state={state} title="Credits in the last 24 hours">
       <div className="ac-meter__text">
-        <strong>{spent.toLocaleString("de-CH")}</strong>
-        <span>{limit ? ` / ${limit.toLocaleString("de-CH")} Credits` : " Credits · ohne Limit"}</span>
+        <strong>{spent.toLocaleString("en-US")}</strong>
+        <span>{limit ? ` / ${limit.toLocaleString("en-US")} Credits` : " Credits · no limit"}</span>
       </div>
       {limit ? (
-        <div className="ac-meter__bar" role="meter" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={spent} aria-label="Verbrauch der letzten 24 Stunden">
+        <div className="ac-meter__bar" role="meter" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={spent} aria-label="Usage in the last 24 hours">
           <span style={{ inlineSize: `${Math.max(share * 100, spent > 0 ? 3 : 0)}%` }} />
         </div>
       ) : null}

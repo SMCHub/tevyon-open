@@ -105,7 +105,7 @@ export const BIO_MAX = 160;
 const line = (v: unknown) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim() : "");
 const chars = (s: string) => [...s].length;
 
-/** «@Lena_Creates » → «lena_creates». */
+/** “@Lena_Creates ” → “lena_creates”. */
 export function normalizeHandle(raw: unknown): string {
   return typeof raw === "string" ? raw.trim().replace(/^@/, "").toLowerCase() : "";
 }
@@ -246,7 +246,7 @@ export interface CommunityStore {
 
 const FEED_LIMIT = 40;
 const FEED_MAX = 60;
-/** Where a page continues: «<publishedAt>_<jobId>», sorted by likes «<likes>.<publishedAt>_<jobId>». */
+/** Where a page continues: “<publishedAt>_<jobId>”, sorted by likes “<likes>.<publishedAt>_<jobId>”. */
 const CURSOR = /^(?:(\d{1,9})\.)?(\d{1,16})_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 /** Job ids are UUIDs; anything else is no job (and must not reach a uuid column). */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -491,7 +491,7 @@ export function createCommunity(deps: {
    * (`before`). With a `viewer`, every creation says whether that account likes it.
    */
   async function feed(q: FeedOptions = {}, viewer?: string): Promise<FeedPage> {
-    // «Gefolgt» needs someone who follows.
+    // “Following” needs someone who follows.
     if (q.following === true && !viewer) return { items: [], next: null };
     return page(q, { ...(viewer ? { viewer } : {}), ...(q.following === true && viewer ? { followedBy: viewer } : {}) });
   }
@@ -605,7 +605,7 @@ export function createMemoryCommunityStore(): CommunityStore {
   const publications = new Map<string, PublicationRow>();
   const reports = new Map<string, ReportRow>();
   const likes = new Map<string, number>();
-  /** «follower|followee» → when. */
+  /** “follower|followee” → when. */
   const follows = new Map<string, number>();
   const profileReports = new Map<string, ProfileReportRow>();
   const visible = (p: PublicationRow) => p.publishedAt !== null && p.hiddenAt === null && profiles.get(p.accountId)?.hiddenAt === null;
@@ -845,7 +845,7 @@ export function createPostgresCommunityStore(db: Db): CommunityStore {
         );
         return "ok";
       } catch (e) {
-        // The only unique key left after «on conflict (account_id)» is the handle.
+        // The only unique key left after “on conflict (account_id)” is the handle.
         if ((e as { code?: string }).code === "23505") return "handle_taken";
         throw e;
       }

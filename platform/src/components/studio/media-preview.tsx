@@ -63,8 +63,8 @@ export function MediaPreview({ label, count, index, onIndex, onClose, stage, asi
       <div className="lightbox__backdrop" onClick={onClose} />
       <div className="lightbox__stage" onClick={(e) => e.target === e.currentTarget && onClose()}>
         {stage}
-        {index > 0 && <button type="button" className="lightbox__nav lightbox__nav--prev" aria-label="Vorheriges" onClick={() => onIndex(index - 1)}><ChevronLeft /></button>}
-        {index < count - 1 && <button type="button" className="lightbox__nav lightbox__nav--next" aria-label="Nächstes" onClick={() => onIndex(index + 1)}><ChevronRight /></button>}
+        {index > 0 && <button type="button" className="lightbox__nav lightbox__nav--prev" aria-label="Previous" onClick={() => onIndex(index - 1)}><ChevronLeft /></button>}
+        {index < count - 1 && <button type="button" className="lightbox__nav lightbox__nav--next" aria-label="Next" onClick={() => onIndex(index + 1)}><ChevronRight /></button>}
       </div>
       <aside className="lightbox__side">{aside}</aside>
     </div>
@@ -99,7 +99,7 @@ function savePrefs(p: SoundPrefs) {
 
 /**
  * A video in the preview, with sound at the viewer's last volume. Where the browser refuses sound without a fresh
- * gesture it plays muted and offers «Ton an»; a clip without an audio track says «Ohne Ton». Space pauses, M mutes.
+ * gesture it plays muted and offers “Sound on”; a clip without an audio track says “No sound”. Space pauses, M mutes.
  */
 function PreviewVideo({ media }: { media: PreviewMedia }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -174,37 +174,37 @@ function PreviewVideo({ media }: { media: PreviewMedia }) {
         onTimeUpdate={probe}
       />
       {sound === false ? (
-        <span className="pv-sound pv-sound--none" title="Dieses Video hat keine Tonspur."><VolumeX aria-hidden="true" />Ohne Ton</span>
+        <span className="pv-sound pv-sound--none" title="This video has no audio track."><VolumeX aria-hidden="true" />No sound</span>
       ) : muted ? (
-        <button type="button" className="pv-sound pv-sound--call" onClick={toggle}><Volume2 aria-hidden="true" />Ton an</button>
+        <button type="button" className="pv-sound pv-sound--call" onClick={toggle}><Volume2 aria-hidden="true" />Sound on</button>
       ) : sound ? (
-        <button type="button" className="pv-sound pv-sound--icon" onClick={toggle} aria-label="Ton ausschalten" title="Ton ausschalten (M)"><Volume2 aria-hidden="true" /></button>
+        <button type="button" className="pv-sound pv-sound--icon" onClick={toggle} aria-label="Mute" title="Mute (M)"><Volume2 aria-hidden="true" /></button>
       ) : null}
     </>
   );
 }
 
-/** «Kopieren» next to a prompt. */
+/** “Copy” next to a prompt. */
 export function CopyPrompt({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       type="button"
       className="lb-copy"
-      aria-label="Prompt kopieren"
+      aria-label="Copy prompt"
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
     >
-      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Kopiert" : "Kopieren"}
+      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Copied" : "Copy"}
     </button>
   );
 }
 
 /**
- * A prompt in the side panel: its first lines, «Mehr» shows all of it. The panel itself never scrolls for a prompt;
+ * A prompt in the side panel: its first lines, “More” shows all of it. The panel itself never scrolls for a prompt;
  * only an opened one longer than the free room scrolls inside its own lines.
  */
 export function PromptText({ text }: { text: string }) {
@@ -227,7 +227,7 @@ export function PromptText({ text }: { text: string }) {
       <p ref={ref} className={`lb-text${open ? " is-open" : long ? " is-long" : ""}`}>{text}</p>
       {(long || open) && (
         <button type="button" className="lb-more" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {open ? "Weniger" : "Mehr"}{open ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+          {open ? "Less" : "More"}{open ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
         </button>
       )}
     </>
@@ -238,7 +238,7 @@ export function PromptText({ text }: { text: string }) {
 export function PreviewHint({ video }: { video: boolean }) {
   return (
     <p className="lightbox__hint">
-      <kbd>←</kbd><kbd>→</kbd> blättern {video && <><kbd>M</kbd> Ton </>}<kbd>Esc</kbd> schliessen
+      <kbd>←</kbd><kbd>→</kbd> browse {video && <><kbd>M</kbd> sound </>}<kbd>Esc</kbd> close
     </p>
   );
 }
@@ -250,7 +250,7 @@ export function EntryAside({ entry, onClose, onAction }: { entry: PreviewEntry; 
     <>
       <header className="lb-head">
         <span className="lb-chip">{entry.kind === "video" ? <Clapperboard aria-hidden="true" /> : <ImageIcon aria-hidden="true" />}{entry.chip}</span>
-        <button type="button" className="icon-btn lb-close" aria-label="Schliessen" onClick={onClose}><X /></button>
+        <button type="button" className="icon-btn lb-close" aria-label="Close" onClick={onClose}><X /></button>
       </header>
       <h2 className="lightbox__model">{entry.title}</h2>
       {entry.text && <p className="pv-text">{entry.text}</p>}
@@ -288,8 +288,8 @@ export function PreviewButton({ onOpen, className = "" }: { onOpen: () => void; 
     <button
       type="button"
       className={`icon-btn pv-open${className ? ` ${className}` : ""}`}
-      aria-label="Vorschau"
-      title="Vorschau"
+      aria-label="Preview"
+      title="Preview"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

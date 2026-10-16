@@ -22,14 +22,14 @@ export type Msg =
       charged?: number;
       /** Name of the language model that wrote it. */
       model?: string;
-      /** Seconds the answer took («Gearbeitet für …»). */
+      /** Seconds the answer took ("Worked for …"). */
       took?: number;
     };
 
 export type Assistant = Extract<Msg, { role: "assistant" }>;
 type JobStatus = "queued" | "running" | "succeeded" | "failed";
 
-const OUTCOME: Partial<Record<JobStatus, string>> = { succeeded: "fertig", failed: "fehlgeschlagen" };
+const OUTCOME: Partial<Record<JobStatus, string>> = { succeeded: "done", failed: "failed" };
 /** The server keeps 2,000 characters per message: a prompt in the marker is cut, so every status still fits. */
 const PROMPT_CHARS = 300;
 const short = (s: string) => (s.length > PROMPT_CHARS ? `${s.slice(0, PROMPT_CHARS).trimEnd()}…` : s);
@@ -38,7 +38,7 @@ const short = (s: string) => (s.length > PROMPT_CHARS ? `${s.slice(0, PROMPT_CHA
 function line(p: Proposal, i: number, job: string | undefined, statusOf: (jobId: string) => JobStatus | undefined): string {
   const what = `${p.model}${typeof p.params.aspect_ratio === "string" ? `, ${p.params.aspect_ratio}` : ""}${typeof p.params.duration === "number" ? `, ${p.params.duration} s` : ""}: ${short(p.prompt)}`;
   const outcome = job ? OUTCOME[statusOf(job) ?? "running"] : undefined;
-  return `${i + 1}) ${what}${job ? ` (gestartet${outcome ? `, ${outcome}` : ""})` : ""}`;
+  return `${i + 1}) ${what}${job ? ` (started${outcome ? `, ${outcome}` : ""})` : ""}`;
 }
 
 /**
@@ -52,7 +52,7 @@ export function toHistory(msgs: Msg[], statusOf: (jobId: string) => JobStatus | 
     .map((m) => ({
       role: m.role,
       content: m.role === "assistant" && m.proposals.length
-        ? `${m.content}\n[Vorschläge: ${m.proposals.map((p, i) => line(p, i, m.started[i], statusOf)).join(" | ")}]`
+        ? `${m.content}\n[Proposals: ${m.proposals.map((p, i) => line(p, i, m.started[i], statusOf)).join(" | ")}]`
         : m.content,
     }));
 }

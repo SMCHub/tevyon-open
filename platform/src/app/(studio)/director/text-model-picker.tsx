@@ -29,25 +29,25 @@ export type TextModel = {
 };
 
 /** The price line of a paid model: about what a message costs, and the most it can cost. */
-export const priceLine = (m: TextModel) => (m.credits ? `≈ ${m.credits.typical} Credits, höchstens ${m.credits.cap}` : "");
+export const priceLine = (m: TextModel) => (m.credits ? `≈ ${m.credits.typical} Credits, at most ${m.credits.cap}` : "");
 
 export const TIER: Record<TextTier, { label: string; icon: React.ReactNode }> = {
-  beste: { label: "Beste", icon: <Crown /> },
-  ausgewogen: { label: "Ausgewogen", icon: <Scale /> },
-  schnell: { label: "Schnell", icon: <Zap /> },
+  beste: { label: "Best", icon: <Crown /> },
+  ausgewogen: { label: "Balanced", icon: <Scale /> },
+  schnell: { label: "Fast", icon: <Zap /> },
 };
 
 function Cost({ n }: { n: number }) {
   return (
-    <span className="tm-cost" role="img" aria-label={`Verbrauch ${n} von 4`} title={`Verbraucht das Tageskontingent ${["sehr langsam", "langsam", "zügig", "schnell"][n - 1]}`}>
+    <span className="tm-cost" role="img" aria-label={`Usage ${n} of 4`} title={`Uses up the daily allowance ${["very slowly", "slowly", "steadily", "quickly"][n - 1]}`}>
       {[1, 2, 3, 4].map((i) => <i key={i} className={i <= n ? "on" : undefined} />)}
     </span>
   );
 }
 
 const LOCKED: Record<NonNullable<TextModel["locked"]>, { short: string; title: string }> = {
-  purchase: { short: "ab dem ersten Kauf", title: "Die stärksten Modelle kosten Credits pro Nachricht und gibt es ab dem ersten Kauf von Credits." },
-  credits: { short: "zu wenig Credits", title: "Für eine Nachricht mit diesem Modell reicht dein Guthaben gerade nicht." },
+  purchase: { short: "after first purchase", title: "The strongest models cost Credits per message and unlock with your first Credits purchase." },
+  credits: { short: "not enough Credits", title: "Your balance is not enough for a message with this model right now." },
 };
 
 /**
@@ -69,7 +69,7 @@ export function TextModelPicker({
 }: { models: TextModel[]; model: TextModel; share: number | null; paying: boolean; owed?: number; onChoose: (id: string) => void }) {
   return (
     <Popover
-      label="Sprachmodell wählen"
+      label="Choose language model"
       side="auto"
       panelClassName="pop__panel--models tm-panel"
       trigger={
@@ -84,20 +84,20 @@ export function TextModelPicker({
         <div className="models" ref={scrollToChosen}>
           {owed > 0 ? (
             <div className="tm-budget tm-budget--owed">
-              <span>Offen: {owed} Credits aus einer Rückbuchung. Bis neue Credits den Betrag ausgleichen, pausiert der Director.</span>
+              <span>Owed: {owed} Credits from a chargeback. The Director is paused until new Credits settle the amount.</span>
             </div>
           ) : share !== null && (
             <div className="tm-budget">
-              <span>Gratis heute: {Math.round(share * 100)} % übrig{paying ? "" : " · mit dem ersten Kauf fünfmal mehr"}</span>
+              <span>Free today: {Math.round(share * 100)}% left{paying ? "" : " · five times more after your first purchase"}</span>
               <span className="tm-budget__bar" aria-hidden="true"><span style={{ width: `${Math.round(share * 100)}%` }} /></span>
             </div>
           )}
           {(Object.keys(TIER) as TextTier[]).map((tier) => (
             <Fragment key={tier}>
-              <p className="pop__head tm-head"><span>{TIER[tier].label}</span><span>{tier === "beste" ? "Credits pro Nachricht" : "gratis"}</span></p>
+              <p className="pop__head tm-head"><span>{TIER[tier].label}</span><span>{tier === "beste" ? "Credits per message" : "free"}</span></p>
               {models.filter((m) => m.tier === tier).map((m) => {
                 const used = m.allowed === false;
-                const why = m.locked ? LOCKED[m.locked].title : used ? "Für heute aufgebraucht. Nimm ein schnelleres Modell oder komm morgen wieder." : m.paid ? priceLine(m) : undefined;
+                const why = m.locked ? LOCKED[m.locked].title : used ? "Used up for today. Pick a faster model or come back tomorrow." : m.paid ? priceLine(m) : undefined;
                 return (
                   <button
                     key={m.id}
@@ -124,9 +124,9 @@ export function TextModelPicker({
                       )}
                       <span className="tm-left">
                         {m.locked ? LOCKED[m.locked].short
-                          : m.paid && m.credits ? `höchstens ${m.credits.cap}`
-                          : used ? "heute aufgebraucht"
-                          : m.turnsLeft !== undefined && m.turnsLeft < 100 ? `noch ${m.turnsLeft} heute` : ""}
+                          : m.paid && m.credits ? `at most ${m.credits.cap}`
+                          : used ? "used up today"
+                          : m.turnsLeft !== undefined && m.turnsLeft < 100 ? `${m.turnsLeft} left today` : ""}
                       </span>
                     </span>
                   </button>

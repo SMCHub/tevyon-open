@@ -26,12 +26,12 @@ export async function notifyOperator(subject: string, lines: string[]): Promise<
   }
 }
 
-/** German labels of the report reasons, for the operator's mail and page. */
+/** Labels of the report reasons, for the operator's mail and page. */
 export const REASON_LABEL: Record<string, string> = {
-  rights: "Rechte verletzt",
-  person: "Reale Person ohne Einwilligung",
-  sexual: "Sexuelle Inhalte",
-  violence: "Gewalt, Hass oder Hetze",
-  minors: "Minderjährige",
-  other: "Anderes",
+  rights: "Rights infringed",
+  person: "Real person without consent",
+  sexual: "Sexual content",
+  violence: "Violence, hate or incitement",
+  minors: "Minors",
+  other: "Other",
 };

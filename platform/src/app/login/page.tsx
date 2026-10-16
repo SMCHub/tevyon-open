@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
 import "./login.css";
 
-export const metadata: Metadata = { title: "Anmelden – Tevyon" };
+export const metadata: Metadata = { title: "Sign in – Tevyon" };
 
 // Our own examples from the image studio wall (gallery-data.ts, GPT Image 2, full size), as a still, dense wall like
 // the studio's: no drift, no clips. [src, width, height]; the sizes keep the columns from jumping while they load.

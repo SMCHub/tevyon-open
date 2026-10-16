@@ -6,22 +6,22 @@ import { PreviewButton, usePreview } from "./media-preview";
 import { useMediaPicker } from "./media-picker";
 
 const UPLOAD_ERROR: Record<string, string> = {
-  too_large: "Die Datei ist zu gross (Foto bis 10 MB, Video bis 50 MB).",
-  not_an_image: "Bitte ein Foto als JPG, PNG oder WebP.",
-  unreadable_video: "Die Länge des Videos lässt sich nicht lesen. Bitte als MP4 oder MOV exportieren.",
-  scan_unavailable: "Die Prüfung des Uploads klappt gerade nicht. Bitte versuch es gleich nochmals.",
-  upload_limit: "Für heute sind die Uploads aufgebraucht (200 pro Tag). Morgen geht es weiter.",
+  too_large: "The file is too large (photos up to 10 MB, videos up to 50 MB).",
+  not_an_image: "Please use a photo as JPG, PNG or WebP.",
+  unreadable_video: "The video's length cannot be read. Please export it as MP4 or MOV.",
+  scan_unavailable: "The upload check is not working right now. Please try again in a moment.",
+  upload_limit: "You have used up today's uploads (200 per day). You can upload again tomorrow.",
 };
 
-/** Why the scan refused a file (core/upload-scan.ts). Minors and «other» stay general on purpose. */
+/** Why the scan refused a file (core/upload-scan.ts). Minors and "other" stay general on purpose. */
 const BLOCKED: Record<string, string> = {
-  nudity: "Nacktheit und sexuelle Inhalte sind auf Tevyon nicht erlaubt.",
-  violence: "Drastische Gewalt ist auf Tevyon nicht erlaubt.",
-  extremism: "Extremistische oder hasserfüllte Inhalte sind auf Tevyon nicht erlaubt.",
-  documents: "Ausweise und amtliche Dokumente nehmen wir nicht an.",
+  nudity: "Nudity and sexual content are not allowed on Tevyon.",
+  violence: "Graphic violence is not allowed on Tevyon.",
+  extremism: "Extremist or hateful content is not allowed on Tevyon.",
+  documents: "We do not accept ID cards or official documents.",
 };
-const blockedText = (category?: string) => `Nicht hochgeladen: ${BLOCKED[category ?? ""] ?? "Die Datei verstösst gegen unsere Nutzungsrichtlinien."}`;
-const VIDEO_ERROR: Record<string, string> = { ...UPLOAD_ERROR, not_an_image: "Bitte ein Video als MP4 oder MOV." };
+const blockedText = (category?: string) => `Not uploaded: ${BLOCKED[category ?? ""] ?? "The file violates our usage policy."}`;
+const VIDEO_ERROR: Record<string, string> = { ...UPLOAD_ERROR, not_an_image: "Please use a video as MP4 or MOV." };
 
 /** Length in seconds of an uploaded reference video, from its media URL ("…_12s.mp4"), or null for any other file. */
 export function videoSecondsOf(url: string): number | null {
@@ -60,7 +60,7 @@ export async function uploadImage(file: File, kind: "image" | "video" = "image")
   const res = (await r?.json().catch(() => undefined) ?? { ok: false }) as { ok: boolean; url?: string; error?: string; category?: string };
   const texts = kind === "video" ? VIDEO_ERROR : UPLOAD_ERROR;
   if (res.error === "upload_blocked") return { error: blockedText(res.category) };
-  if (!res.ok || !res.url) return { error: texts[res.error ?? ""] ?? "Upload hat nicht geklappt." };
+  if (!res.ok || !res.url) return { error: texts[res.error ?? ""] ?? "Upload failed." };
   return { url: res.url };
 }
 
@@ -121,18 +121,18 @@ export function DropZone({ up, title, hint, icons }: { up: ReturnType<typeof use
       {up.url ? (
         <>
           {up.kind === "video"
-            ? <video src={up.url} muted loop autoPlay playsInline aria-label="Dein Video" />
+            ? <video src={up.url} muted loop autoPlay playsInline aria-label="Your video" />
             // eslint-disable-next-line @next/next/no-img-element
-            : <img src={up.url} alt="Dein Foto" />}
-          <span className="drop__swap">Ersetzen</span>
+            : <img src={up.url} alt="Your photo" />}
+          <span className="drop__swap">Replace</span>
           <PreviewButton
             className="pv-open--beside"
-            onOpen={() => preview.openEntries([{ url: up.url!, kind: up.kind, chip: "Dein Upload", title: up.kind === "video" ? "Dein Video" : "Dein Foto" }])}
+            onOpen={() => preview.openEntries([{ url: up.url!, kind: up.kind, chip: "Your upload", title: up.kind === "video" ? "Your video" : "Your photo" }])}
           />
           <button
             type="button"
             className="icon-btn drop__clear"
-            aria-label={up.kind === "video" ? "Video entfernen" : "Foto entfernen"}
+            aria-label={up.kind === "video" ? "Remove video" : "Remove photo"}
             onClick={(e) => {
               e.stopPropagation();
               up.setUrl(null);
@@ -148,7 +148,7 @@ export function DropZone({ up, title, hint, icons }: { up: ReturnType<typeof use
               : (icons ?? [up.kind === "video" ? <Film key="f" aria-hidden="true" /> : <ImageUp key="i" aria-hidden="true" />]).map((icon, i) => <span key={i} className="drop__icon">{icon}</span>)}
           </span>
           <span className="drop__text">
-            <span className="drop__title">{up.busy ? "Wird hochgeladen und geprüft …" : title}</span>
+            <span className="drop__title">{up.busy ? "Uploading and checking…" : title}</span>
             <span className="drop__sub">{hint}</span>
           </span>
         </span>

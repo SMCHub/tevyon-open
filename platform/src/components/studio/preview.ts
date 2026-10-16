@@ -9,7 +9,7 @@ export type PreviewAction = { label: string; href?: string; run?: () => void; cr
 
 /**
  * One result, example or upload in the preview, with what its side panel shows. `extra`: further buttons
- * beside the main action (a public creation: like, the creator's page, «Melden»).
+ * beside the main action (a public creation: like, the creator's page, "Report").
  */
 export type PreviewEntry = PreviewMedia & {
   chip: string; title: string; text?: string; prompt?: string; facts?: string[]; action?: PreviewAction; extra?: ReactNode;

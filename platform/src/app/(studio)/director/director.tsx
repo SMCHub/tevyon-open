@@ -32,16 +32,16 @@ type DirectorEvent =
 const STORE = "tachyon:director:v1";
 const MODEL_STORE = "tachyon:director:model";
 
-/** What the Director does while it thinks, as work steps («… wird geplant»). */
-const THINKING = ["Liest deinen Wunsch …", "Sucht den Hook …", "Plant Szene und Kamera …", "Wählt Modell und Format …", "Rechnet die Preise …"];
-const UNREACHABLE = "Ich komme gerade nicht durch. Versuch es gleich nochmal.";
+/** What the Director does while it thinks, as work steps ("Planning …"). */
+const THINKING = ["Reading your wish …", "Finding the hook …", "Planning scene and camera …", "Choosing model and format …", "Working out the prices …"];
+const UNREACHABLE = "I can't get through right now. Please try again in a moment.";
 /** Example wishes the empty composer cycles through as a rotating placeholder. */
 const EXAMPLES = [
-  "Mein Hund als Superheld, für TikTok",
-  "Werbeclip für meine Sneaker, 9:16, mit Ton",
-  "Kinoszene: ein Reiter im Sandsturm bei Sonnenuntergang",
-  "Produktfoto meiner Kerze auf Marmor, warmes Licht",
-  "Mein Foto sagt «Willkommen bei uns»",
+  "My dog as a superhero, for TikTok",
+  "An ad for my sneakers, 9:16, with sound",
+  "Movie scene: a rider in a sandstorm at sunset",
+  "Product photo of my candle on marble, warm light",
+  "My photo says “Welcome to our place”",
 ];
 
 /** The Tevyon symbol, drawn in the current text colour. */
@@ -66,8 +66,8 @@ function CopyButton({ text }: { text: string }) {
           setTimeout(() => setDone(false), 1600);
         } catch {}
       }}
-      aria-label={done ? "Kopiert" : "Text kopieren"}
-      title={done ? "Kopiert" : "Kopieren"}
+      aria-label={done ? "Copied" : "Copy text"}
+      title={done ? "Copied" : "Copy"}
     >
       {done ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
     </button>
@@ -97,11 +97,11 @@ function ResultThumb({ job }: { job: Job }) {
   const out = job.outputs[0];
   if (job.status === "succeeded" && out) {
     return (
-      <button type="button" className="dr-result dr-result--done" onClick={() => preview.openJobs([job.id])} aria-label="Ergebnis gross ansehen">
+      <button type="button" className="dr-result dr-result--done" onClick={() => preview.openJobs([job.id])} aria-label="View result large">
         {out.contentType.startsWith("video/")
           ? <LoopVideo src={out.url} />
           // eslint-disable-next-line @next/next/no-img-element
-          : <img src={out.url} alt="Ergebnis" />}
+          : <img src={out.url} alt="Result" />}
       </button>
     );
   }
@@ -118,7 +118,7 @@ function ProposalCard({
   p, price, balance, schema, startedJob, onStart, onAdjust, busy,
 }: {
   p: Proposal; price: number | null; balance: number | null;
-  /** The model's options, for «Anpassen» (custom proposals only). */
+  /** The model's options, for "Adjust" (custom proposals only). */
   schema?: JsonSchema;
   startedJob?: Job; onStart: () => void;
   /** A changed proposal; requote: its settings changed, so its price must be asked for again. */
@@ -135,9 +135,9 @@ function ProposalCard({
   const out = startedJob?.status === "succeeded" ? startedJob.outputs[0] : undefined;
   const failed = startedJob?.status === "failed";
   const running = startedJob && !out && !failed;
-  // Short of credits: say so on the card before the click («Credits aufladen» in the thread).
+  // Short of credits: say so on the card before the click ("Buy Credits" in the thread).
   const short = price !== null && balance !== null && price > balance;
-  const label = failed ? "Nochmal" : "Starten";
+  const label = failed ? "Retry" : "Start";
   const prompt = p.prompt;
   const adjustable = Boolean(schema && onAdjust) && !startedJob;
   return (
@@ -152,11 +152,11 @@ function ProposalCard({
           <span>{p.model}</span>
           {tags.length > 0 && <span>{tags.join(" · ")}</span>}
         </p>
-        <h3 className="dr-card__title">{p.kind === "video" ? "Eigener Clip" : "Eigenes Bild"}</h3>
+        <h3 className="dr-card__title">{p.kind === "video" ? "Custom clip" : "Custom image"}</h3>
         <p className="dr-card__why">{p.why}</p>
         {prompt && !(editing && adjustable) && (
-          <button type="button" className={`dr-card__prompt${open ? " is-open" : ""}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={open ? "Weniger" : "Ganzen Prompt zeigen"}>
-            {`«${prompt}»`}
+          <button type="button" className={`dr-card__prompt${open ? " is-open" : ""}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={open ? "Less" : "Show full prompt"}>
+            {`“${prompt}”`}
           </button>
         )}
         {adjustable && (editing ? (
@@ -167,43 +167,43 @@ function ProposalCard({
               value={p.prompt}
               rows={3}
               maxLength={2000}
-              aria-label="Prompt anpassen"
+              aria-label="Adjust prompt"
               onChange={(e) => onAdjust!({ ...p, prompt: e.target.value, params: { ...p.params, prompt: e.target.value } }, false)}
             />
             <div className="dr-card__opts">
               <OptionPills schema={schema!} opts={p.params} setOpt={(k, v) => onAdjust!({ ...p, params: { ...p.params, [k]: v } }, true)} side="top" />
-              <button type="button" className="dr-act dr-act--text" onClick={() => setEditing(false)}><Check aria-hidden="true" /> Fertig</button>
+              <button type="button" className="dr-act dr-act--text" onClick={() => setEditing(false)}><Check aria-hidden="true" /> Done</button>
             </div>
           </div>
         ) : (
-          <button type="button" className="dr-act dr-act--text dr-card__adjust-open" onClick={() => setEditing(true)}><SlidersHorizontal aria-hidden="true" /> Anpassen</button>
+          <button type="button" className="dr-act dr-act--text dr-card__adjust-open" onClick={() => setEditing(true)}><SlidersHorizontal aria-hidden="true" /> Adjust</button>
         ))}
       </div>
       <div className="dr-card__side">
         {out ? (
           <>
-            <button type="button" className="dr-card__btn" onClick={() => preview.openJobs([startedJob!.id])}><Maximize2 aria-hidden="true" /> Ansehen</button>
-            <a className="dr-card__btn" href={out.url} download={`tevyon-${startedJob!.id.slice(0, 8)}.${out.contentType.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") ?? "bin"}`}><Download aria-hidden="true" /> Herunterladen</a>
+            <button type="button" className="dr-card__btn" onClick={() => preview.openJobs([startedJob!.id])}><Maximize2 aria-hidden="true" /> View</button>
+            <a className="dr-card__btn" href={out.url} download={`tevyon-${startedJob!.id.slice(0, 8)}.${out.contentType.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") ?? "bin"}`}><Download aria-hidden="true" /> Download</a>
           </>
         ) : running ? (
-          <span className="dr-card__state" role="status">{startedJob!.status === "queued" ? "In der Warteschlange …" : video ? "Wird gedreht …" : "Entsteht …"}</span>
+          <span className="dr-card__state" role="status">{startedJob!.status === "queued" ? "Queued …" : video ? "Rendering …" : "Creating …"}</span>
         ) : short ? (
           <>
-            <span className="dr-card__state">Dafür fehlen {price! - balance!} Credits.</span>
+            <span className="dr-card__state">You need {price! - balance!} more Credits.</span>
             <a className="go dr-card__go go--quiet" href="/credits">
-              <span className="go__label">Credits kaufen</span>
+              <span className="go__label">Buy Credits</span>
               <span className="go__price"><TokenGlyph />{price}</span>
             </a>
           </>
         ) : (
           <>
-            {failed && <span className="dr-card__state dr-card__state--err">{JOB_ERROR[startedJob!.error ?? ""] ?? "Fehlgeschlagen. Credits zurück."}</span>}
+            {failed && <span className="dr-card__state dr-card__state--err">{JOB_ERROR[startedJob!.error ?? ""] ?? "Failed. Credits refunded."}</span>}
             <button
               type="button"
               className="go dr-card__go"
               disabled={busy || price === null}
               onClick={onStart}
-              aria-label={price !== null ? `${label}: ${price} Credits` : `${label}: Preis nicht verfügbar`}
+              aria-label={price !== null ? `${label}: ${price} Credits` : `${label}: price not available`}
             >
               <span className="go__label">{label}</span>
               <span className="go__price"><TokenGlyph />{price ?? "…"}</span>
@@ -218,7 +218,7 @@ function ProposalCard({
 export function Director() {
   const { jobs, refresh, start: startJob, catalog, quote, me } = useStudio();
   const preview = usePreview();
-  /** Image models that take reference images get the attached photo as «image 1». */
+  /** Image models that take reference images get the attached photo as "image 1". */
   const takesRefs = (jobType: string) => Boolean((catalog.find((c) => c.jobType === jobType)?.params.properties?.references as { maxItems?: number } | undefined)?.maxItems);
   const usesPhoto = (p: Proposal) => Boolean(up.url) && (p.kind === "video" || (p.kind === "image" && takesRefs(p.jobType)));
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -406,7 +406,7 @@ export function Director() {
       patchAnswer((a) => (a.state === "waiting" || a.state === "streaming" ? { state: a.content.trim() ? undefined : "failed", content: a.content || UNREACHABLE } : {}));
     } catch {
       patchAnswer((a) => ac.signal.aborted
-        ? { state: "stopped", content: a.content.trim() ? a.content : "Gestoppt." }
+        ? { state: "stopped", content: a.content.trim() ? a.content : "Stopped." }
         : { state: "failed", content: a.content ? `${a.content}\n\n${UNREACHABLE}` : UNREACHABLE });
     } finally {
       stream.current = null;
@@ -422,7 +422,7 @@ export function Director() {
   async function start(i: number, j: number, p: Proposal, price: number | null) {
     if (busyStart || price === null) return;
     if (usesPhoto(p) && up.url && !consent) {
-      setError("Bitte bestätige unten die Einwilligung für das Foto.");
+      setError("Please confirm consent for the photo below.");
       return;
     }
     setBusyStart(true);
@@ -493,9 +493,9 @@ export function Director() {
   }
 
   const composer = (
-    <div className="composer composer--director" role="region" aria-label="Nachricht an den Director">
+    <div className="composer composer--director" role="region" aria-label="Message to the Director">
       {away && !empty && (
-        <button type="button" className="dr-jump" onClick={() => end.current?.scrollIntoView({ behavior: "smooth", block: "end" })} aria-label="Zum Ende der Unterhaltung">
+        <button type="button" className="dr-jump" onClick={() => end.current?.scrollIntoView({ behavior: "smooth", block: "end" })} aria-label="Jump to the end of the conversation">
           <ArrowDown aria-hidden="true" />
         </button>
       )}
@@ -520,12 +520,12 @@ export function Director() {
           <div className="dr-attach">
             <span className="dr-attach__thumb">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={up.url} alt="Angehängtes Foto" />
-              <button type="button" className="dr-attach__remove" aria-label="Foto entfernen" onClick={() => up.setUrl(null)}><X /></button>
+              <img src={up.url} alt="Attached photo" />
+              <button type="button" className="dr-attach__remove" aria-label="Remove photo" onClick={() => up.setUrl(null)}><X /></button>
             </span>
             <label className="consent dr-attach__consent">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-              <span>Ich habe die Einwilligung aller abgebildeten Personen bzw. die Rechte am Bild.</span>
+              <span>I have the consent of everyone shown, or the rights to the image.</span>
             </label>
           </div>
         )}
@@ -535,8 +535,8 @@ export function Director() {
           rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={empty ? `Beschreib deine Idee, z. B. «${EXAMPLES[example]}»` : "Antworte dem Director …"}
-          aria-label="Nachricht an den Director"
+          placeholder={empty ? `Describe your idea, e.g. “${EXAMPLES[example]}”` : "Reply to the Director …"}
+          aria-label="Message to the Director"
           onPaste={(e) => {
             if (takeImage(e.clipboardData.files)) e.preventDefault();
           }}
@@ -550,15 +550,15 @@ export function Director() {
         />
         <div className="composer__bar">
           <div className="composer__tools">
-            <span className="pill-group" aria-label="Foto">
+            <span className="pill-group" aria-label="Photo">
               <button
                 type="button"
                 className="pill-btn pill-btn--icon"
                 onClick={(e) => picker.open(e.currentTarget)}
                 aria-haspopup="dialog"
                 disabled={up.busy}
-                title={up.url ? "Foto ersetzen" : "Foto anhängen"}
-                aria-label={up.url ? "Foto ersetzen" : "Foto anhängen"}
+                title={up.url ? "Replace photo" : "Attach photo"}
+                aria-label={up.url ? "Replace photo" : "Attach photo"}
               >
                 {up.busy ? <span className="ring" aria-hidden="true" /> : <ImagePlus aria-hidden="true" />}
               </button>
@@ -578,8 +578,8 @@ export function Director() {
                     el?.setSelectionRange((before + token).length, (before + token).length);
                   });
                 }}
-                title={up.url ? "Foto im Text erwähnen (@Bild1)" : "Erst ein Foto anhängen"}
-                aria-label="Foto erwähnen"
+                title={up.url ? "Mention the photo in the text (@image1)" : "Attach a photo first"}
+                aria-label="Mention photo"
               >
                 <AtSign aria-hidden="true" />
               </button>
@@ -588,8 +588,8 @@ export function Director() {
             {up.error && <span className="note note--error">{up.error}</span>}
           </div>
           {busy ? (
-            <button type="button" className="go go--stop" onClick={stop} aria-label="Antwort stoppen" title="Stoppen (Esc)">
-              <span className="go__label">Stopp</span>
+            <button type="button" className="go go--stop" onClick={stop} aria-label="Stop answer" title="Stop (Esc)">
+              <span className="go__label">Stop</span>
               <Square className="go__arrow" aria-hidden="true" />
             </button>
           ) : (
@@ -598,10 +598,10 @@ export function Director() {
               className="go"
               onClick={() => void send(text)}
               disabled={!text.trim() || model?.allowed === false}
-              aria-label={model?.paid ? `Senden: ${priceLine(model)}` : "Senden"}
+              aria-label={model?.paid ? `Send: ${priceLine(model)}` : "Send"}
               title={model?.paid ? priceLine(model) : undefined}
             >
-              <span className="go__label">Senden</span>
+              <span className="go__label">Send</span>
               {model?.paid && model.credits && <span className="go__price"><TokenGlyph />≈ {model.credits.typical}</span>}
               <ArrowUp className="go__arrow" aria-hidden="true" />
             </button>
@@ -617,8 +617,8 @@ export function Director() {
       <div className="studio studio--director is-empty">
         <section className="dr-hello">
           <span className="dr-hello__mark" aria-hidden="true"><DirectorMark /></span>
-          <h1 className="display dr-hello__title">Was drehen wir heute?</h1>
-          <p className="page-sub">Sag mir, was du willst. Ich plane den viralen Clip, wähle Effekt und Modell und zeige dir vorher den Preis. Gestartet wird erst, wenn du klickst.</p>
+          <h1 className="display dr-hello__title">What are we making today?</h1>
+          <p className="page-sub">Tell me what you want. I plan the viral clip, pick the effect and model, and show you the price up front. Nothing starts until you click.</p>
         </section>
         {composer}
       </div>
@@ -627,24 +627,24 @@ export function Director() {
 
   return (
     <div className="studio studio--director">
-      <div className="dr-thread" role="log" aria-label="Unterhaltung mit dem Director">
+      <div className="dr-thread" role="log" aria-label="Conversation with the Director">
         <header className="dr-bar">
           <span className="dr-bar__title"><span className="dr-avatar" aria-hidden="true"><DirectorMark /></span>Director</span>
-          <button type="button" className="dr-bar__new" onClick={reset}><SquarePen aria-hidden="true" /> Neuer Chat</button>
+          <button type="button" className="dr-bar__new" onClick={reset}><SquarePen aria-hidden="true" /> New chat</button>
         </header>
         {msgs.map((m, i) =>
           m.role === "user" ? (
             <div key={i} className="dr-msg dr-msg--user">
               {m.image && (
-                <button type="button" className="dr-msg__zoom" aria-label="Angehängtes Foto ansehen" onClick={() => preview.openEntries([{ url: m.image!, kind: "image", chip: "Dein Foto", title: "Angehängtes Foto" }])}>
+                <button type="button" className="dr-msg__zoom" aria-label="View attached photo" onClick={() => preview.openEntries([{ url: m.image!, kind: "image", chip: "Your photo", title: "Attached photo" }])}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="dr-msg__img" src={m.image} alt="Angehängtes Foto" />
+                  <img className="dr-msg__img" src={m.image} alt="Attached photo" />
                 </button>
               )}
               <div className="dr-msg__line">
                 <span className="dr-actions">
                   {i === lastUser && editable && (
-                    <button type="button" className="dr-act" onClick={editLast} aria-label="Nachricht bearbeiten" title="Bearbeiten"><Pencil aria-hidden="true" /></button>
+                    <button type="button" className="dr-act" onClick={editLast} aria-label="Edit message" title="Edit"><Pencil aria-hidden="true" /></button>
                   )}
                   <CopyButton text={m.content} />
                 </span>
@@ -657,7 +657,7 @@ export function Director() {
                 <span className={`dr-avatar${m.state === "waiting" || m.state === "streaming" ? " is-live" : ""}`} aria-hidden="true"><DirectorMark /></span>
                 <span className="dr-who__name">Director</span>
                 {m.model && <span className="dr-who__model">{m.model}</span>}
-                {m.took ? <span className="dr-who__model" title="So lange hat der Director an dieser Antwort gearbeitet">{m.took} s</span> : null}
+                {m.took ? <span className="dr-who__model" title="How long the Director worked on this answer">{m.took} s</span> : null}
               </div>
               <div className="dr-msg__body">
                 {m.state === "waiting" ? (
@@ -666,7 +666,7 @@ export function Director() {
                   <MarkdownView className="dr-md" text={m.content} tail={m.state === "streaming" ? <span className="dr-caret" aria-hidden="true" /> : null} />
                 )}
                 {m.proposals.length > 0 && (
-                  <div className="dr-cards" aria-label="Vorschläge">
+                  <div className="dr-cards" aria-label="Proposals">
                     {m.proposals.map((p, j) => {
                       const price = prices[`${i}:${j}`] ?? p.credits;
                       return (
@@ -689,17 +689,17 @@ export function Director() {
                   <div className="dr-actions">
                     {m.state === "failed" || m.state === "stopped" ? (
                       i === lastIndex && !busy && (
-                        <button type="button" className="dr-act dr-act--text" onClick={regenerate}><RotateCw aria-hidden="true" /> Erneut versuchen</button>
+                        <button type="button" className="dr-act dr-act--text" onClick={regenerate}><RotateCw aria-hidden="true" /> Try again</button>
                       )
                     ) : (
                       <>
                         <CopyButton text={m.content} />
                         {i === lastIndex && !busy && !Object.keys(m.started).length && (
-                          <button type="button" className="dr-act" onClick={regenerate} aria-label="Neu antworten" title="Neu antworten"><RotateCw aria-hidden="true" /></button>
+                          <button type="button" className="dr-act" onClick={regenerate} aria-label="Answer again" title="Answer again"><RotateCw aria-hidden="true" /></button>
                         )}
                       </>
                     )}
-                    {m.state === "stopped" && <span className="dr-msg__note">Gestoppt</span>}
+                    {m.state === "stopped" && <span className="dr-msg__note">Stopped</span>}
                     {m.charged ? <span className="dr-msg__charged"><TokenGlyph />{m.charged} Credits</span> : null}
                   </div>
                 )}
@@ -708,7 +708,7 @@ export function Director() {
                   and sends nothing (a message with the strongest models costs credits), Enter sends it.
                 */}
                 {i === lastIndex && !busy && !m.state && m.suggestions?.length ? (
-                  <div className="dr-replies" role="group" aria-label="Antworten zum Übernehmen">
+                  <div className="dr-replies" role="group" aria-label="Suggested replies">
                     {m.suggestions.map((s) => (
                       <button key={s} type="button" className="pill-btn dr-reply" onClick={() => prime(s, true)}>{s}</button>
                     ))}

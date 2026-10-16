@@ -8,7 +8,7 @@ export function prevIndex(i: number, count: number): number {
   return count > 0 ? (i - 1 + count) % count : 0;
 }
 
-/** Position for a slider's bar, «01 / 04». */
+/** Position for a slider's bar, "01 / 04". */
 export function counter(i: number, count: number): string {
   const two = (n: number) => String(n).padStart(2, "0");
   return `${two(i + 1)} / ${two(count)}`;

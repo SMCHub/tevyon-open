@@ -19,19 +19,19 @@ export function CommunityPage({ initial }: { initial: FeedPage | null }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [order, setOrder] = useState<Order>("new");
   const feed = useFeed("/api/community", filter, order, initial);
-  const kind = filter === "image" ? "Bilder" : filter === "video" ? "Videos" : null;
+  const kind = filter === "image" ? "images" : filter === "video" ? "videos" : null;
   const orders = guest ? ORDERS.filter((o) => o.id !== "following") : ORDERS;
 
   const tab = (on: boolean) => `chip${on ? " is-on" : ""}`;
 
   return (
     <div className="studio cm cm-feed wall-page">
-      <WallTitle words={["Die", "Community"]} />
+      <WallTitle words={["The", "Community"]} />
 
       {/* One quiet bar like the image studio: order and kind as plain tabs, the AI note and the actions on the right. */}
       <header className="wall-head cm-feedbar">
         <div className="cm-feedbar__filters">
-          <div className="wall-tabs" role="tablist" aria-label="Reihenfolge">
+          <div className="wall-tabs" role="tablist" aria-label="Order">
             {orders.map((o) => (
               <button key={o.id} type="button" role="tab" aria-selected={order === o.id} className={tab(order === o.id)} onClick={() => setOrder(o.id)}>
                 {o.label}
@@ -39,7 +39,7 @@ export function CommunityPage({ initial }: { initial: FeedPage | null }) {
             ))}
           </div>
           <span className="cm-feedbar__sep" aria-hidden="true" />
-          <div className="wall-tabs" role="tablist" aria-label="Art">
+          <div className="wall-tabs" role="tablist" aria-label="Type">
             {FILTERS.map((f) => (
               <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} className={tab(filter === f.id)} onClick={() => setFilter(f.id)}>
                 {f.label}
@@ -49,19 +49,19 @@ export function CommunityPage({ initial }: { initial: FeedPage | null }) {
         </div>
         <div className="cm-feedbar__end">
           {/* Everything here is made with AI (AI Act Art. 50): said once, quietly. */}
-          <p className="cm-feedbar__note">Mit KI erstellt · freigegeben von ihren Urhebern</p>
+          <p className="cm-feedbar__note">Made with AI · shared by their creators</p>
           {guest ? (
-            <Link href="/login?next=%2Fcommunity" className="cm-link">Gratis starten <ArrowRight aria-hidden="true" /></Link>
+            <Link href="/login?next=%2Fcommunity" className="cm-link">Start for free <ArrowRight aria-hidden="true" /></Link>
           ) : (
             <>
-              <Link href="/profile#kreationen" className="cm-link"><Share2 aria-hidden="true" /> Teilen</Link>
-              {profile && <Link href={`/profile/${profile.handle}`} className="cm-link">Mein Profil</Link>}
+              <Link href="/profile#creations" className="cm-link"><Share2 aria-hidden="true" /> Share</Link>
+              {profile && <Link href={`/profile/${profile.handle}`} className="cm-link">My profile</Link>}
             </>
           )}
         </div>
       </header>
 
-      <section className="wall-body" aria-label="Kreationen der Community">
+      <section className="wall-body" aria-label="Community creations">
         <CommunityWall
           feed={feed}
           ownHandle={profile?.handle ?? null}
@@ -70,16 +70,16 @@ export function CommunityPage({ initial }: { initial: FeedPage | null }) {
             order === "following" ? (
               <div className="cm-empty">
                 <Users aria-hidden="true" />
-                <strong>Hier erscheint, was die Menschen teilen, denen du folgst</strong>
-                <p>Öffne ein Profil in der Community und tippe auf «Folgen».</p>
-                <button type="button" className="cm-btn" onClick={() => setOrder("new")}>Alle zeigen</button>
+                <strong>What the people you follow share shows up here</strong>
+                <p>Open a profile in the Community and tap “Follow”.</p>
+                <button type="button" className="cm-btn" onClick={() => setOrder("new")}>Show all</button>
               </div>
             ) : (
               <div className="cm-empty">
                 <Users aria-hidden="true" />
-                <strong>{kind ? `Noch keine ${kind} in der Community` : "Noch nichts geteilt"}</strong>
-                <p>Teile die erste Kreation: Öffne sie in deinem Profil gross und tippe auf «Teilen».</p>
-                <Link href={guest ? "/login?next=%2Fprofile" : "/profile#kreationen"} className="cm-btn">Zum Profil <ArrowRight aria-hidden="true" /></Link>
+                <strong>{kind ? `No ${kind} in the Community yet` : "Nothing shared yet"}</strong>
+                <p>Share the first creation: open it in your profile and tap “Share”.</p>
+                <Link href={guest ? "/login?next=%2Fprofile" : "/profile#creations"} className="cm-btn">Go to profile <ArrowRight aria-hidden="true" /></Link>
               </div>
             )
           }

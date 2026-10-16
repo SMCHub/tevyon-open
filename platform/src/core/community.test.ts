@@ -107,8 +107,8 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     expect(await save({ handle: "lena", acceptTerms: false })).toEqual({ ok: false, error: "terms_required" });
     expect(await community.profile(LENA)).toBeNull();
 
-    const saved = await save({ handle: " @Lena_Creates ", name: "  Lena   Muster ", bio: "Licht,  Wasser\nund Film." });
-    expect(saved).toEqual({ ok: true, profile: { handle: "lena_creates", name: "Lena Muster", bio: "Licht, Wasser und Film.", showPrompts: true, since: expect.any(Number), avatar: null } });
+    const saved = await save({ handle: " @Lena_Creates ", name: "  Lena   Smith ", bio: "Light,  water\nand film." });
+    expect(saved).toEqual({ ok: true, profile: { handle: "lena_creates", name: "Lena Smith", bio: "Light, water and film.", showPrompts: true, since: expect.any(Number), avatar: null } });
     expect(await community.profile(LENA)).toEqual(saved.ok && saved.profile);
   });
 
@@ -210,7 +210,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     addJob(LENA, J2, { outputs: [{ url: `/api/media/${J2}/0.mp4`, contentType: "video/mp4" }] });
     addJob(LENA, J3);
     addJob(MAX, J4);
-    await community.saveProfile(LENA, { handle: "lena", name: "Lena", bio: "Licht und Film", acceptTerms: true });
+    await community.saveProfile(LENA, { handle: "lena", name: "Lena", bio: "Light and film", acceptTerms: true });
     await community.saveProfile(MAX, { handle: "max", name: "Max", acceptTerms: true });
     await community.publish(LENA, J1);
     await community.publish(LENA, J2);
@@ -218,7 +218,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
 
     const page = await community.creator("@LENA");
     expect(page).toEqual({
-      profile: { handle: "lena", name: "Lena", bio: "Licht und Film", since: expect.any(Number), avatar: null },
+      profile: { handle: "lena", name: "Lena", bio: "Light and film", since: expect.any(Number), avatar: null },
       counts: { image: 1, video: 1 },
       followers: 0,
       following: 0,
@@ -273,7 +273,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
 
     expect(await community.report(LENA, J1, { reason: "rights" })).toEqual({ ok: false, error: "own_creation" });
     expect(await community.report(R1, J1, { reason: "spam" })).toEqual({ ok: false, error: "invalid_reason" });
-    expect(await community.report(R1, J1, { reason: "rights", note: "Mein Foto" })).toMatchObject({ ok: true });
+    expect(await community.report(R1, J1, { reason: "rights", note: "My photo" })).toMatchObject({ ok: true });
     expect(await community.report(R1, J1, { reason: "rights" })).toMatchObject({ ok: true });
     expect(await community.report(R2, J1, { reason: "person" })).toMatchObject({ ok: true });
     expect(await community.isPublic(J1)).toBe(true);
@@ -309,9 +309,9 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     await community.report(R1, J1, { reason: "minors" });
     expect(await community.isPublic(J1)).toBe(false);
 
-    expect(await community.hide(J2, "Verstoss gegen die Nutzungsrichtlinien: Gewalt")).toEqual({ ok: true });
+    expect(await community.hide(J2, "Violates the usage policy: violence")).toEqual({ ok: true });
     expect(await community.isPublic(J2)).toBe(false);
-    expect((await community.mine(LENA)).find((p) => p.jobId === J2)).toMatchObject({ state: "hidden", reason: "Verstoss gegen die Nutzungsrichtlinien: Gewalt" });
+    expect((await community.mine(LENA)).find((p) => p.jobId === J2)).toMatchObject({ state: "hidden", reason: "Violates the usage policy: violence" });
     expect(await community.hide("10000000-0000-4000-8000-0000000000ff", "x")).toEqual({ ok: false, error: "not_found" });
   });
 
@@ -406,7 +406,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     expect(await community.creator("lena", {}, R3)).toMatchObject({ followed: false });
     expect(await community.creator("lena")).not.toHaveProperty("followed");
 
-    // «Gefolgt»: only what the creators the viewer follows have shared; without a viewer nothing.
+    // “Following”: only what the creators the viewer follows have shared; without a viewer nothing.
     expect((await community.feed({ following: true }, R1)).items.map((c) => c.id)).toEqual([J1]);
     expect((await community.feed({ following: true })).items).toEqual([]);
 
@@ -424,7 +424,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     expect(await community.report(R2, J1, { reason: "rights" })).toEqual({ ok: true, first: false, hidden: false });
     expect(await community.report(R3, J1, { reason: "rights" })).toEqual({ ok: true, first: false, hidden: true });
 
-    // Restored, then a new report is a first again; «dismiss» settles reports without hiding anything.
+    // Restored, then a new report is a first again; “dismiss” settles reports without hiding anything.
     await community.unhide(J1);
     expect(await community.report(R4, J1, { reason: "other" })).toEqual({ ok: true, first: true, hidden: false });
     expect(await community.dismiss(J1)).toEqual({ ok: true });
@@ -441,7 +441,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     expect(await community.reportProfile(LENA, "lena", { reason: "other" })).toEqual({ ok: false, error: "self" });
     expect(await community.reportProfile(R1, "nobody", { reason: "other" })).toEqual({ ok: false, error: "not_found" });
     expect(await community.reportProfile(R1, "lena", { reason: "nope" })).toEqual({ ok: false, error: "invalid_reason" });
-    expect(await community.reportProfile(R1, "lena", { reason: "person", note: "Mein Gesicht" })).toEqual({ ok: true, first: true });
+    expect(await community.reportProfile(R1, "lena", { reason: "person", note: "My face" })).toEqual({ ok: true, first: true });
     expect(await community.reportProfile(R2, "lena", { reason: "person" })).toEqual({ ok: true, first: false });
     expect(await community.isPublic(J1)).toBe(true);
 
@@ -485,7 +485,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
     await community.saveProfile(MAX, { handle: "max", name: "Max", acceptTerms: true });
     await community.publish(LENA, J1);
     await community.publish(LENA, J2);
-    await community.report(R1, J1, { reason: "rights", note: "Mein Bild" });
+    await community.report(R1, J1, { reason: "rights", note: "My picture" });
     await community.hide(J2, "Gewalt");
     await community.reportProfile(R2, "max", { reason: "person", note: "Fake" });
 
@@ -494,7 +494,7 @@ describe.each(stores)("%s community", (_name, makeStore) => {
       { jobId: J2, handle: "lena", kind: "image", media: { url: `/api/media/${J2}/0.png`, contentType: "image/png" }, state: "hidden", reason: "Gewalt", reports: [] },
       {
         jobId: J1, handle: "lena", kind: "image", media: { url: `/api/media/${J1}/0.png`, contentType: "image/png" }, state: "public",
-        reports: [{ reason: "rights", note: "Mein Bild", at: expect.any(Number) }],
+        reports: [{ reason: "rights", note: "My picture", at: expect.any(Number) }],
       },
     ]);
     expect(q.profiles).toEqual([{ handle: "max", name: "Max", avatar: null, state: "visible", reports: [{ reason: "person", note: "Fake", at: expect.any(Number) }] }]);

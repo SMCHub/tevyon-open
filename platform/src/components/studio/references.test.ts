@@ -3,40 +3,41 @@ import { mentionAt, mentionParts, renumberAfterRemoval, replaceMention } from ".
 
 describe("reference mentions in the prompt", () => {
   it("drops the mentions of a removed reference and moves the later ones up", () => {
-    expect(renumberAfterRemoval("Katze aus @Bild1 im Raum von @Bild2, Licht wie @Bild3", 2)).toBe("Katze aus @Bild1 im Raum von , Licht wie @Bild2");
-    expect(renumberAfterRemoval("@image1 und @img3", 1)).toBe(" und @Bild2");
+    expect(renumberAfterRemoval("Cat from @image1 in the room of @image2, light like @image3", 2)).toBe("Cat from @image1 in the room of , light like @image2");
+    // Older prompts may still say @Bild; they are understood and renumbered all the same.
+    expect(renumberAfterRemoval("@Bild1 and @img3", 1)).toBe(" and @image2");
   });
 
   it("finds the @-word the user is typing right before the caret, not an e-mail address", () => {
-    expect(mentionAt("Katze aus @Bi", 13)).toEqual({ start: 10, query: "Bi" });
+    expect(mentionAt("Cat from @im", 12)).toEqual({ start: 9, query: "im" });
     expect(mentionAt("@", 1)).toEqual({ start: 0, query: "" });
-    expect(mentionAt("mail an a@b", 11)).toBeNull();
-    expect(mentionAt("@Bild1 sitzt", 12)).toBeNull();
+    expect(mentionAt("mail to a@b", 11)).toBeNull();
+    expect(mentionAt("@image1 sits", 12)).toBeNull();
   });
 });
 
 describe("mentioning images picked from the assets", () => {
   it("replaces the @-word being typed with the names of the new references and puts the caret after them", () => {
-    expect(replaceMention("ändere die Person auf dem @", 26, 27, [1])).toEqual({ text: "ändere die Person auf dem @Bild1 ", caret: 33 });
-    expect(replaceMention("Mische @ und den Rest", 7, 8, [2, 3])).toEqual({ text: "Mische @Bild2 @Bild3 und den Rest", caret: 20 });
+    expect(replaceMention("change the person in @", 21, 22, [1])).toEqual({ text: "change the person in @image1 ", caret: 29 });
+    expect(replaceMention("Blend @ and the rest", 6, 7, [2, 3])).toEqual({ text: "Blend @image2 @image3 and the rest", caret: 21 });
   });
 });
 
 describe("marking the mentions in the prompt field", () => {
   it("splits the prompt into text and mentions, the text unchanged, a mention without its image marked loose", () => {
-    const text = "Gesicht von @Bild1 auf @bild 2, Licht wie @image3.";
+    const text = "Face from @image1 on @bild 2, light like @img3.";
     const parts = mentionParts(text, 2);
     expect(parts).toEqual([
-      { text: "Gesicht von " },
-      { text: "@Bild1", n: 1, attached: true },
-      { text: " auf " },
+      { text: "Face from " },
+      { text: "@image1", n: 1, attached: true },
+      { text: " on " },
       { text: "@bild 2", n: 2, attached: true },
-      { text: ", Licht wie " },
-      { text: "@image3", n: 3, attached: false },
+      { text: ", light like " },
+      { text: "@img3", n: 3, attached: false },
       { text: "." },
     ]);
     expect(parts.map((p) => p.text).join("")).toBe(text);
-    expect(mentionParts("mail an a@b und @Bilder", 1)).toEqual([{ text: "mail an a@b und @Bilder" }]);
+    expect(mentionParts("mail to a@b and @images", 1)).toEqual([{ text: "mail to a@b and @images" }]);
     expect(mentionParts("", 0)).toEqual([]);
   });
 });

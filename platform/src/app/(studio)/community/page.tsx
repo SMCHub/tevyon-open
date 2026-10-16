@@ -5,7 +5,7 @@ import { pageOrigin } from "@/server/consent";
 import { CommunityPage } from "./community-page";
 
 const TITLE = "Community – Tevyon";
-const DESCRIPTION = "Bilder und Videos, die Menschen mit Tevyon erstellt und geteilt haben. Alle mit KI erstellt, jeder Prompt zum Übernehmen.";
+const DESCRIPTION = "Images and videos people made with Tevyon and shared. All made with AI, every prompt ready to reuse.";
 
 /** Public and indexable (the Studio around it is not): the first picture is the preview in social media. */
 export async function generateMetadata(): Promise<Metadata> {

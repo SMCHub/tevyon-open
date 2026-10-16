@@ -34,25 +34,25 @@ export async function GET(req: Request) {
   return Response.json({ summary: statement.summary, entries }, { headers: { "cache-control": "private, no-store" } });
 }
 
-const ZURICH = new Intl.DateTimeFormat("de-CH", {
+const ZURICH = new Intl.DateTimeFormat("en-US", {
   timeZone: "Europe/Zurich", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
 });
 
-/** Semicolon CSV with a BOM, so Excel in Switzerland and Germany opens it with umlauts and columns intact. */
+/** Comma CSV with a BOM, so spreadsheet apps open it with special characters and columns intact. */
 function toCsv(entries: CreditEntry[]): string {
-  const cell = (v: string | number) => (/[";\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-  const rows = [["Datum", "Art", "Beschreibung", "Kanal", "Status", "Preis", "Credits", "Saldo"]];
+  const cell = (v: string | number) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+  const rows = [["Date", "Type", "Description", "Channel", "Status", "Price", "Credits", "Balance"]];
   for (const e of [...entries].reverse()) {
     rows.push([
       ZURICH.format(e.at),
       entryKindLabel(e),
       entryTitle(e),
       e.kind === "job" ? ORIGIN_LABEL[e.origin] : "",
-      e.kind === "job" || e.kind === "director" ? CHARGE_LABEL[e.state] : e.kind === "grant" ? "gutgeschrieben" : e.credits < 0 ? "abgezogen" : "zurückgebucht",
+      e.kind === "job" || e.kind === "director" ? CHARGE_LABEL[e.state] : e.kind === "grant" ? "added" : e.credits < 0 ? "deducted" : "refunded",
       e.kind === "job" || e.kind === "director" ? String(e.amount) : "",
       String(e.credits),
       String(e.balance),
     ]);
   }
-  return "﻿" + rows.map((r) => r.map(cell).join(";")).join("\r\n") + "\r\n";
+  return "﻿" + rows.map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
 }

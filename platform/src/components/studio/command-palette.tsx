@@ -13,18 +13,18 @@ import "./command-palette.css";
 type Item = Command & { icon: React.ReactNode; href?: string; run?: () => void };
 
 const PAGES: Item[] = [
-  { id: "p-community", group: "Seiten", label: "Community", hint: "Was andere teilen", href: "/community", icon: <Users />, keywords: ["geteilt", "öffentlich", "galerie", "feed", "andere"] },
-  { id: "p-profile", group: "Seiten", label: "Profil", hint: "Nutzung, Kreationen, teilen", href: "/profile", icon: <UserRound />, keywords: ["konto", "account", "teilen", "veröffentlichen", "nutzung", "handle"] },
-  { id: "p-image", group: "Seiten", label: "Bild", hint: "Bild-Studio", href: "/image", icon: <ImagePlus />, keywords: ["foto", "image", "erstellen"] },
-  { id: "p-video", group: "Seiten", label: "Video", hint: "Video-Studio", href: "/video", icon: <Clapperboard />, keywords: ["clip", "film", "erstellen"] },
-  { id: "p-director", group: "Seiten", label: "Director", hint: "Idee im Gespräch planen", href: "/director", icon: <Wand2 />, keywords: ["chat", "planen", "regie"] },
-  { id: "p-assets", group: "Seiten", label: "Assets", hint: "Alle deine Ergebnisse", href: "/assets", icon: <FolderOpen />, keywords: ["ergebnisse", "downloads", "verlauf", "meine"] },
-  { id: "p-credits", group: "Seiten", label: "Credits", hint: "Saldo und Aufladen", href: "/credits", icon: <Coins />, keywords: ["kosten", "aufladen", "preise", "kaufen", "konto"] },
-  { id: "p-api", group: "Seiten", label: "API & MCP", hint: "Claude, Cursor, CLI", href: "/settings/api", icon: <KeyRound />, keywords: ["schlüssel", "agent", "claude", "cli", "mcp"] },
+  { id: "p-community", group: "Pages", label: "Community", hint: "What others share", href: "/community", icon: <Users />, keywords: ["shared", "public", "gallery", "feed", "others"] },
+  { id: "p-profile", group: "Pages", label: "Profile", hint: "Usage, creations, sharing", href: "/profile", icon: <UserRound />, keywords: ["account", "share", "publish", "usage", "handle"] },
+  { id: "p-image", group: "Pages", label: "Image", hint: "Image studio", href: "/image", icon: <ImagePlus />, keywords: ["photo", "picture", "create"] },
+  { id: "p-video", group: "Pages", label: "Video", hint: "Video studio", href: "/video", icon: <Clapperboard />, keywords: ["clip", "film", "create"] },
+  { id: "p-director", group: "Pages", label: "Director", hint: "Plan an idea in conversation", href: "/director", icon: <Wand2 />, keywords: ["chat", "plan", "direct"] },
+  { id: "p-assets", group: "Pages", label: "Assets", hint: "All your results", href: "/assets", icon: <FolderOpen />, keywords: ["results", "downloads", "history", "mine"] },
+  { id: "p-credits", group: "Pages", label: "Credits", hint: "Balance and top-up", href: "/credits", icon: <Coins />, keywords: ["cost", "top up", "prices", "buy", "account", "billing"] },
+  { id: "p-api", group: "Pages", label: "API & MCP", hint: "Claude, Cursor, CLI", href: "/settings/api", icon: <KeyRound />, keywords: ["key", "agent", "claude", "cli", "mcp"] },
 ];
 
 const ACTIONS: Item[] = [
-  { id: "a-i2v", group: "Aktionen", label: "Bild → Video", hint: "Foto animieren", href: "/video?mode=image", icon: <Sparkles />, keywords: ["animieren", "startbild"] },
+  { id: "a-i2v", group: "Actions", label: "Image → Video", hint: "Animate a photo", href: "/video?mode=image", icon: <Sparkles />, keywords: ["animate", "start image"] },
 ];
 
 /** The palette's contents while it is open: pages, actions and every live model. */
@@ -35,12 +35,12 @@ function useItems(): Item[] {
       .filter((m) => m.status !== "paused")
       .map((m) => ({
         id: `m-${m.jobType}`,
-        group: "Modelle",
+        group: "Models",
         label: m.model,
-        hint: `${m.kind === "image" ? "Bild" : "Video"} · ${m.tagline}`,
+        hint: `${m.kind === "image" ? "Image" : "Video"} · ${m.tagline}`,
         href: `/${m.kind}?model=${m.jobType}`,
         icon: m.kind === "image" ? <ImageIcon /> : <Clapperboard />,
-        keywords: [m.kind === "image" ? "bild" : "video", ...(m.family ? [m.family] : [])],
+        keywords: [m.kind === "image" ? "image" : "video", ...(m.family ? [m.family] : [])],
       }));
     return [...PAGES, ...ACTIONS, ...models];
   }, [catalog]);
@@ -98,7 +98,7 @@ function Palette({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div className="cmdk" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="cmdk__panel" role="dialog" aria-modal="true" aria-label="Suchen und springen">
+      <div className="cmdk__panel" role="dialog" aria-modal="true" aria-label="Search and jump">
         <div className="cmdk__search">
           <Search aria-hidden="true" />
           <input
@@ -107,16 +107,16 @@ function Palette({ onClose }: { onClose: () => void }) {
             aria-expanded="true"
             aria-controls="cmdk-list"
             aria-activedescendant={results[active] ? `cmdk-${results[active]!.id}` : undefined}
-            aria-label="Suchen"
-            placeholder="Seite oder Modell suchen …"
+            aria-label="Search"
+            placeholder="Search pages or models…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKey}
           />
           <kbd>Esc</kbd>
         </div>
-        <ul className="cmdk__list" id="cmdk-list" role="listbox" ref={list} aria-label="Treffer">
-          {results.length === 0 && <li className="cmdk__empty" role="presentation">Nichts gefunden für «{query.trim()}».</li>}
+        <ul className="cmdk__list" id="cmdk-list" role="listbox" ref={list} aria-label="Results">
+          {results.length === 0 && <li className="cmdk__empty" role="presentation">Nothing found for “{query.trim()}”.</li>}
           {results.map((item, i) => {
             const heading = !searching && (i === 0 || results[i - 1]!.group !== item.group);
             return (
@@ -142,10 +142,10 @@ function Palette({ onClose }: { onClose: () => void }) {
           })}
         </ul>
         <div className="cmdk__foot" aria-hidden="true">
-          <span><kbd>↑</kbd><kbd>↓</kbd> wählen</span>
-          <span><kbd>↵</kbd> öffnen</span>
-          <span><kbd>Esc</kbd> schliessen</span>
-          <span className="cmdk__foot-end"><kbd>⌘</kbd><kbd>K</kbd> überall</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> select</span>
+          <span><kbd>↵</kbd> open</span>
+          <span><kbd>Esc</kbd> close</span>
+          <span className="cmdk__foot-end"><kbd>⌘</kbd><kbd>K</kbd> anywhere</span>
         </div>
       </div>
     </div>,

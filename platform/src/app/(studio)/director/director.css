@@ -135,7 +135,7 @@
 .composer .go.go--stop:hover:not(:disabled) { background: rgb(var(--fg) / 0.18); box-shadow: none; }
 .composer .go.go--stop .go__arrow { width: 13px; height: 13px; fill: currentColor; }
 
-/* ----- «Anpassen» on a card (the user changes prompt and settings before the start) ----- */
+/* ----- “Adjust” on a card (the user changes prompt and settings before the start) ----- */
 .dr-card__adjust-open.dr-act--text { justify-self: start; height: 28px; margin-top: 6px; padding: 0 10px; font-size: 12px; }
 .dr-card.is-editing { align-items: start; border-color: var(--line-strong); }
 .dr-card__adjust { display: grid; gap: 8px; margin-top: 8px; }

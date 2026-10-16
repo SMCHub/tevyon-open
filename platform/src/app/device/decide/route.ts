@@ -6,7 +6,7 @@ import { oauth } from "@/server/keys";
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return new Response("Forbidden", { status: 403 });
   const account = await currentAccount();
-  if (!account || account.via !== "session") return new Response("Bitte zuerst bei Tevyon anmelden.", { status: 401 });
+  if (!account || account.via !== "session") return new Response("Please sign in to Tevyon first.", { status: 401 });
   const form = Object.fromEntries(new URLSearchParams(await req.text())) as Record<string, string>;
   const code = form.code ?? "";
   if (!checkDeviceToken(form.csrf, account.id, code)) return new Response("Forbidden", { status: 403 });

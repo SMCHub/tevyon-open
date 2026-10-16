@@ -14,7 +14,7 @@ import "./model-picker.css";
 
 /**
  * Draft state of one generator: model, prompt, options and the live price.
- * Reads ?model=, ?prompt= and ?from=<jobId> so menus and "Erneut verwenden" can prefill it.
+ * Reads ?model=, ?prompt= and ?from=<jobId> so menus and "Reuse" can prefill it.
  */
 export function useDraft(kind: Kind) {
   const { catalog, jobs, quote } = useStudio();
@@ -99,7 +99,7 @@ export function useDraft(kind: Kind) {
   };
 }
 
-const BADGE = { top: "Top", neu: "Neu" } as const;
+const BADGE = { top: "Top", neu: "New" } as const;
 
 /**
  * Model picker: the models grouped by family (maker once per family), each with what it can do (highest resolution,
@@ -120,7 +120,7 @@ export function ModelPicker({
   const cover = (model && modelCover(model)) ?? null;
   return (
     <Popover
-      label="Modell wählen"
+      label="Choose model"
       side={side}
       className={variant === "row" ? "pop--block mpick" : variant === "button" ? "pop--block" : ""}
       panelClassName="pop__panel--models mlist-panel"
@@ -130,18 +130,18 @@ export function ModelPicker({
           {cover ? <img className="mpick__cover" src={cover} alt="" /> : <span className="mpick__cover" aria-hidden="true" />}
           <span className="mpick__text">
             <span className="mpick__name">
-              {model?.model ?? "Modell"}
+              {model?.model ?? "Model"}
               {model?.badge && <span className={`tag tag--${model.badge}`}>{BADGE[model.badge]}</span>}
             </span>
             <span className="mpick__sub">{model ? [splitTagline(model.tagline).maker, ...modelFacts(model.params)].filter(Boolean).join(" · ") : "…"}</span>
           </span>
-          <span className="mpick__switch">Wechseln<ChevronDown aria-hidden="true" /></span>
+          <span className="mpick__switch">Change<ChevronDown aria-hidden="true" /></span>
         </>
       ) : (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pill-btn__thumb" src={cover ?? "/login-art/p1.webp"} alt="" />
-          <span className="pill-btn__text">{model?.model ?? "Modell"}</span>
+          <span className="pill-btn__text">{model?.model ?? "Model"}</span>
           <ChevronDown className="pill-btn__chev" aria-hidden="true" />
         </>
       )}
@@ -185,7 +185,7 @@ function ModelList({ families, model, onChoose }: {
   const count = families.reduce((n, f) => n + f.models.length, 0);
   return (
     <div className="mlist" ref={list} onKeyDown={onKey}>
-      <p className="pop__head mlist__head"><span>Modell</span><span className="mlist__count">{count}</span></p>
+      <p className="pop__head mlist__head"><span>Model</span><span className="mlist__count">{count}</span></p>
       {families.map((f) => (
         <section key={f.key} className="mlist__family" aria-label={f.maker ? `${f.name}, ${f.maker}` : f.name}>
           <p className="mlist__fam" aria-hidden="true"><span>{f.name}</span>{f.maker && <span className="mlist__maker">{f.maker}</span>}</p>
@@ -201,14 +201,14 @@ function ModelList({ families, model, onChoose }: {
                 <span className="mlist__name">
                   {m.model}
                   {m.status === "deprecated"
-                    ? <span className="tag">Läuft aus</span>
+                    ? <span className="tag">Retiring</span>
                     : m.badge && <span className={`tag tag--${m.badge}`}>{BADGE[m.badge]}</span>}
                 </span>
-                <span className="mlist__price">{paused ? "Pausiert" : price && <><TokenGlyph />{price}</>}</span>
+                <span className="mlist__price">{paused ? "Paused" : price && <><TokenGlyph />{price}</>}</span>
                 <span className="mlist__desc">{splitTagline(m.tagline).text}</span>
                 <span className="mlist__facts">
                   {[spec.resolution, spec.seconds && `${spec.seconds.max} s`].filter(Boolean).join(" · ")}
-                  {spec.sound && <Volume2 aria-label="mit Ton" />}
+                  {spec.sound && <Volume2 aria-label="with sound" />}
                 </span>
               </button>
             );

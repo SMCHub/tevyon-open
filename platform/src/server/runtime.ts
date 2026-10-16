@@ -28,7 +28,7 @@ const TICK_MS = 2000;
 const ON_VERCEL = Boolean(process.env.VERCEL);
 
 /**
- * Where uploads and results live: Supabase Storage (bucket «media») on Vercel or with MEDIA_STORE=supabase, otherwise
+ * Where uploads and results live: Supabase Storage (bucket “media”) on Vercel or with MEDIA_STORE=supabase, otherwise
  * the file store in .data/media (local development). Both use the same keys and /api/media URLs.
  */
 export function mediaStore() {

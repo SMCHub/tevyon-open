@@ -2,7 +2,7 @@
 // server in process (real catalog, a vendor that finishes at once, test credits); every session is judged by the house
 // rules. Without --yes it only shows the scenarios and the estimated token cost (free). With --yes the model's tokens
 // cost money (Comfy Router chat route); the generations do not.
-// Usage: node --env-file=.env.local scripts/agent-eval.ts [--yes] [--model claude-sonnet-5-5] [--scenario video-mit-ton,produktfoto]
+// Usage: node --env-file=.env.local scripts/agent-eval.ts [--yes] [--model claude-sonnet-5-5] [--scenario video-with-sound,product-photo]
 import path from "node:path";
 import { runnerImport } from "vite";
 

@@ -20,7 +20,7 @@ export async function community() {
 
 /**
  * The answer when the community store fails. Until migrations 0017/0018 are applied their tables are missing (Postgres
- * «undefined_table», «undefined_column»): the Studio then says the community is not ready instead of breaking.
+ * “undefined_table”, “undefined_column”): the Studio then says the community is not ready instead of breaking.
  */
 export function storageFailure(e: unknown): Response {
   const code = (e as { code?: string })?.code;

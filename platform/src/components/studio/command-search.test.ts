@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { searchCommands, type Command } from "./command-search";
 
-const cmd = (id: string, label: string, extra: Partial<Command> = {}): Command => ({ id, group: "Seiten", label, ...extra });
+const cmd = (id: string, label: string, extra: Partial<Command> = {}): Command => ({ id, group: "Pages", label, ...extra });
 const ALL: Command[] = [
-  cmd("explore", "Entdecken"),
-  cmd("image", "Bild"),
+  cmd("explore", "Explore"),
+  cmd("image", "Image"),
   cmd("video", "Video"),
-  cmd("i2v", "Bild → Video"),
+  cmd("i2v", "Image → Video"),
   cmd("presets", "Presets"),
-  cmd("credits", "Credits", { keywords: ["kosten", "aufladen", "preise"] }),
-  cmd("seedream", "Seedream 4.5", { group: "Modelle", hint: "Bild-Modell" }),
-  cmd("veo", "Veo 3.1", { group: "Modelle", hint: "Video-Modell" }),
-  cmd("surprise", "Überrasch mich", { group: "Aktionen" }),
+  cmd("credits", "Credits", { keywords: ["cost", "top up", "prices"] }),
+  cmd("seedream", "Seedream 4.5", { group: "Models", hint: "Image model" }),
+  cmd("veo", "Veo 3.1", { group: "Models", hint: "Video model" }),
+  cmd("surprise", "Café crème", { group: "Actions" }),
 ];
 const ids = (q: string) => searchCommands(ALL, q).map((c) => c.id);
 
@@ -26,11 +26,11 @@ describe("command search", () => {
   });
 
   it("finds a command by its keywords", () => {
-    expect(ids("kosten")).toEqual(["credits"]);
+    expect(ids("cost")).toEqual(["credits"]);
   });
 
   it("ignores case and accents", () => {
-    expect(ids("UBERRASCH")).toEqual(["surprise"]);
+    expect(ids("CAFE CREME")).toEqual(["surprise"]);
   });
 
   it("needs every word of the query to match", () => {

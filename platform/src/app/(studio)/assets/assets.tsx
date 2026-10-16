@@ -8,19 +8,19 @@ import { useStudio, type Job } from "@/components/studio/studio-context";
 
 type Filter = "all" | "image" | "video" | "failed";
 const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "Alle" },
-  { id: "image", label: "Bilder" },
+  { id: "all", label: "All" },
+  { id: "image", label: "Images" },
   { id: "video", label: "Videos" },
-  { id: "failed", label: "Fehlgeschlagen" },
+  { id: "failed", label: "Failed" },
 ];
 
 const DAY = 86_400_000;
 function groupOf(ms: number): string {
   const today = new Date().setHours(0, 0, 0, 0);
-  if (ms >= today) return "Heute";
-  if (ms >= today - DAY) return "Gestern";
-  if (ms >= today - 6 * DAY) return "Diese Woche";
-  return new Date(ms).toLocaleDateString("de-CH", { month: "long", year: "numeric" });
+  if (ms >= today) return "Today";
+  if (ms >= today - DAY) return "Yesterday";
+  if (ms >= today - 6 * DAY) return "This week";
+  return new Date(ms).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
 export function Assets() {
@@ -61,7 +61,7 @@ export function Assets() {
       <header className="page-head">
         <div>
           <h1 className="page-title">Assets</h1>
-          <p className="page-sub">{counts.image} Bilder · {counts.video} Videos. Alles, was du erstellt hast, sicher bei Tevyon gespeichert.</p>
+          <p className="page-sub">{counts.image} {counts.image === 1 ? "image" : "images"} · {counts.video} {counts.video === 1 ? "video" : "videos"}. Everything you made, stored safely with Tevyon.</p>
         </div>
       </header>
 
@@ -76,7 +76,7 @@ export function Assets() {
         <div className="assets-bar__right">
           <label className="search-box">
             <Search aria-hidden="true" />
-            <input type="search" placeholder="Prompt oder Modell suchen" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Assets durchsuchen" />
+            <input type="search" placeholder="Search prompt or model" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search Assets" />
           </label>
         </div>
       </div>
@@ -93,8 +93,8 @@ export function Assets() {
       ) : loaded ? (
         <div className="empty">
           <FolderOpen aria-hidden="true" />
-          <p>{query ? "Nichts gefunden." : "Hier landen deine Bilder und Videos."}</p>
-          {!query && <p className="empty__links"><Link href="/image">Bild erstellen</Link> · <Link href="/video">Video erstellen</Link></p>}
+          <p>{query ? "Nothing found." : "Your images and videos land here."}</p>
+          {!query && <p className="empty__links"><Link href="/image">Create an image</Link> · <Link href="/video">Create a video</Link></p>}
         </div>
       ) : null}
 

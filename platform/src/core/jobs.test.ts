@@ -174,11 +174,11 @@ describe("start", () => {
     const mine = `/api/media/uploads/${ACC_1}/a1b2.png`;
     // Still uploading, removed, or the model takes no reference images at all.
     expect(await jobs.start(ACC_1, "test_image", { prompt: "the fox from @Bild1 in @Bild2", references: [mine] }))
-      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @Bild2 is not attached"] });
+      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @image2 is not attached"] });
     expect(await jobs.start(ACC_1, "test_image", { prompt: "the fox from @Bild1" }))
-      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @Bild1 is not attached"] });
+      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @image1 is not attached"] });
     expect(await jobs.start(ACC_1, "test_image", { prompt: "the fox from @image3 runs", references: [mine, mine] }))
-      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @Bild3 is not attached"] });
+      .toMatchObject({ ok: false, error: "invalid_params", issues: ["references: @image3 is not attached"] });
     expect(await repo.balance(ACC_1)).toBe(10);
     expect(await jobs.start(ACC_1, "test_image", { prompt: "the fox from @Bild1, style of @bild 1", references: [mine] })).toMatchObject({ ok: true });
   });
@@ -444,7 +444,7 @@ describe("prompt skill", () => {
     const draft = await jobs.start(ACC_1, "test_image", { prompt: "fuchs im schnee" });
     if (!draft.ok) throw new Error(draft.error);
     await jobs.tick();
-    await jobs.start(ACC_1, "test_image", { prompt: "fuchs im schnee bei nacht" }, { basedOn: draft.job.id });
+    await jobs.start(ACC_1, "test_image", { prompt: "fox in the snow at night" }, { basedOn: draft.job.id });
     await jobs.tick();
     expect(writer.calls).toBe(2);
   });

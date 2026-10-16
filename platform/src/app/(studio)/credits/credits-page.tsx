@@ -18,16 +18,16 @@ import { jobText } from "@/components/studio/job-views";
 
 type Price = PriceEntry;
 
-const DATE = new Intl.DateTimeFormat("de-CH", { day: "numeric", month: "long", year: "numeric" });
+const DATE = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "long", year: "numeric" });
 const PLAN_STATUS: Record<string, string> = {
-  past_due: "Die letzte Zahlung ist offen. Stripe versucht es erneut; prüfe dein Zahlungsmittel unter «Abo verwalten».",
-  unpaid: "Die Zahlung ist offen. Solange kommen keine neuen Abo-Credits.",
-  incomplete: "Die erste Zahlung ist noch nicht bestätigt.",
-  paused: "Das Abo ist pausiert.",
+  past_due: "The last payment is outstanding. Stripe will retry; check your payment method under “Manage plan”.",
+  unpaid: "The payment is outstanding. No new plan credits until it is paid.",
+  incomplete: "The first payment is not confirmed yet.",
+  paused: "The plan is paused.",
 };
 
 /**
- * Plans and packs (the same rows as /preise), purchase via Stripe Checkout, the customer portal and the return from
+ * Plans and packs (the same rows as /pricing), purchase via Stripe Checkout, the customer portal and the return from
  * Stripe (idempotent with the webhook). With a running plan the account sees it first, with its credits and status.
  */
 function TopUp({ prices, expiring }: { prices: Price[]; expiring: CreditStatement["expiring"] | undefined }) {
@@ -45,8 +45,8 @@ function TopUp({ prices, expiring }: { prices: Price[]; expiring: CreditStatemen
     if (!sessionId) return;
     const kind = abo ? "plan" : "pack";
     if (sessionId === "cancel") {
-      setNotice({ kind: "info", text: "Abgebrochen. Es wurde nichts belastet." });
-      router.replace("/credits#aufladen");
+      setNotice({ kind: "info", text: "Cancelled. Nothing was charged." });
+      router.replace("/credits#top-up");
       return;
     }
     let live = true;
@@ -54,17 +54,17 @@ function TopUp({ prices, expiring }: { prices: Price[]; expiring: CreditStatemen
       .then(async (res) => {
         if (!live) return;
         if (res.ok) {
-          setNotice({ kind: "ok", text: kind === "plan" ? `Dein Abo läuft. ${fmt(res.credits ?? 0)} Credits für diesen Monat sind gutgeschrieben.` : `${fmt(res.credits ?? 0)} Credits gutgeschrieben. Danke für deinen Kauf.` });
+          setNotice({ kind: "ok", text: kind === "plan" ? `Your plan is active. ${fmt(res.credits ?? 0)} Credits for this month have been added.` : `${fmt(res.credits ?? 0)} Credits added. Thanks for your purchase.` });
           await refresh();
           reload();
         } else if (res.error === "not_paid") {
-          setNotice({ kind: "info", text: "Die Zahlung ist noch nicht bestätigt. Die Credits erscheinen, sobald sie eingeht." });
+          setNotice({ kind: "info", text: "The payment is not confirmed yet. Your Credits will appear as soon as it arrives." });
         } else {
-          setNotice({ kind: "error", text: "Diese Zahlung lässt sich deinem Konto nicht zuordnen. Wurde etwas belastet, melde dich bitte." });
+          setNotice({ kind: "error", text: "We could not match this payment to your account. If you were charged, please contact us." });
         }
-        router.replace("/credits#aufladen");
+        router.replace("/credits#top-up");
       })
-      .catch(() => live && setNotice({ kind: "error", text: "Die Zahlung lässt sich gerade nicht prüfen. Lade die Seite gleich noch einmal." }));
+      .catch(() => live && setNotice({ kind: "error", text: "We cannot check the payment right now. Please reload the page in a moment." }));
     return () => {
       live = false;
     };
@@ -75,7 +75,7 @@ function TopUp({ prices, expiring }: { prices: Price[]; expiring: CreditStatemen
     setNotice(null);
     const res = await start();
     setBusy(null);
-    if (!res.ok) setNotice({ kind: "error", text: BILLING_ERROR[res.error ?? ""] ?? "Das liess sich gerade nicht starten. Bitte versuch es gleich noch einmal." });
+    if (!res.ok) setNotice({ kind: "error", text: BILLING_ERROR[res.error ?? ""] ?? "That could not be started. Please try again in a moment." });
   }
 
   const subscription = billing?.subscription ?? null;
@@ -83,46 +83,46 @@ function TopUp({ prices, expiring }: { prices: Price[]; expiring: CreditStatemen
   const plan = live ? billing?.plans.find((p) => p.id === subscription.planId) : undefined;
 
   function planAction(p: PlanView): RowAction {
-    if (!billing?.plansEnabled) return { label: "Bald verfügbar", disabled: true };
-    if (live) return { label: subscription.planId === p.id ? "Verwalten" : "Wechseln", onClick: () => run("portal", openPortal), busy: busy === "portal", disabled: busy !== null };
-    return { label: "Abo starten", onClick: () => run(p.id, () => startPlan(p.id)), busy: busy === p.id, disabled: busy !== null };
+    if (!billing?.plansEnabled) return { label: "Coming soon", disabled: true };
+    if (live) return { label: subscription.planId === p.id ? "Manage" : "Switch", onClick: () => run("portal", openPortal), busy: busy === "portal", disabled: busy !== null };
+    return { label: "Subscribe", onClick: () => run(p.id, () => startPlan(p.id)), busy: busy === p.id, disabled: busy !== null };
   }
 
   function packAction(p: PackView): RowAction {
-    if (!billing?.enabled) return { label: "Bald verfügbar", disabled: true };
-    return { label: "Kaufen", onClick: () => run(p.id, () => buyPack(p.id)), busy: busy === p.id, disabled: busy !== null };
+    if (!billing?.enabled) return { label: "Coming soon", disabled: true };
+    return { label: "Buy", onClick: () => run(p.id, () => buyPack(p.id)), busy: busy === p.id, disabled: busy !== null };
   }
 
   return (
-    <section className="cr-topup" id="aufladen" aria-labelledby="cr-topup-title">
+    <section className="cr-topup" id="top-up" aria-labelledby="cr-topup-title">
       <div className="cr-section-head">
-        <h2 id="cr-topup-title" className="section-title">Credits aufladen</h2>
-        <p className="note">Abo oder Paket, bezahlt über Stripe mit Karte, TWINT oder Wallet. Alle Preise sind Endpreise in CHF.</p>
+        <h2 id="cr-topup-title" className="section-title">Top up Credits</h2>
+        <p className="note">A plan or a pack, paid via Stripe with card, TWINT or wallet. All prices are final prices in CHF.</p>
       </div>
       {notice && <p className={`cr-notice cr-notice--${notice.kind}`} role="status">{notice.kind === "ok" && <Check aria-hidden="true" />}{notice.text}</p>}
 
       {live && plan && (
-        <div className="cr-plan" id="abo">
+        <div className="cr-plan" id="plan">
           <div className="cr-plan__main">
-            <span className="cr-plan__label">Dein Abo</span>
-            <p className="cr-plan__name">{fmt(plan.credits)} Credits im Monat <span>{chf(plan.priceChf)} pro Monat</span></p>
-            {expiring && <p className="cr-plan__line">{fmt(expiring.credits)} Abo-Credits übrig, gültig bis {DATE.format(expiring.at)}. Sie werden zuerst verbraucht.</p>}
+            <span className="cr-plan__label">Your plan</span>
+            <p className="cr-plan__name">{fmt(plan.credits)} Credits a month <span>{chf(plan.priceChf)} per month</span></p>
+            {expiring && <p className="cr-plan__line">{fmt(expiring.credits)} plan Credits left, valid until {DATE.format(expiring.at)}. They are used first.</p>}
             {subscription.currentPeriodEnd && (
-              <p className="cr-plan__line">{subscription.cancelAtPeriodEnd ? `Gekündigt, endet am ${DATE.format(subscription.currentPeriodEnd)}.` : `Verlängert sich am ${DATE.format(subscription.currentPeriodEnd)}.`}</p>
+              <p className="cr-plan__line">{subscription.cancelAtPeriodEnd ? `Cancelled, ends on ${DATE.format(subscription.currentPeriodEnd)}.` : `Renews on ${DATE.format(subscription.currentPeriodEnd)}.`}</p>
             )}
             {PLAN_STATUS[subscription.status] && <p className="cr-plan__line cr-plan__line--warn">{PLAN_STATUS[subscription.status]}</p>}
           </div>
           <button type="button" className="btn btn--primary" disabled={busy !== null} onClick={() => run("portal", openPortal)}>
-            {busy === "portal" ? "Weiter zu Stripe …" : "Abo verwalten"}
+            {busy === "portal" ? "Opening Stripe …" : "Manage plan"}
           </button>
         </div>
       )}
 
-      <h3 className="cr-topup__sub" id={live ? undefined : "abo"}>{live ? "Andere Abos" : "Abo"}</h3>
+      <h3 className="cr-topup__sub" id={live ? undefined : "plan"}>{live ? "Other plans" : "Plans"}</h3>
       {billing && <PlanRows plans={billing.plans} prices={prices} subscription={subscription} action={planAction} />}
-      <h3 className="cr-topup__sub">Ohne Abo</h3>
+      <h3 className="cr-topup__sub">No plan</h3>
       {billing && <PackRows packs={billing.packs} prices={prices} action={packAction} start={billing.plans.length + 1} />}
-      {billing && !billing.enabled && <p className="note cr-topup__soon">Die Zahlung wird gerade eingerichtet. Bis dahin arbeitest du mit deinen Credits zum Start.</p>}
+      {billing && !billing.enabled && <p className="note cr-topup__soon">Payments are being set up. Until then you work with your starter Credits.</p>}
     </section>
   );
 }
@@ -133,12 +133,12 @@ function PriceList({ prices }: { prices: Price[] }) {
   return (
     <section className="cr-card cr-prices" aria-labelledby="cr-prices">
       <header className="cr-card__head">
-        <h2 id="cr-prices" className="cr-card__title">Preise pro Modell</h2>
-        <span className="cr-card__aside">in Credits, vor jedem Start sichtbar</span>
+        <h2 id="cr-prices" className="cr-card__title">Prices per model</h2>
+        <span className="cr-card__aside">in Credits, shown before every start</span>
       </header>
       <table className="cr-table">
         <thead>
-          <tr><th scope="col">Modell</th><th scope="col">ab</th><th scope="col">Standard</th><th scope="col">Einstellungen</th></tr>
+          <tr><th scope="col">Model</th><th scope="col">From</th><th scope="col">Default</th><th scope="col">Settings</th></tr>
         </thead>
         <tbody>
           {prices.map((p) => (
@@ -151,22 +151,22 @@ function PriceList({ prices }: { prices: Price[] }) {
           ))}
         </tbody>
       </table>
-      <p className="note">Schlägt ein Job fehl oder blockiert ihn der Inhaltsfilter, gehen die Credits vollständig zurück.</p>
+      <p className="note">If a job fails or the content filter blocks it, the Credits are refunded in full.</p>
     </section>
   );
 }
 
 type Filter = "all" | "spent" | "granted" | "refunded";
 const FILTERS: { id: Filter; label: string; test: (e: CreditEntry) => boolean }[] = [
-  { id: "all", label: "Alle", test: () => true },
-  { id: "spent", label: "Ausgaben", test: (e) => e.kind === "job" && e.state !== "refunded" },
-  { id: "granted", label: "Gutschriften", test: (e) => e.kind === "grant" },
-  { id: "refunded", label: "Erstattungen", test: (e) => e.kind === "job" && e.state === "refunded" },
+  { id: "all", label: "All", test: () => true },
+  { id: "spent", label: "Spent", test: (e) => e.kind === "job" && e.state !== "refunded" },
+  { id: "granted", label: "Added", test: (e) => e.kind === "grant" },
+  { id: "refunded", label: "Refunds", test: (e) => e.kind === "job" && e.state === "refunded" },
 ];
 
-const DAY = new Intl.DateTimeFormat("de-CH", { weekday: "short", day: "numeric", month: "long" });
-const TIME = new Intl.DateTimeFormat("de-CH", { hour: "2-digit", minute: "2-digit" });
-const SHORT = new Intl.DateTimeFormat("de-CH", { day: "numeric", month: "numeric" });
+const DAY = new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "long" });
+const TIME = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit" });
+const SHORT = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "numeric" });
 
 function dayLabel(ms: number) {
   const d = new Date(ms);
@@ -174,8 +174,8 @@ function dayLabel(ms: number) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diff = Math.round((today.getTime() - d.getTime()) / 86_400_000);
-  if (diff === 0) return "Heute";
-  if (diff === 1) return "Gestern";
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
   return DAY.format(ms);
 }
 
@@ -193,13 +193,13 @@ function UsageChart({ entries }: { entries: CreditEntry[] }) {
   return (
     <section className="cr-card cr-chart" aria-labelledby="cr-usage">
       <header className="cr-card__head">
-        <h2 id="cr-usage" className="cr-card__title">Verbrauch, letzte 30 Tage</h2>
+        <h2 id="cr-usage" className="cr-card__title">Usage, last 30 days</h2>
         <span className="cr-card__aside">{fmt(total)} Credits</span>
       </header>
       {total === 0 ? (
-        <p className="cr-chart__empty">Noch kein Verbrauch in den letzten 30 Tagen.</p>
+        <p className="cr-chart__empty">No usage in the last 30 days.</p>
       ) : (
-        <div className="cr-cols" role="img" aria-label={`Verbrauch pro Tag, zusammen ${fmt(total)} Credits in 30 Tagen`}>
+        <div className="cr-cols" role="img" aria-label={`Usage per day, ${fmt(total)} Credits in 30 days in total`}>
           <div className="cr-cols__grid" aria-hidden="true">
             <span data-v={fmt(max)} />
             <span data-v={fmt(max / 2)} />
@@ -220,7 +220,7 @@ function UsageChart({ entries }: { entries: CreditEntry[] }) {
                     <span>{SHORT.format(d.start)} · {d.jobs} {d.jobs === 1 ? "Job" : "Jobs"}</span>
                   </span>
                 )}
-                {(i % 7 === 2 || i === days.length - 1) && <span className="cr-col__x">{i === days.length - 1 ? "Heute" : SHORT.format(d.start)}</span>}
+                {(i % 7 === 2 || i === days.length - 1) && <span className="cr-col__x">{i === days.length - 1 ? "Today" : SHORT.format(d.start)}</span>}
               </div>
             ))}
           </div>
@@ -246,11 +246,11 @@ function ByModel({ entries }: { entries: CreditEntry[] }) {
   return (
     <section className="cr-card" aria-labelledby="cr-models">
       <header className="cr-card__head">
-        <h2 id="cr-models" className="cr-card__title">Nach Modell</h2>
-        <span className="cr-card__aside">gesamt</span>
+        <h2 id="cr-models" className="cr-card__title">By model</h2>
+        <span className="cr-card__aside">all time</span>
       </header>
       {rows.length === 0 ? (
-        <p className="cr-chart__empty">Sobald ein Job abgebucht ist, siehst du hier, welches Modell wie viel kostet.</p>
+        <p className="cr-chart__empty">Once a job is charged, you see here what each model costs.</p>
       ) : (
         <ul className="cr-bars">
           {rows.map((r) => (
@@ -290,8 +290,8 @@ function Statement({ entries }: { entries: CreditEntry[] }) {
   return (
     <section className="cr-statement" aria-labelledby="cr-statement">
       <div className="cr-statement__head">
-        <h2 id="cr-statement" className="section-title">Buchungen</h2>
-        <div className="filters" role="tablist" aria-label="Buchungen filtern">
+        <h2 id="cr-statement" className="section-title">Transactions</h2>
+        <div className="filters" role="tablist" aria-label="Filter transactions">
           {FILTERS.map((f) => (
             <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} className="filters__item" onClick={() => setFilter(f.id)}>
               {f.label} <span className="count">{entries.filter(f.test).length}</span>
@@ -302,7 +302,7 @@ function Statement({ entries }: { entries: CreditEntry[] }) {
       {groups.length === 0 ? (
         <div className="empty cr-statement__empty">
           <ReceiptText aria-hidden="true" />
-          <p>Keine Buchungen in dieser Ansicht.</p>
+          <p>No transactions in this view.</p>
         </div>
       ) : (
         groups.map((g) => (
@@ -324,13 +324,13 @@ function Statement({ entries }: { entries: CreditEntry[] }) {
                       ) : e.kind === "director" ? (
                         <ChargeTag entry={e} />
                       ) : (
-                        <span>{e.kind === "grant" ? "gutgeschrieben" : e.credits < 0 ? "abgezogen" : "zurückgebucht"}</span>
+                        <span>{e.kind === "grant" ? "added" : e.credits < 0 ? "deducted" : "refunded"}</span>
                       )}
                     </span>
                     {e.kind === "job" && prompts.get(e.jobId) && <span className="cr-row__prompt">{prompts.get(e.jobId)}</span>}
                   </span>
                   <EntryAmount entry={e} />
-                  <span className="cr-row__balance" title="Saldo nach dieser Buchung">{fmt(e.balance)}</span>
+                  <span className="cr-row__balance" title="Balance after this transaction">{fmt(e.balance)}</span>
                 </li>
               ))}
             </ul>
@@ -353,23 +353,23 @@ export function CreditsPage() {
       <header className="page-head">
         <div>
           <h1 className="page-title">Credits</h1>
-          <p className="page-sub">Saldo, Verbrauch und jede Buchung. Der Preis steht vor jedem Job fest. Schlägt ein Job fehl, gehen die Credits automatisch zurück.</p>
+          <p className="page-sub">Balance, usage and every transaction. The price is fixed before every job. If a job fails, the Credits are refunded automatically.</p>
         </div>
         <div className="cr-page__actions">
           <a className="btn" href="/api/credits?format=csv" download>
-            <Download aria-hidden="true" /> CSV exportieren
+            <Download aria-hidden="true" /> Export CSV
           </a>
-          <a className="btn btn--primary" href="#aufladen">
-            <Coins aria-hidden="true" /> Credits aufladen
+          <a className="btn btn--primary" href="#top-up">
+            <Coins aria-hidden="true" /> Top up Credits
           </a>
         </div>
       </header>
 
-      {failed && !statement && <p className="note note--error" role="alert">Der Kontoauszug lässt sich gerade nicht laden. Bitte später erneut versuchen.</p>}
+      {failed && !statement && <p className="note note--error" role="alert">The statement cannot be loaded right now. Please try again later.</p>}
 
-      <section className="cr-hero" aria-label="Saldo">
+      <section className="cr-hero" aria-label="Balance">
         <div className="cr-hero__main">
-          <span className="cr-hero__label">Verfügbar</span>
+          <span className="cr-hero__label">Available</span>
           <p className="cr-hero__value">
             <CreditCoin size={40} />
             <span className="cr-hero__num">{available === null ? "…" : fmt(available)}</span>
@@ -377,34 +377,34 @@ export function CreditsPage() {
           </p>
           {s && <CreditMeter summary={s} size="lg" />}
           {statement?.expiring && (
-            <p className="cr-hero__plan">davon {fmt(statement.expiring.credits)} Abo-Credits, gültig bis {new Date(statement.expiring.at).toLocaleDateString("de-CH", { day: "numeric", month: "long" })}</p>
+            <p className="cr-hero__plan">including {fmt(statement.expiring.credits)} plan Credits, valid until {new Date(statement.expiring.at).toLocaleDateString("en-US", { day: "numeric", month: "long" })}</p>
           )}
           {s && s.owed > 0 && (
             <p className="cr-owed" role="status">
-              Offen: {fmt(s.owed)} Credits aus einer Rückerstattung oder einem Zahlungsstreit. Neue Credits gleichen den Betrag zuerst aus, bis dahin startet nichts.
+              Outstanding: {fmt(s.owed)} Credits from a refund or a payment dispute. New Credits settle this amount first; until then nothing starts.
             </p>
           )}
         </div>
         <dl className="cr-kpis">
           <div className="cr-kpi">
-            <dt><span className="cr-dot cr-dot--reserved" aria-hidden="true" /> Reserviert</dt>
+            <dt><span className="cr-dot cr-dot--reserved" aria-hidden="true" /> Reserved</dt>
             <dd>{s ? fmt(s.reserved) : "…"}</dd>
-            <p>für laufende Jobs</p>
+            <p>for running jobs</p>
           </div>
           <div className="cr-kpi">
-            <dt><span className="cr-dot cr-dot--charged" aria-hidden="true" /> Verbraucht</dt>
+            <dt><span className="cr-dot cr-dot--charged" aria-hidden="true" /> Spent</dt>
             <dd>{s ? fmt(s.spent) : "…"}</dd>
-            <p>für fertige Ergebnisse</p>
+            <p>for finished results</p>
           </div>
           <div className="cr-kpi">
-            <dt>Zurückerstattet</dt>
+            <dt>Refunded</dt>
             <dd>{s ? fmt(s.refunded) : "…"}</dd>
-            <p>bei Fehlschlag oder Moderation</p>
+            <p>on failure or moderation</p>
           </div>
           <div className="cr-kpi">
-            <dt>Erhalten</dt>
+            <dt>Received</dt>
             <dd>{s ? fmt(s.granted) : "…"}</dd>
-            <p>Gutschriften insgesamt</p>
+            <p>total added</p>
           </div>
         </dl>
       </section>
@@ -421,7 +421,7 @@ export function CreditsPage() {
       {statement && <Statement entries={statement.entries} />}
 
       <p className="note cr-page__foot">
-        Erstellen kannst du im <Link href="/image">Bild-</Link> und im <Link href="/video">Video-Studio</Link>, über die CLI und über den MCP-Server, alles mit denselben Credits.
+        Create in the <Link href="/image">image</Link> and <Link href="/video">video studio</Link>, via the CLI and via the MCP server, all with the same Credits.
       </p>
     </div>
   );

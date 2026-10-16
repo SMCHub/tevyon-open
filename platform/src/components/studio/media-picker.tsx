@@ -48,8 +48,8 @@ function place(anchor: HTMLElement, height: number): React.CSSProperties {
 }
 
 /**
- * Instead of the file dialog, every upload field opens this card beside it: earlier uploads and own results («Assets», as the page is called) to pick again,
- * and «Vom Computer» for a new file. Every new file is scanned on the server before it is stored (upload-scan.ts).
+ * Instead of the file dialog, every upload field opens this card beside it: earlier uploads and own results (“Assets”, as the page is called) to pick again,
+ * and “From computer” for a new file. Every new file is scanned on the server before it is stored (upload-scan.ts).
  * `onFiles` gets new files (the page uploads them as before), `onPick` the URLs of picked uploads or results.
  */
 export function useMediaPicker({ kind, multiple = false, max = 1, onPick, onFiles }: {
@@ -183,7 +183,7 @@ function PickerCard({ anchor, kind, multiple, max, onClose, onComputer, onDropFi
     const urls = await Promise.all(list.map((i) => (i.jobId ? resultAsUpload(i.jobId) : Promise.resolve(i.url))));
     setBusy(false);
     const ok = urls.filter((u): u is string => Boolean(u));
-    if (ok.length < list.length) setError("Ein Asset liess sich gerade nicht übernehmen.");
+    if (ok.length < list.length) setError("An asset couldn't be added just now.");
     if (ok.length) onPick(ok);
   }
 
@@ -193,14 +193,14 @@ function PickerCard({ anchor, kind, multiple, max, onClose, onComputer, onDropFi
     setChosen((c) => (c.some((x) => x.key === item.key) ? c.filter((x) => x.key !== item.key) : c.length < max ? [...c, item] : c));
   }
 
-  const noun = kind === "video" ? "Video" : multiple ? "Bilder" : "Bild";
+  const noun = kind === "video" ? "video" : multiple ? "images" : "image";
   return createPortal(
     <div
       ref={card}
       className={`mpk${drag ? " is-drag" : ""}`}
       style={style}
       role="dialog"
-      aria-label={`${noun} hinzufügen`}
+      aria-label={`Add ${noun}`}
       // Portalled, but React events still bubble to the field that opened it (a drop zone, the composer): stop them here.
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
@@ -223,19 +223,19 @@ function PickerCard({ anchor, kind, multiple, max, onClose, onComputer, onDropFi
       }}
     >
       <header className="mpk__head">
-        <p className="mpk__title">{noun} hinzufügen</p>
-        <button type="button" className="icon-btn mpk__x" aria-label="Schliessen" onClick={onClose}><X aria-hidden="true" /></button>
+        <p className="mpk__title">Add {noun}</p>
+        <button type="button" className="icon-btn mpk__x" aria-label="Close" onClick={onClose}><X aria-hidden="true" /></button>
       </header>
 
       <button type="button" className="mpk__computer" onClick={onComputer} data-autofocus>
         <span className="mpk__computer-icon" aria-hidden="true"><Upload /></span>
         <span className="mpk__computer-text">
-          <span className="mpk__computer-title">Vom Computer</span>
-          <span className="mpk__computer-sub">{kind === "video" ? "MP4 oder MOV, 4 bis 30 Sekunden" : "JPG, PNG oder WebP"}, oder hierher ziehen</span>
+          <span className="mpk__computer-title">From computer</span>
+          <span className="mpk__computer-sub">{kind === "video" ? "MP4 or MOV, 4 to 30 seconds" : "JPG, PNG or WebP"}, or drag here</span>
         </span>
       </button>
 
-      <div className="mpk__tabs" role="tablist" aria-label="Quelle">
+      <div className="mpk__tabs" role="tablist" aria-label="Source">
         {([["uploads", "Uploads", shownUploads.length], ["results", "Assets", shownResults.length]] as const).map(([id, label, n]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className="mpk__tab" onClick={() => setTab(id)}>
             {label} <span className="mpk__n">{n}</span>
@@ -245,16 +245,16 @@ function PickerCard({ anchor, kind, multiple, max, onClose, onComputer, onDropFi
 
       <div className="mpk__body">
         {tab === "uploads" && uploads === null ? (
-          <p className="mpk__empty"><span className="ring" aria-hidden="true" /> Lädt …</p>
+          <p className="mpk__empty"><span className="ring" aria-hidden="true" /> Loading …</p>
         ) : items.length === 0 ? (
-          <p className="mpk__empty">{tab === "uploads" ? `Noch keine ${kind === "video" ? "Videos" : "Bilder"} hochgeladen.` : `Noch keine ${kind === "video" ? "Videos" : "Bilder"} erstellt.`}</p>
+          <p className="mpk__empty">{tab === "uploads" ? `No ${kind === "video" ? "videos" : "images"} uploaded yet.` : `No ${kind === "video" ? "videos" : "images"} created yet.`}</p>
         ) : (
-          <ul className="mpk__grid" role="listbox" aria-multiselectable={multiple} aria-label={tab === "uploads" ? "Deine Uploads" : "Deine Assets"}>
+          <ul className="mpk__grid" role="listbox" aria-multiselectable={multiple} aria-label={tab === "uploads" ? "Your uploads" : "Your Assets"}>
             {items.map((item) => {
               const at = chosen.findIndex((c) => c.key === item.key);
               return (
                 <li key={item.key} role="option" aria-selected={at >= 0}>
-                  <button type="button" className={`mpk__item${at >= 0 ? " is-on" : ""}`} onClick={() => choose(item)} disabled={busy} aria-label={`${kind === "video" ? "Video" : "Bild"} übernehmen`}>
+                  <button type="button" className={`mpk__item${at >= 0 ? " is-on" : ""}`} onClick={() => choose(item)} disabled={busy} aria-label={`Use ${kind === "video" ? "video" : "image"}`}>
                     {item.kind === "video"
                       ? <video src={`${item.url}#t=0.1`} muted playsInline preload="metadata" aria-hidden="true" onError={() => hide(item.key)} />
                       // eslint-disable-next-line @next/next/no-img-element
@@ -270,13 +270,13 @@ function PickerCard({ anchor, kind, multiple, max, onClose, onComputer, onDropFi
 
       {error && <p className="mpk__error" role="alert">{error}</p>}
       <footer className="mpk__foot">
-        <span className="mpk__note"><ShieldCheck aria-hidden="true" /> Jeder neue Upload wird automatisch geprüft</span>
+        <span className="mpk__note"><ShieldCheck aria-hidden="true" /> Every new upload is checked automatically</span>
         {multiple && (
           <button type="button" className="btn mpk__go" disabled={chosen.length === 0 || busy} onClick={() => void finish(chosen)}>
-            {busy ? "Übernimmt …" : `Einfügen${chosen.length ? ` (${chosen.length})` : ""}`}
+            {busy ? "Adding …" : `Insert${chosen.length ? ` (${chosen.length})` : ""}`}
           </button>
         )}
-        {!multiple && busy && <span className="mpk__note"><span className="ring" aria-hidden="true" /> Übernimmt …</span>}
+        {!multiple && busy && <span className="mpk__note"><span className="ring" aria-hidden="true" /> Adding …</span>}
       </footer>
     </div>,
     document.body,

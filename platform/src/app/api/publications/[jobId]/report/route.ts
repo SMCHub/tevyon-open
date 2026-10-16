@@ -23,11 +23,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/publications/[j
       const note = typeof body.note === "string" && body.note.trim() ? body.note.trim().slice(0, 500) : "";
       const page = `${publicBase(req)}/moderation`;
       after(() =>
-        notifyOperator(res.hidden ? "Tevyon: Kreation nach Meldungen ausgeblendet" : "Tevyon: neue Meldung zu einer Kreation", [
-          res.hidden ? "Eine Kreation ist nach Meldungen aus der Community genommen, bis du sie geprüft hast." : "Eine Kreation in der Community wurde gemeldet.",
-          `Grund: ${reason}`,
-          ...(note ? [`Hinweis: ${note}`] : []),
-          `Prüfen: ${page}`,
+        notifyOperator(res.hidden ? "Tevyon: creation hidden after reports" : "Tevyon: new report on a creation", [
+          res.hidden ? "A creation was taken out of the Community after reports until you have reviewed it." : "A creation in the Community was reported.",
+          `Reason: ${reason}`,
+          ...(note ? [`Note: ${note}`] : []),
+          `Review: ${page}`,
         ]),
       );
     }

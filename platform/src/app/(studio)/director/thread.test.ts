@@ -7,60 +7,60 @@ const image = { type: "custom" as const, jobType: "flux_3_image", kind: "image" 
 describe("Director thread", () => {
   it("tells the model what it proposed, numbered, and which proposals the user started and how they ended", () => {
     const msgs: Msg[] = [
-      { role: "user", content: "Hund viral" },
-      { role: "assistant", content: "Ich mache aus deinem Hund einen Clip.", proposals: [custom, image], started: { 0: "job-1", 1: "job-2" }, suggestions: ["Mach es düsterer"] },
-      { role: "user", content: "Noch einer" },
+      { role: "user", content: "dog viral" },
+      { role: "assistant", content: "I am turning your dog into a clip.", proposals: [custom, image], started: { 0: "job-1", 1: "job-2" }, suggestions: ["Make it darker"] },
+      { role: "user", content: "One more" },
     ];
     const status = (id: string) => (id === "job-1" ? "succeeded" : "failed");
     expect(toHistory(msgs, status)).toEqual([
-      { role: "user", content: "Hund viral" },
+      { role: "user", content: "dog viral" },
       {
         role: "assistant",
         content:
-          "Ich mache aus deinem Hund einen Clip.\n[Vorschläge: 1) Kling 3.0 Turbo, 9:16, 5 s: A dog jumps through a glowing portal (gestartet, fertig) | 2) FLUX 3: A red fox in snow (gestartet, fehlgeschlagen)]",
+          "I am turning your dog into a clip.\n[Proposals: 1) Kling 3.0 Turbo, 9:16, 5 s: A dog jumps through a glowing portal (started, done) | 2) FLUX 3: A red fox in snow (started, failed)]",
       },
-      { role: "user", content: "Noch einer" },
+      { role: "user", content: "One more" },
     ]);
   });
 
   it("marks a running proposal as started and leaves out answers that failed, stopped or never said anything", () => {
     const msgs: Msg[] = [
       { role: "user", content: "a" },
-      { role: "assistant", content: "Ich plane", proposals: [custom], started: { 0: "job-1" } },
+      { role: "assistant", content: "I am planning", proposals: [custom], started: { 0: "job-1" } },
       { role: "user", content: "b" },
-      { role: "assistant", content: "Ich komme gerade nicht durch.", proposals: [], started: {}, state: "failed" },
+      { role: "assistant", content: "I cannot get through right now.", proposals: [], started: {}, state: "failed" },
       { role: "user", content: "c" },
-      { role: "assistant", content: "Halb", proposals: [], started: {}, state: "stopped" },
+      { role: "assistant", content: "Half", proposals: [], started: {}, state: "stopped" },
       { role: "user", content: "d" },
       { role: "assistant", content: "  ", proposals: [], started: {} },
     ];
     const out = toHistory(msgs, () => "running");
     expect(out.map((m) => m.role)).toEqual(["user", "assistant", "user", "user", "user"]);
-    expect(out[1]!.content).toMatch(/\(gestartet\)\]$/);
+    expect(out[1]!.content).toMatch(/\(started\)\]$/);
   });
 
   it("shortens long prompts in the marker, so the server's 2,000 characters per message keep every status", () => {
     const long = { ...custom, prompt: "A dog ".repeat(200) };
     const msgs: Msg[] = [
       { role: "user", content: "a" },
-      { role: "assistant", content: "Ich mache dir drei Clips im Hochformat.", proposals: [long, long, long], started: { 2: "job-9" } },
+      { role: "assistant", content: "I am making you three portrait clips.", proposals: [long, long, long], started: { 2: "job-9" } },
     ];
     const content = toHistory(msgs, () => "succeeded")[1]!.content;
     expect(content.length).toBeLessThan(2000);
-    expect(content).toMatch(/3\) .*\(gestartet, fertig\)\]$/);
+    expect(content).toMatch(/3\) .*\(started, done\)\]$/);
     expect(content).toContain("…");
   });
 
   it("brings a chat saved mid-answer back as a stopped answer, and drops one that was still waiting", () => {
     const msgs: Msg[] = [
       { role: "user", content: "a" },
-      { role: "assistant", content: "Ich mache", proposals: [], started: {}, state: "streaming" },
+      { role: "assistant", content: "I am making", proposals: [], started: {}, state: "streaming" },
       { role: "user", content: "b" },
       { role: "assistant", content: "", proposals: [], started: {}, state: "waiting" },
     ];
     expect(restore(msgs)).toEqual([
       { role: "user", content: "a" },
-      { role: "assistant", content: "Ich mache", proposals: [], started: {}, state: "stopped" },
+      { role: "assistant", content: "I am making", proposals: [], started: {}, state: "stopped" },
       { role: "user", content: "b" },
     ]);
   });

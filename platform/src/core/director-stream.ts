@@ -68,7 +68,7 @@ export async function* parseChatStream(lines: AsyncIterable<string>): AsyncGener
   if (usage) yield usage;
 }
 
-/** Purchase routes and router ids (comfy, kling/…, anthropic/…). Model names such as «Claude Opus 5.5» stay. */
+/** Purchase routes and router ids (comfy, kling/…, anthropic/…). Model names such as "Claude Opus 5.5" stay. */
 const ROUTE =
   /\b(?:comfy(?:ui)?(?: router)?|openrouter|fal\.ai|fal ai|byok)\b|\b(?:bfl|kling|ltx|veo|vertexai|bytedance(?:-seed)?|google|kwaivgi|alibaba|anthropic|openai|x-ai|deepseek|qwen|moonshotai|z-ai|mistralai|meta-llama|black-forest-labs|minimax)\/[\w.:-]*/gi;
 /** Longest stretch held back, so a name split across deltas is complete before it is checked. */
@@ -102,28 +102,47 @@ export function createStreamSanitizer() {
   };
 }
 
-const COUNT_WORD: Record<string, number> = { zwei: 2, drei: 3, vier: 4, "2": 2, "3": 3, "4": 4 };
-const NUMBER_WORD = ["", "", "zwei", "drei", "vier"];
-/** Plural noun → the singular with its article, for a text that announced several but shows one. */
-const ONE: Record<string, string> = {
+/** German and English count words: the Director answers in the user's language, English by default. */
+const COUNT_WORD: Record<string, number> = { zwei: 2, drei: 3, vier: 4, two: 2, three: 3, four: 4, "2": 2, "3": 3, "4": 4 };
+const NUMBER_WORD = { de: ["", "", "zwei", "drei", "vier"], en: ["", "", "two", "three", "four"] };
+/** German plural noun → the singular with its article, for a text that announced several but shows one. */
+const ONE_DE: Record<string, string> = {
   Ideen: "eine Idee", Vorschläge: "einen Vorschlag", Varianten: "eine Variante", Optionen: "eine Option", Wege: "einen Weg",
   Clips: "einen Clip", Bilder: "ein Bild", Videos: "ein Video", Creatives: "ein Creative", Konzepte: "ein Konzept", Looks: "einen Look",
 };
-const COUNTED = new RegExp(`(?<![\\p{L}\\d])(zwei|drei|vier|[234])(\\s+)((?:\\p{L}+e\\s+)?)(${Object.keys(ONE).join("|")})(?![\\p{L}])`, "giu");
+/** English plural noun → its singular. */
+const ONE_EN: Record<string, string> = {
+  ideas: "idea", proposals: "proposal", suggestions: "suggestion", variations: "variation", variants: "variant", options: "option",
+  ways: "way", clips: "clip", images: "image", videos: "video", creatives: "creative", concepts: "concept", looks: "look", shots: "shot",
+};
+const COUNTED_DE = new RegExp(`(?<![\\p{L}\\d-])(zwei|drei|vier|[234])(\\s+)((?:\\p{L}+e\\s+)?)(${Object.keys(ONE_DE).join("|")})(?![\\p{L}])`, "giu");
+const COUNTED_EN = new RegExp(`(?<![\\p{L}\\d-])(two|three|four|[234])(\\s+)((?:\\p{L}+\\s+)?)(${Object.keys(ONE_EN).join("|")})(?![\\p{L}])`, "giu");
+
+/** A German reply (otherwise the text is read as English). */
+const GERMAN = /[äöüß]|\b(?:ich|und|der|die|das|ist|nicht|mit|für|dir|hier|sind|zwei|drei|vier|eine?n?)\b/i;
 
 /**
- * The model writes its text before it calls the tools, so «drei Ideen» can stand above two cards when a call is missing
- * or refused. Sets the number of announced ideas, proposals or creatives to the `shown` ones (1 to 4); otherwise as is.
+ * The model writes its text before it calls the tools, so "three ideas" can stand above two cards when a call is
+ * missing or refused. Sets the number of announced ideas, proposals or creatives to the `shown` ones (1 to 4), in
+ * English or German; otherwise as is.
  */
 export function matchCount(text: string, shown: number): string {
   if (shown < 1 || shown > 4) return text;
-  return text.replace(COUNTED, (all, num: string, space: string, adjective: string, noun: string) => {
+  const fix = (lang: "de" | "en") => (all: string, num: string, space: string, adjective: string, noun: string) => {
     const said = COUNT_WORD[num.toLowerCase()];
     if (said === undefined || said === shown) return all;
     const upper = num[0] !== num[0]!.toLowerCase();
     const cap = (s: string) => (upper ? s[0]!.toUpperCase() + s.slice(1) : s);
-    const key = Object.keys(ONE).find((k) => k.toLowerCase() === noun.toLowerCase()) ?? noun;
-    if (shown === 1) return cap(ONE[key] ?? `${num} ${noun}`);
-    return `${/\d/.test(num) ? String(shown) : cap(NUMBER_WORD[shown]!)}${space}${adjective}${noun}`;
-  });
+    if (shown === 1) {
+      if (lang === "de") {
+        const key = Object.keys(ONE_DE).find((k) => k.toLowerCase() === noun.toLowerCase()) ?? noun;
+        return cap(ONE_DE[key] ?? `${num} ${noun}`);
+      }
+      const one = ONE_EN[noun.toLowerCase()] ?? noun;
+      const sing = noun[0] !== noun[0]!.toLowerCase() ? one[0]!.toUpperCase() + one.slice(1) : one;
+      return `${/\d/.test(num) ? "1" : cap("one")}${space}${adjective}${sing}`;
+    }
+    return `${/\d/.test(num) ? String(shown) : cap(NUMBER_WORD[lang][shown]!)}${space}${adjective}${noun}`;
+  };
+  return GERMAN.test(text) ? text.replace(COUNTED_DE, fix("de")) : text.replace(COUNTED_EN, fix("en"));
 }

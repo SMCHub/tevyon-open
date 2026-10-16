@@ -10,7 +10,7 @@ describe("model facts for the model list", () => {
       resolution: { enum: ["480p", "720p", "1080p", "4K"] },
       generate_audio: { type: "boolean" },
     });
-    expect(modelFacts(seedance)).toEqual(["4K", "4–15 s", "Ton"]);
+    expect(modelFacts(seedance)).toEqual(["4K", "4–15 s", "Sound"]);
   });
 
   it("ranks 2K above 1080p and 768p above 720p, whatever the order of the list", () => {

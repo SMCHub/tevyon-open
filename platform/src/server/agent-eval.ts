@@ -15,8 +15,8 @@ import { requestConsent } from "./person-consent";
 import { loadSkills, SKILLS_DIR } from "./skill-files";
 
 /**
- * Agent evals (review 15.10.2026: «Echte Clients spielen Szenarien durch … Wurde der Preis gezeigt? War der Ton an?
- * Wurde der Idempotency-Key verwendet? Gab es keine Doppelbuchung?»). The harness runs Tevyon's MCP server in process
+ * Agent evals (review 15.10.2026: "Real clients play through scenarios … Was the price shown? Was sound on?
+ * Was the idempotency key used? Was nothing booked twice?"). The harness runs Tevyon's MCP server in process
  * on the real catalog, with a vendor that finishes every job at once and an account with test credits, and records an
  * agent session: every tool call, what the agent tells the user and what the user answers. checkSession judges the
  * record by the house rules of the server's instructions. Scripted agents drive it in agent-eval.test.ts (free);
@@ -54,27 +54,27 @@ export type Scenario = {
 
 export const SCENARIOS: Scenario[] = [
   {
-    id: "video-mit-ton",
-    ask: "Mach mir ein 8 Sekunden langes Video mit Ton für TikTok: Ein Fuchs läuft durch frischen Schnee.",
-    answer: "Ja, passt, starte bitte.",
+    id: "video-with-sound",
+    ask: "Make me an 8-second video with sound for TikTok: a fox runs through fresh snow.",
+    answer: "Yes, fine, please start.",
     expect: { jobs: 1, audio: true },
   },
   {
-    id: "produktfoto",
-    ask: "Erstelle ein quadratisches Produktfoto: eine weisse Kaffeetasse auf einem Holztisch, weiches Morgenlicht.",
-    answer: "Ja, mach.",
+    id: "product-photo",
+    ask: "Create a square product photo: a white coffee cup on a wooden table, soft morning light.",
+    answer: "Yes, go ahead.",
     expect: { jobs: 1 },
   },
   {
-    id: "entwurf-und-final",
-    ask: "Ich brauche ein Video von einem Leuchtturm im Sturm in bester Qualität. Mach zuerst einen günstigen Entwurf, dann die finale Version.",
-    answer: "Ja, starte. Und wenn der Entwurf da ist: Er passt, mach die finale Version.",
+    id: "draft-and-final",
+    ask: "I need a video of a lighthouse in a storm in the best quality. Make a cheap draft first, then the final version.",
+    answer: "Yes, start. And once the draft is there: it works, make the final version.",
     expect: { jobs: 2, draft: true },
   },
   {
-    id: "verbindung-weg",
-    ask: "Mach mir ein Bild von einem Leuchtturm bei Nacht.",
-    answer: "Ja, bitte.",
+    id: "lost-connection",
+    ask: "Make me an image of a lighthouse at night.",
+    answer: "Yes, please.",
     expect: { jobs: 1, lostAnswer: true },
   },
 ];
@@ -191,43 +191,43 @@ export function checkSession(scenario: Scenario, steps: EvalStep[], jobs: JobRec
     const jobType = String(s.args.job_type ?? "");
     const quote = calls.filter((c) => c.i < i && c.s.tool === "get_price" && !c.s.result.isError && c.s.args.job_type === jobType && priced(c.s.args.params) === priced(s.args.params)).at(-1);
     if (!quote) {
-      add("price", `${jobType}: gestartet ohne get_price mit denselben Einstellungen.`);
+      add("price", `${jobType}: started without get_price for the same settings.`);
     } else {
       const credits = quote.s.result.data?.credits as number | undefined;
-      if (s.args.max_credits !== credits) add("max_credits", `${jobType}: max_credits ${String(s.args.max_credits)} statt der ${credits} Credits aus get_price.`);
+      if (s.args.max_credits !== credits) add("max_credits", `${jobType}: max_credits ${String(s.args.max_credits)} instead of the ${credits} Credits from get_price.`);
       const told = steps.slice(quote.i + 1, i).some((x) => x.type === "say" && credits !== undefined && x.text.includes(String(credits)));
-      if (!told) add("price_shown", `${jobType}: Preis (${credits} Credits) vor dem Start nicht genannt.`);
+      if (!told) add("price_shown", `${jobType}: price (${credits} Credits) not stated before the start.`);
     }
     const key = typeof s.args.idempotency_key === "string" ? s.args.idempotency_key : "";
-    if (!key) add("idempotency_key", `${jobType}: ohne idempotency_key gestartet.`);
+    if (!key) add("idempotency_key", `${jobType}: started without idempotency_key.`);
     const what = JSON.stringify([jobType, s.args.params]);
-    if (key && keys.has(key) && keys.get(key) !== what) add("idempotency_key", `${jobType}: derselbe idempotency_key für einen anderen Job.`);
+    if (key && keys.has(key) && keys.get(key) !== what) add("idempotency_key", `${jobType}: the same idempotency_key for a different job.`);
     if (key) keys.set(key, what);
   }
 
   if (jobs.length !== scenario.expect.jobs) {
-    add("jobs", `${jobs.length} Jobs gestartet, erwartet ${scenario.expect.jobs}${jobs.length > scenario.expect.jobs ? " (Doppelbuchung?)" : ""}.`);
+    add("jobs", `${jobs.length} jobs started, expected ${scenario.expect.jobs}${jobs.length > scenario.expect.jobs ? " (double booking?)" : ""}.`);
   }
   if (scenario.expect.lostAnswer && new Set(starts.map((c) => c.s.args.idempotency_key)).size > 1 && jobs.length > 1) {
-    add("idempotency_key", "Nach der verlorenen Antwort mit neuem idempotency_key wiederholt: der Job lief doppelt.");
+    add("idempotency_key", "Retried with a new idempotency_key after the lost answer: the job ran twice.");
   }
   if (scenario.expect.audio) {
     for (const j of jobs.filter((j) => catalog.get(j.jobType)?.kind === "video")) {
-      if (j.params.generate_audio !== true) add("audio", `${j.model}: ohne Ton gestartet, obwohl Ton gewünscht war.`);
+      if (j.params.generate_audio !== true) add("audio", `${j.model}: started without sound although sound was asked for.`);
     }
   }
   if (scenario.expect.consent) {
     const asked = calls.find((c) => c.s.tool === "request_consent" && !c.s.result.isError);
     const id = asked?.s.result.data?.consent_id;
-    if (!asked) add("consent", "Kein request_consent vor dem Swap.");
-    else if (!starts.some((c) => c.i > asked.i && c.s.args.consent_id === id)) add("consent", "generate ohne die consent_id aus request_consent.");
+    if (!asked) add("consent", "No request_consent before the swap.");
+    else if (!starts.some((c) => c.i > asked.i && c.s.args.consent_id === id)) add("consent", "generate without the consent_id from request_consent.");
   }
   if (scenario.expect.draft) {
     const [draft, final] = jobs;
     const finalStart = starts.find((c) => !c.s.result.isError && c.s.result.data?.job?.id === final?.id);
-    if (!draft || !final) add("draft", "Entwurf und Final fehlen.");
-    else if (draft.credits >= final.credits) add("draft", `Der Entwurf (${draft.credits} Credits) ist nicht günstiger als das Final (${final.credits}).`);
-    else if (!finalStart || !same(finalStart.s.args.based_on, draft.id)) add("draft", "Das Final baut nicht mit based_on auf dem Entwurf auf.");
+    if (!draft || !final) add("draft", "Draft and final are missing.");
+    else if (draft.credits >= final.credits) add("draft", `The draft (${draft.credits} Credits) is not cheaper than the final (${final.credits}).`);
+    else if (!finalStart || !same(finalStart.s.args.based_on, draft.id)) add("draft", "The final does not build on the draft with based_on.");
   }
   return findings;
 }

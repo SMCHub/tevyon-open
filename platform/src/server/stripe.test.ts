@@ -32,9 +32,9 @@ describe("Stripe gateway", () => {
     expect(body.get("metadata[credits]")).toBe("3000");
     expect(body.get("metadata[amount]")).toBe("2700");
     expect([...body.keys()].some((k) => k.startsWith("payment_method_types"))).toBe(false);
-    // AGB «Widerrufsrecht»: the buyer asks for immediate performance in a required checkbox, and the receipt repeats it.
+    // Terms, "right of withdrawal": the buyer asks for immediate performance in a required checkbox, and the receipt repeats it.
     expect(body.get("consent_collection[terms_of_service]")).toBe("required");
-    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toMatch(/Widerrufsrecht \(EU\) erlischt/);
+    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toMatch(/right of withdrawal \(EU\) ends/);
     expect(body.get("payment_intent_data[receipt_email]")).toBe("user@example.com");
     expect((calls[0]!.init.headers as Record<string, string>)["Idempotency-Key"]).toMatch(/^[0-9a-f-]{36}$/);
   });
@@ -52,10 +52,10 @@ describe("Stripe gateway", () => {
     expect(body.get("branding_settings[display_name]")).toBe("Tevyon");
     // Rectangles, never pills.
     expect(body.get("branding_settings[border_style]")).toBe("rounded");
-    // The account's prefix plus this suffix: «TEVYON* CREDITS» on the card statement.
+    // The account's prefix plus this suffix: "TEVYON* CREDITS" on the card statement.
     expect(body.get("payment_intent_data[statement_descriptor_suffix]")).toBe("CREDITS");
-    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[AGB](https://tachyon-landing.vercel.app/agb)");
-    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[Datenschutzerklärung](https://tachyon-landing.vercel.app/datenschutz)");
+    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[Terms of Service](https://tachyon-landing.vercel.app/agb)");
+    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[Privacy Policy](https://tachyon-landing.vercel.app/datenschutz)");
     // The receipt keeps plain text.
     expect(body.get("payment_intent_data[description]")).not.toContain("](");
   });
@@ -119,8 +119,8 @@ describe("Stripe gateway", () => {
     // Every invoice of the plan carries the mark, so its months are recognised as Tevyon's.
     expect(body.get("subscription_data[metadata][app]")).toBe("tevyon");
     expect(body.get("branding_settings[display_name]")).toBe("Tevyon");
-    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[AGB](https://tachyon-landing.vercel.app/agb)");
-    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toMatch(/verlängert sich jeden Monat/);
+    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toContain("[Terms of Service](https://tachyon-landing.vercel.app/agb)");
+    expect(body.get("custom_text[terms_of_service_acceptance][message]")).toMatch(/renews every month/);
     expect([...body.keys()].some((k) => k.startsWith("payment_method_types"))).toBe(false);
     expect(new URLSearchParams(String(calls[2]!.init.body)).get("customer_email")).toBe("user@example.com");
   });

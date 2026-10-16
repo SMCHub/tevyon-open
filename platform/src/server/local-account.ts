@@ -1,6 +1,6 @@
 /**
  * Local mode: on a developer's machine without a Supabase project, every request is one local account, so the
- * platform runs with nothing but `COMFY_API_KEY` (README «Run it locally»). Never in production, never on Vercel and
+ * platform runs with nothing but `COMFY_API_KEY` (README “Run it locally”). Never in production, never on Vercel and
  * never next to a configured Supabase project: there the login decides.
  */
 export const LOCAL_ACCOUNT = { id: "00000000-0000-4000-8000-00000000c0de", email: "you@localhost.test", via: "session" as const };

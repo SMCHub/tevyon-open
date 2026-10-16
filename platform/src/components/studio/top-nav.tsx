@@ -88,7 +88,7 @@ function AccountMenu() {
   }, [open, close, place]);
   const email = me?.email ?? "";
   // With a community profile the menu shows its name and picture.
-  const name = profile?.name ?? (email.split("@")[0] || "Konto");
+  const name = profile?.name ?? (email.split("@")[0] || "Account");
   const initial = ([...name][0] ?? "?").toUpperCase();
   // eslint-disable-next-line @next/next/no-img-element
   const face = profile?.avatar ? <img className="hd__avatar-img" src={profile.avatar} alt="" /> : initial;
@@ -101,7 +101,7 @@ function AccountMenu() {
         className="hd__avatar"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Konto von ${name}`}
+        aria-label={`Account of ${name}`}
         onClick={() => {
           place();
           setOpen((o) => !o);
@@ -111,7 +111,7 @@ function AccountMenu() {
       </button>
       {open && (
         <Floating>
-          <div className="acct__menu" role="menu" aria-label="Konto" ref={menu} style={at}>
+          <div className="acct__menu" role="menu" aria-label="Account" ref={menu} style={at}>
             <div className="acct__who">
               <span className="acct__avatar" aria-hidden="true">{face}</span>
               <span className="acct__id">
@@ -121,15 +121,15 @@ function AccountMenu() {
             </div>
             <AccountBalance onNavigate={go} />
             <div className="acct__group">
-              <Link href="/profile" className="acct__item" role="menuitem" onClick={go}><UserRound aria-hidden="true" /> Profil</Link>
-              <Link href="/assets" className="acct__item" role="menuitem" onClick={go}><FolderOpen aria-hidden="true" /> Meine Assets</Link>
-              <Link href="/credits" className="acct__item" role="menuitem" onClick={go}><Receipt aria-hidden="true" /> Credits und Kontoauszug</Link>
+              <Link href="/profile" className="acct__item" role="menuitem" onClick={go}><UserRound aria-hidden="true" /> Profile</Link>
+              <Link href="/assets" className="acct__item" role="menuitem" onClick={go}><FolderOpen aria-hidden="true" /> My Assets</Link>
+              <Link href="/credits" className="acct__item" role="menuitem" onClick={go}><Receipt aria-hidden="true" /> Credits and statement</Link>
               <Link href="/settings/api" className="acct__item" role="menuitem" onClick={go}><KeyRound aria-hidden="true" /> API &amp; MCP</Link>
               {operator && <Link href="/moderation" className="acct__item" role="menuitem" onClick={go}><ShieldCheck aria-hidden="true" /> Moderation</Link>}
-              {operator && <Link href="/operations" className="acct__item" role="menuitem" onClick={go}><Activity aria-hidden="true" /> Betrieb</Link>}
+              {operator && <Link href="/operations" className="acct__item" role="menuitem" onClick={go}><Activity aria-hidden="true" /> Operations</Link>}
             </div>
             <div className="acct__group acct__group--last">
-              <button type="button" className="acct__item" role="menuitem" onClick={signOut}><LogOut aria-hidden="true" /> Abmelden</button>
+              <button type="button" className="acct__item" role="menuitem" onClick={signOut}><LogOut aria-hidden="true" /> Sign out</button>
             </div>
           </div>
         </Floating>
@@ -143,7 +143,7 @@ const HERO_PAGES = new Set<string>();
 
 const NAV: { href: string; label: string; icon: React.ReactNode; mega?: Menu }[] = [
   { href: "/community", label: "Community", icon: <Users aria-hidden="true" /> },
-  { href: "/image", label: "Bild", icon: <ImagePlus aria-hidden="true" />, mega: "image" },
+  { href: "/image", label: "Image", icon: <ImagePlus aria-hidden="true" />, mega: "image" },
   { href: "/video", label: "Video", icon: <Clapperboard aria-hidden="true" />, mega: "video" },
   { href: "/director", label: "Director", icon: <Wand2 aria-hidden="true" /> },
   { href: "/assets", label: "Assets", icon: <Images aria-hidden="true" /> },
@@ -155,8 +155,8 @@ function GuestActions({ className = "hd__guest" }: { className?: string }) {
   const back = `/login?next=${encodeURIComponent(pathname)}`;
   return (
     <div className={className}>
-      <Link href={back} className="hd__login">Anmelden</Link>
-      <Link href={back} className="hd__start">Gratis starten</Link>
+      <Link href={back} className="hd__login">Sign in</Link>
+      <Link href={back} className="hd__start">Start free</Link>
     </div>
   );
 }
@@ -182,13 +182,13 @@ function MenuSheet({ activeHref, onClose, onSearch }: { activeHref?: string; onC
   }, [onClose]);
   return createPortal(
     <div className="hd-sheet" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="hd-sheet__panel" id="hd-sheet" role="dialog" aria-modal="true" aria-label="Menü" ref={panel}>
+      <div className="hd-sheet__panel" id="hd-sheet" role="dialog" aria-modal="true" aria-label="Menu" ref={panel}>
         <div className="hd-sheet__head">
-          <Link href="/" className="hd__brand" aria-label="Tevyon, Entdecken" onClick={onClose}><span className="hd__logo" aria-hidden="true" /></Link>
-          <button type="button" className="hd__icon hd-sheet__close" aria-label="Menü schliessen" onClick={onClose}><X aria-hidden="true" /></button>
+          <Link href="/" className="hd__brand" aria-label="Tevyon, Explore" onClick={onClose}><span className="hd__logo" aria-hidden="true" /></Link>
+          <button type="button" className="hd__icon hd-sheet__close" aria-label="Close menu" onClick={onClose}><X aria-hidden="true" /></button>
         </div>
-        <button type="button" className="hd-sheet__search" onClick={() => { onClose(); onSearch(); }}><Search aria-hidden="true" /> Suchen …</button>
-        <nav className="hd-sheet__nav" aria-label="Bereiche">
+        <button type="button" className="hd-sheet__search" onClick={() => { onClose(); onSearch(); }}><Search aria-hidden="true" /> Search…</button>
+        <nav className="hd-sheet__nav" aria-label="Sections">
           <span className="hd-sheet__label">Studio</span>
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className={`hd-sheet__link${n.href === activeHref ? " is-on" : ""}`} aria-current={n.href === activeHref ? "page" : undefined} onClick={onClose}>
@@ -197,8 +197,8 @@ function MenuSheet({ activeHref, onClose, onSearch }: { activeHref?: string; onC
           ))}
           {!guest && (
             <>
-              <span className="hd-sheet__label">Konto</span>
-              <Link href="/profile" className="hd-sheet__link" onClick={onClose}><UserRound aria-hidden="true" />Profil</Link>
+              <span className="hd-sheet__label">Account</span>
+              <Link href="/profile" className="hd-sheet__link" onClick={onClose}><UserRound aria-hidden="true" />Profile</Link>
             </>
           )}
         </nav>
@@ -211,7 +211,7 @@ function MenuSheet({ activeHref, onClose, onSearch }: { activeHref?: string; onC
               <div className="hd-sheet__row">
                 <Link href="/credits" className="btn" onClick={onClose}>Credits</Link>
                 <Link href="/settings/api" className="btn" onClick={onClose}>API &amp; MCP</Link>
-                <button type="button" className="btn" onClick={signOut}>Abmelden</button>
+                <button type="button" className="btn" onClick={signOut}>Sign out</button>
               </div>
             </>
           )}
@@ -225,7 +225,7 @@ function MenuSheet({ activeHref, onClose, onSearch }: { activeHref?: string; onC
 /**
  * The header, a resizable glass bar: at the top it spans the page, once the page moves it draws in to a floating pill.
  * A pill of light glides under the hovered area, a lamp marks the page you are on; search (⌘K) and account on
- * the right. Bild and Video open their menu (mega-menu.tsx) on hover or keyboard focus.
+ * the right. Image and Video open their menu (mega-menu.tsx) on hover or keyboard focus.
  */
 export function TopNav() {
   const pathname = usePathname();
@@ -301,11 +301,11 @@ export function TopNav() {
     <>
       <header className={`hd${compact ? " is-compact" : ""}${hero ? " is-hero theme-dark" : ""}`} ref={header} onMouseLeave={closeMega}>
         <div className="hd__bar">
-          <Link href="/" className="hd__brand" aria-label="Tevyon, Entdecken">
+          <Link href="/" className="hd__brand" aria-label="Tevyon, Explore">
             <span className="hd__logo" aria-hidden="true" />
           </Link>
 
-          <nav className="hd__nav" aria-label="Bereiche" onMouseLeave={() => glideTo(null)}>
+          <nav className="hd__nav" aria-label="Sections" onMouseLeave={() => glideTo(null)}>
             <span className={`hd__glide${glide ? " is-on" : ""}`} style={glide ? ({ "--x": `${glide.x}px`, "--w": `${glide.w}px` } as React.CSSProperties) : undefined} aria-hidden="true" />
             {NAV.map((n) => {
               const active = n.href === activeHref;
@@ -336,14 +336,14 @@ export function TopNav() {
           </nav>
 
           <div className="hd__tools" onMouseEnter={closeMega}>
-            {me?.demo && <span className="hd__note" title="Ohne Modell-Schlüssel entstehen Platzhalter, es fallen keine Kosten an.">Demo</span>}
-            <button type="button" className="hd__search" onClick={openPalette} aria-label="Suchen (⌘K)" aria-keyshortcuts="Meta+K Control+K">
+            {me?.demo && <span className="hd__note" title="Without model keys, placeholders are generated and nothing is charged.">Demo</span>}
+            <button type="button" className="hd__search" onClick={openPalette} aria-label="Search (⌘K)" aria-keyshortcuts="Meta+K Control+K">
               <Search aria-hidden="true" />
-              <span className="hd__search-label">Suchen …</span>
+              <span className="hd__search-label">Search…</span>
               <kbd>⌘K</kbd>
             </button>
             {guest ? <GuestActions /> : <AccountMenu />}
-            <button type="button" className="hd__icon hd__menu" aria-label="Menü" aria-expanded={sheet} aria-controls="hd-sheet" onClick={() => setSheet(true)}>
+            <button type="button" className="hd__icon hd__menu" aria-label="Menu" aria-expanded={sheet} aria-controls="hd-sheet" onClick={() => setSheet(true)}>
               <MenuIcon aria-hidden="true" />
             </button>
           </div>

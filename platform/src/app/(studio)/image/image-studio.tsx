@@ -23,7 +23,7 @@ export function ImageStudio() {
     () => jobs.filter((j) => kindOf(j.jobType) === "image" && j.status !== "failed").sort((a, b) => b.createdAt - a.createdAt),
     [jobs, kindOf],
   );
-  // A new image of yours (you just pressed Generieren) shows on top: scroll up to it.
+  // A new image of yours (you just pressed GENERATE) shows on top: scroll up to it.
   const running = images.filter((j) => j.status === "queued" || j.status === "running").length;
   const seen = useRef<number | null>(null);
   useEffect(() => {
@@ -33,17 +33,17 @@ export function ImageStudio() {
 
   return (
     <div className="studio studio--image wall-page">
-      <WallTitle words={["Meine", "Bilder"]} />
+      <WallTitle words={["My", "Images"]} />
 
       {images.length ? (
-        <section className="wall-body" aria-label="Meine Bilder">
+        <section className="wall-body" aria-label="My images">
           <Columns items={images} ratio={jobHeight} keyOf={jobKey} min={240} dense>
             {(j, i) => <JobCard job={j} onOpen={() => setOpen(i)} />}
           </Columns>
         </section>
       ) : (
         <div className="wall-empty">
-          <p className="wall-empty__text">Noch keine Bilder. Beschreib unten, was entstehen soll.</p>
+          <p className="wall-empty__text">No images yet. Describe below what you want to create.</p>
         </div>
       )}
 

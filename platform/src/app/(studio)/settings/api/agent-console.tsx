@@ -26,12 +26,12 @@ const POLL_MS = 15_000;
 /** A key used this recently counts as active right now. */
 const LIVE_MS = 5 * 60_000;
 
-const STATUS: Record<AgentActivity["status"], string> = { queued: "Wartet", running: "Läuft", succeeded: "Fertig", failed: "Fehlgeschlagen" };
+const STATUS: Record<AgentActivity["status"], string> = { queued: "Queued", running: "Running", succeeded: "Done", failed: "Failed" };
 const FAILURE: Record<NonNullable<AgentActivity["error"]>, string> = {
-  content_moderated: "Von der Moderation gestoppt",
-  invalid_request: "Ungültige Anfrage",
-  generation_failed: "Erstellung fehlgeschlagen",
-  timed_out: "Zeitüberschreitung",
+  content_moderated: "Stopped by moderation",
+  invalid_request: "Invalid request",
+  generation_failed: "Generation failed",
+  timed_out: "Timed out",
 };
 const CHANNEL: Record<AgentActivity["origin"], string> = { mcp: "MCP", cli: "CLI", api: "API" };
 
@@ -62,7 +62,7 @@ function KeyRow(props: {
   const { k, now, armed, isNew } = props;
   const live = k.lastUsedAt !== null && now - k.lastUsedAt < LIVE_MS;
   const limits = [...new Set([...LIMITS, ...(k.dailyLimit === null ? [] : [k.dailyLimit])])].sort((a, b) => a - b);
-  const verb = k.kind === "oauth" ? "trennen" : "widerrufen";
+  const verb = k.kind === "oauth" ? "disconnect" : "revoke";
   return (
     <li className="ac-key" data-key={k.id} data-new={isNew || undefined} style={{ viewTransitionName: `key-${k.id}` }}>
       <span className="ac-key__icon" aria-hidden="true"><KeyIcon k={k} /></span>
@@ -72,25 +72,25 @@ function KeyRow(props: {
           {k.kind === "oauth" && <span className="ac-badge">App</span>}
         </p>
         <p className="ac-key__meta">
-          {k.kind === "oauth" ? <span>über OAuth</span> : <code>{k.prefix}…</code>}
+          {k.kind === "oauth" ? <span>via OAuth</span> : <code>{k.prefix}…</code>}
           {k.lastUsedAt ? (
             <span className="ac-key__seen" data-live={live || undefined}>
-              {live && <i className="ac-live" aria-hidden="true" />}zuletzt aktiv <RelativeTime ms={k.lastUsedAt} />
+              {live && <i className="ac-live" aria-hidden="true" />}last active <RelativeTime ms={k.lastUsedAt} />
             </span>
           ) : (
-            <span>noch nie benutzt</span>
+            <span>never used</span>
           )}
         </p>
       </div>
       <UsageMeter spent={k.spent24h} limit={k.dailyLimit} />
       <div className="ac-key__actions">
         <label className="ac-select">
-          <span className="ac-sr">Tageslimit von {k.name}</span>
+          <span className="ac-sr">Daily limit of {k.name}</span>
           <select value={k.dailyLimit === null ? "none" : String(k.dailyLimit)} onChange={(e) => props.onLimit(e.target.value)}>
             {limits.map((n) => (
-              <option key={n} value={n}>{n.toLocaleString("de-CH")} Credits</option>
+              <option key={n} value={n}>{n.toLocaleString("en-US")} Credits</option>
             ))}
-            <option value="none">Ohne Limit</option>
+            <option value="none">No limit</option>
           </select>
         </label>
         <button
@@ -100,9 +100,9 @@ function KeyRow(props: {
           onClick={() => (armed ? props.onRevoke() : props.onArm(true))}
           onBlur={() => props.onArm(false)}
           onKeyDown={(e) => e.key === "Escape" && props.onArm(false)}
-          aria-label={armed ? `${k.name} wirklich ${verb}?` : `${k.name} ${verb}`}
+          aria-label={armed ? `Really ${verb} ${k.name}?` : `${verb === "revoke" ? "Revoke" : "Disconnect"} ${k.name}`}
         >
-          {armed ? `Wirklich ${verb}?` : k.kind === "oauth" ? "Trennen" : "Widerrufen"}
+          {armed ? `Really ${verb}?` : k.kind === "oauth" ? "Disconnect" : "Revoke"}
         </button>
       </div>
     </li>
@@ -115,7 +115,7 @@ function ActivityCard({ a }: { a: AgentActivity }) {
     <li className="ac-act" data-status={a.status}>
       <div className="ac-act__media">
         {result ? (
-          <a href={result} target="_blank" rel="noopener" aria-label={`Ergebnis von ${a.model} öffnen`}>
+          <a href={result} target="_blank" rel="noopener" aria-label={`Open result from ${a.model}`}>
             {a.media === "video" ? (
               <video
                 src={`${result}#t=0.1`}
@@ -135,7 +135,7 @@ function ActivityCard({ a }: { a: AgentActivity }) {
           </a>
         ) : (
           <div className="ac-act__slate">
-            <span>{a.preset ? `Preset «${a.preset}»` : a.prompt || "Ohne Prompt"}</span>
+            <span>{a.preset ? `Preset “${a.preset}”` : a.prompt || "No prompt"}</span>
           </div>
         )}
         <span className="ac-pill" data-status={a.status}>{STATUS[a.status]}</span>
@@ -143,11 +143,11 @@ function ActivityCard({ a }: { a: AgentActivity }) {
       </div>
       <div className="ac-act__body">
         <p className="ac-act__model">{a.model}</p>
-        {result && <p className="ac-act__prompt">{a.preset ? `Preset «${a.preset}»${a.prompt ? ` · ${a.prompt}` : ""}` : a.prompt || "Ohne Prompt"}</p>}
+        {result && <p className="ac-act__prompt">{a.preset ? `Preset “${a.preset}”${a.prompt ? ` · ${a.prompt}` : ""}` : a.prompt || "No prompt"}</p>}
         {a.error && <p className="ac-act__error">{FAILURE[a.error]}</p>}
         <p className="ac-act__meta">
-          <span>{a.status === "failed" ? `${a.credits} Credits zurück` : `${a.credits} Credits`}</span>
-          <span>{a.keyName ?? "widerrufener Zugang"}</span>
+          <span>{a.status === "failed" ? `${a.credits} Credits refunded` : `${a.credits} Credits`}</span>
+          <span>{a.keyName ?? "revoked access"}</span>
           <RelativeTime ms={a.createdAt} />
         </p>
       </div>
@@ -156,7 +156,7 @@ function ActivityCard({ a }: { a: AgentActivity }) {
 }
 
 /**
- * The «API & MCP» console: what connects to the account (keys and apps, with spend and limit), how to connect a
+ * The "API & MCP" console: what connects to the account (keys and apps, with spend and limit), how to connect a
  * client, what agents did lately and what they can do. Starts from the server's data and polls while visible;
  * revoking and limits change at once and roll back if the server says no.
  */
@@ -233,10 +233,10 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
     try {
       const res = await fetch(`/api/keys/${k.id}`, { method: "DELETE" });
       if (!res.ok && res.status !== 404) throw new Error(`status ${res.status}`);
-      say(k.kind === "oauth" ? `«${k.name}» ist getrennt. Die App muss sich neu anmelden.` : `«${k.name}» ist widerrufen und funktioniert ab sofort nicht mehr.`);
+      say(k.kind === "oauth" ? `“${k.name}” is disconnected. The app has to sign in again.` : `“${k.name}” is revoked and stops working right away.`);
     } catch {
       transition(() => setData((d) => (d.keys.some((x) => x.id === k.id) ? d : { ...d, keys: [...d.keys.slice(0, at), k, ...d.keys.slice(at)] })));
-      say(`«${k.name}» konnte nicht ${k.kind === "oauth" ? "getrennt" : "widerrufen"} werden. Versuche es noch einmal.`, true);
+      say(`“${k.name}” could not be ${k.kind === "oauth" ? "disconnected" : "revoked"}. Please try again.`, true);
     } finally {
       pending.current--;
     }
@@ -250,10 +250,10 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
     try {
       const res = await fetch(`/api/keys/${k.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ dailyLimit }) });
       if (!res.ok) throw new Error(`status ${res.status}`);
-      say(dailyLimit === null ? `«${k.name}» hat jetzt kein Tageslimit.` : `«${k.name}» darf jetzt ${dailyLimit.toLocaleString("de-CH")} Credits in 24 Stunden ausgeben.`);
+      say(dailyLimit === null ? `“${k.name}” now has no daily limit.` : `“${k.name}” may now spend ${dailyLimit.toLocaleString("en-US")} Credits in 24 hours.`);
     } catch {
       set(k.dailyLimit);
-      say(`Das Limit von «${k.name}» konnte nicht gespeichert werden.`, true);
+      say(`The limit of “${k.name}” could not be saved.`, true);
     } finally {
       pending.current--;
     }
@@ -278,18 +278,18 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
             <p className="ac-kicker">API &amp; MCP</p>
             <p className="ac-chip">
               <i className="ac-live" aria-hidden="true" />
-              MCP-Server online<span aria-hidden="true">·</span>{TOOL_CARDS.length} Tools<span aria-hidden="true">·</span>OAuth 2.1
+              MCP server online<span aria-hidden="true">·</span>{TOOL_CARDS.length} Tools<span aria-hidden="true">·</span>OAuth 2.1
             </p>
           </div>
-          <h1 id="ac-title">Tevyon, direkt aus deinem Agenten.</h1>
+          <h1 id="ac-title">Tevyon, straight from your agent.</h1>
           <p className="ac-hero__sub">
-            Claude, Cursor und die CLI erstellen Bilder und Videos über dieselbe Job-API wie das Studio. Der Preis steht vor jedem Job fest,
-            gebucht wird auf dein Credit-Konto.
+            Claude, Cursor and the CLI create images and videos through the same job API as the studio. The price is fixed before every job
+            and charged to your Credits.
           </p>
           <div className="ac-endpoint">
             <span className="ac-endpoint__tag">MCP</span>
             <code>{endpoint}</code>
-            <CopyButton text={endpoint} label="MCP-Adresse kopieren" />
+            <CopyButton text={endpoint} label="Copy MCP address" />
           </div>
         </div>
       </section>
@@ -298,24 +298,24 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
         <section className="ac-panel ac-access" aria-labelledby="ac-access-title">
           <header className="ac-panel__head">
             <div>
-              <h2 id="ac-access-title">Zugänge <span className="ac-count">{keys.length}</span></h2>
-              <p>Schlüssel und verbundene Apps handeln für dein Konto. Jeder hat ein eigenes Tageslimit und lässt sich einzeln widerrufen.</p>
+              <h2 id="ac-access-title">Access <span className="ac-count">{keys.length}</span></h2>
+              <p>Keys and connected apps act for your account. Each has its own daily limit and can be revoked on its own.</p>
             </div>
             <button type="button" className="ac-btn ac-btn--primary" onClick={() => setDialog(true)} ref={newKey}>
-              <Plus aria-hidden="true" />Neuer Schlüssel
+              <Plus aria-hidden="true" />New key
             </button>
           </header>
           {keys.length === 0 ? (
             <div className="ac-empty">
-              <p className="ac-empty__title">Noch kein Zugang</p>
-              <p>Verbinde Claude Code mit dem Befehl rechts, ganz ohne Schlüssel. Für Skripte und Server erstellst du hier einen Schlüssel.</p>
+              <p className="ac-empty__title">No access yet</p>
+              <p>Connect Claude Code with the command on the right, no key needed. For scripts and servers, create a key here.</p>
             </div>
           ) : (
             <div className="ac-keytable">
               <div className="ac-keys__head" aria-hidden="true">
-                <span>Zugang</span>
-                <span>Letzte 24 h</span>
-                <span>Tageslimit</span>
+                <span>Access</span>
+                <span>Last 24 h</span>
+                <span>Daily limit</span>
               </div>
               <ul className="ac-keys">
                 {keys.map((k) => (
@@ -338,8 +338,8 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
         <section className="ac-panel ac-connect-panel" aria-labelledby="ac-connect-title">
           <header className="ac-panel__head">
             <div>
-              <h2 id="ac-connect-title">Verbinden</h2>
-              <p>Anmeldung im Browser über OAuth, ganz ohne Schlüssel. Oder mit Schlüssel, wo kein Browser ist.</p>
+              <h2 id="ac-connect-title">Connect</h2>
+              <p>Sign in through the browser with OAuth, no key needed. Or use a key where there is no browser.</p>
             </div>
           </header>
           <ConnectTabs origin={origin} keys={keys} freshKey={fresh?.key} />
@@ -350,20 +350,20 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
       <section className="ac-section" aria-labelledby="ac-activity-title">
         <header className="ac-section__head">
           <div>
-            <h2 id="ac-activity-title">Aktivität</h2>
-            <p>Was Agenten, CLI und API zuletzt gestartet haben, mit Zugang und Preis.</p>
+            <h2 id="ac-activity-title">Activity</h2>
+            <p>What agents, the CLI and the API started recently, with access and price.</p>
           </div>
           {activity.length > 3 && (
             <div className="ac-section__nav">
-              <button type="button" className="ac-iconbtn" onClick={() => scrollReel(-1)} aria-label="Zurück blättern"><ArrowLeft /></button>
-              <button type="button" className="ac-iconbtn" onClick={() => scrollReel(1)} aria-label="Weiter blättern"><ArrowRight /></button>
+              <button type="button" className="ac-iconbtn" onClick={() => scrollReel(-1)} aria-label="Scroll back"><ArrowLeft /></button>
+              <button type="button" className="ac-iconbtn" onClick={() => scrollReel(1)} aria-label="Scroll forward"><ArrowRight /></button>
             </div>
           )}
         </header>
         {activity.length === 0 ? (
           <div className="ac-empty ac-empty--row">
-            <p className="ac-empty__title">Noch nichts von Agenten</p>
-            <p>Sobald Claude, Cursor oder die CLI etwas erstellen, erscheint es hier. Deine Studio-Jobs findest du unter <a href="/assets">Assets <ArrowUpRight aria-hidden="true" /></a></p>
+            <p className="ac-empty__title">Nothing from agents yet</p>
+            <p>As soon as Claude, Cursor or the CLI create something, it shows up here. Your studio jobs are under <a href="/assets">Assets <ArrowUpRight aria-hidden="true" /></a></p>
           </div>
         ) : (
           <ol className="ac-reel" ref={reel}>
@@ -375,8 +375,8 @@ export function AgentConsole({ origin, initial, now: serverNow, className = "" }
       <section className="ac-section" aria-labelledby="ac-tools-title">
         <header className="ac-section__head">
           <div>
-            <h2 id="ac-tools-title">Werkzeuge <span className="ac-count">{TOOL_CARDS.length}</span></h2>
-            <p>Was ein Agent über den MCP-Server tun kann. Dieselben Modelle, Preise und Regeln wie im Studio.</p>
+            <h2 id="ac-tools-title">Tools <span className="ac-count">{TOOL_CARDS.length}</span></h2>
+            <p>What an agent can do through the MCP server. The same models, prices and rules as in the studio.</p>
           </div>
         </header>
         <ul className="ac-tools">

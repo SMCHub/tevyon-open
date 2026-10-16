@@ -8,7 +8,7 @@ export type PriceEntry = {
   kind: "image" | "video";
   from: number;
   standard: number;
-  /** The standard settings, without the prompt and empty inputs (what «standard» means). */
+  /** The standard settings, without the prompt and empty inputs (what “standard” means). */
   settings: Record<string, unknown>;
 };
 

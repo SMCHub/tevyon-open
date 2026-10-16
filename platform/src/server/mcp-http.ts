@@ -37,7 +37,7 @@ function unauthorized(hadToken: boolean, resourceMetadata?: string): Response {
   return Response.json(
     {
       error: "unauthorized",
-      message: "Sign in with OAuth, or send a Tevyon API key (Tevyon Studio → «API & MCP») as Authorization: Bearer <key>.",
+      message: "Sign in with OAuth, or send a Tevyon API key (Tevyon Studio → “API & MCP”) as Authorization: Bearer <key>.",
     },
     { status: 401, headers: { "www-authenticate": `Bearer ${challenge.join(", ")}` } },
   );

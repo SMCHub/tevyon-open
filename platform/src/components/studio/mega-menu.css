@@ -1,4 +1,4 @@
-/* ===== Header mega menus (Bild, Video, Presets) =====
+/* ===== Header mega menus (Image, Video, Presets) =====
    The grammar of our template (Bulletproof, as on Entdecken and the landing): the panel drops like a blind from under
    the bar and dims the page, lines rise out of their own frame one after another, lists dim every row but the one under
    the pointer, pictures zoom and lose their colour under the pointer, links draw their line from the left, and the
@@ -54,7 +54,7 @@
 .mg-badge { flex: none; align-self: center; padding: 2px 6px; border: 1px solid rgb(var(--fg) / 0.2); border-radius: 6px; color: var(--ash); font: 600 9.5px/1.25 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
 .mg-badge--top { border-color: rgb(var(--fg) / 0.42); color: rgb(var(--fg) / 0.86); }
 
-/* ---------- Bild and Video: index · models · poster ---------- */
+/* ---------- Image and Video: index · models · poster ---------- */
 .mg-kind { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) clamp(220px, 19vw, 300px); gap: clamp(24px, 3vw, 56px); align-items: start; }
 .mg-col { min-width: 0; container-type: inline-size; }
 

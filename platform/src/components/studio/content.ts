@@ -14,24 +14,24 @@ export const MODEL_COVER: Record<string, string> = {};
 
 /** Short headline of a failed job for tiles; the long sentence stays in JOB_ERROR. */
 export const FAILED_TITLE: Record<string, string> = {
-  content_moderated: "Vom Inhaltsfilter gestoppt",
-  invalid_request: "Einstellungen nicht angenommen",
-  generation_failed: "Hat nicht geklappt",
-  timed_out: "Zeitüberschreitung",
+  content_moderated: "Stopped by content filter",
+  invalid_request: "Settings not accepted",
+  generation_failed: "Didn't work",
+  timed_out: "Timed out",
 };
 
 export const JOB_ERROR: Record<string, string> = {
-  content_moderated: "Vom Inhaltsfilter gestoppt. Credits zurückerstattet.",
-  invalid_request: "Diese Einstellungen nimmt das Modell nicht an. Credits zurückerstattet.",
-  generation_failed: "Generierung fehlgeschlagen. Credits zurückerstattet.",
-  timed_out: "Zeitüberschreitung. Credits zurückerstattet.",
-  insufficient_credits: "Nicht genug Credits für diesen Job.",
-  invalid_params: "Bitte Prompt und Einstellungen prüfen.",
-  model_retired: "Dieses Modell gibt es nicht mehr. Bitte ein anderes wählen.",
-  model_paused: "Dieses Modell ist vorübergehend nicht verfügbar. Bitte später nochmal oder ein anderes Modell.",
-  price_changed: "Der Preis hat sich gerade geändert. Bitte den neuen Preis prüfen und nochmal starten.",
-  key_limit_reached: "Das Tageslimit dieses API-Schlüssels ist erreicht. Du kannst es unter «API & MCP» ändern.",
-  image_required: "Bitte zuerst ein Foto hochladen.",
-  consent_required: "Bitte die Einwilligung bestätigen.",
-  line_required: "Bitte den Satz eingeben, der gesprochen werden soll.",
+  content_moderated: "Stopped by the content filter. Credits refunded.",
+  invalid_request: "The model does not accept these settings. Credits refunded.",
+  generation_failed: "Generation failed. Credits refunded.",
+  timed_out: "Timed out. Credits refunded.",
+  insufficient_credits: "Not enough Credits for this job.",
+  invalid_params: "Please check the prompt and settings.",
+  model_retired: "This model is no longer available. Please choose another one.",
+  model_paused: "This model is temporarily unavailable. Please try again later or choose another model.",
+  price_changed: "The price just changed. Please check the new price and start again.",
+  key_limit_reached: "This API key has reached its daily limit. You can change it under \"API & MCP\".",
+  image_required: "Please upload a photo first.",
+  consent_required: "Please confirm consent.",
+  line_required: "Please enter the line to be spoken.",
 };

@@ -13,5 +13,5 @@
   background: rgb(var(--fg) / 0.1);
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
-/* A mention without its image: no fill, a dashed hairline, so it reads as «still missing». */
+/* A mention without its image: no fill, a dashed hairline, so it reads as "still missing". */
 .mention-mark.is-loose { background: none; outline: 1px dashed rgb(var(--fg) / 0.45); outline-offset: -1px; }

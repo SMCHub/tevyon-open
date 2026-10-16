@@ -11,7 +11,7 @@ import { publicBase } from "@/server/media-links";
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return new Response("Forbidden", { status: 403 });
   const account = await currentAccount();
-  if (!account || account.via !== "session") return new Response("Bitte zuerst bei Tevyon anmelden.", { status: 401 });
+  if (!account || account.via !== "session") return new Response("Please sign in to Tevyon first.", { status: 401 });
   const form = Object.fromEntries(new URLSearchParams(await req.text())) as Record<string, string>;
   const origin = publicBase(req);
   const check = await oauth().authorizeRequest(form, { issuer: origin, resource: `${origin}/api/mcp` });

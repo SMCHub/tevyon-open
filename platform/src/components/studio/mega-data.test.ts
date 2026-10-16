@@ -7,11 +7,11 @@ const entry = (jobType: string, model: string, family: string | undefined, tagli
 
 describe("menu families", () => {
   const catalog = [
-    entry("flux_3_image", "Seedream 4.5", "seedream", "ByteDance · fotorealistisch, 4K", "image", "top"),
-    entry("veo_3_1_lite", "Veo 3.1 Lite", "veo", "Google · mit Ton, bis 1080p", "video", "top"),
-    entry("flux_2_pro", "FLUX.2 Pro", "flux", "Black Forest Labs · feine Details", "image"),
-    entry("seedream_5_lite", "Seedream 5 Lite", "seedream", "ByteDance · schnell, günstig", "image"),
-    entry("flux_3_image", "FLUX.3", "flux", "Black Forest Labs · bis 4K", "image", "neu"),
+    entry("flux_3_image", "Seedream 4.5", "seedream", "ByteDance · photorealistic, 4K", "image", "top"),
+    entry("veo_3_1_lite", "Veo 3.1 Lite", "veo", "Google · with sound, up to 1080p", "video", "top"),
+    entry("flux_2_pro", "FLUX.2 Pro", "flux", "Black Forest Labs · fine details", "image"),
+    entry("seedream_5_lite", "Seedream 5 Lite", "seedream", "ByteDance · fast, affordable", "image"),
+    entry("flux_3_image", "FLUX.3", "flux", "Black Forest Labs · up to 4K", "image", "neu"),
   ];
 
   it("groups the models of one kind by family, in the order the register lists them", () => {
@@ -27,12 +27,12 @@ describe("menu families", () => {
     expect(flux).toMatchObject({ name: "FLUX", maker: "Black Forest Labs" });
   });
 
-  it("keeps a family's name of several words and drops versions and tiers («GPT Image 2.5» → «GPT Image»)", () => {
+  it("keeps a family's name of several words and drops versions and tiers ('GPT Image 2.5' → 'GPT Image')", () => {
     const groups = menuFamilies([
-      entry("gpt_image_2_5_sunburst", "GPT Image 2.5", "gpt-image", "OpenAI · präzise", "image"),
-      entry("gpt_image_2_5_flare", "GPT Image 2.5 Flare", "gpt-image", "OpenAI · schneller", "image"),
-      entry("nano_banana_pro", "Nano Banana Pro", "nano-banana", "Google · Bearbeiten", "image"),
-      entry("mai_image_2_6", "MAI-Image 2.6", "mai-image", "Microsoft · fotorealistisch", "image"),
+      entry("gpt_image_2_5_sunburst", "GPT Image 2.5", "gpt-image", "OpenAI · precise", "image"),
+      entry("gpt_image_2_5_flare", "GPT Image 2.5 Flare", "gpt-image", "OpenAI · faster", "image"),
+      entry("nano_banana_pro", "Nano Banana Pro", "nano-banana", "Google · editing", "image"),
+      entry("mai_image_2_6", "MAI-Image 2.6", "mai-image", "Microsoft · photorealistic", "image"),
       entry("minimax_h3", "MiniMax H3", "minimax", "MiniMax · a", "image"),
     ], "image");
     expect(groups.map((g) => g.name)).toEqual(["GPT Image", "Nano Banana", "MAI-Image", "MiniMax"]);
@@ -49,9 +49,9 @@ describe("menu families", () => {
 
   it("gives a model without family a group of its own and drops a maker the models do not share", () => {
     const groups = menuFamilies([
-      entry("a_1", "Alpha 1", undefined, "Maker A · eins"),
-      entry("b_1", "Beta 1", "beta", "Maker B · eins"),
-      entry("b_2", "Beta 2", "beta", "Maker C · zwei"),
+      entry("a_1", "Alpha 1", undefined, "Maker A · one"),
+      entry("b_1", "Beta 1", "beta", "Maker B · one"),
+      entry("b_2", "Beta 2", "beta", "Maker C · two"),
     ], "video");
     expect(groups.map((g) => [g.name, g.maker])).toEqual([["Alpha", "Maker A"], ["Beta", null]]);
   });
@@ -59,39 +59,37 @@ describe("menu families", () => {
 
 describe("tools of a menu", () => {
   it("lists the fixed tools of each kind, every one a link into the studio", () => {
-    expect(kindTools("image").map((t) => t.title)).toEqual(["Bild erstellen", "Director", "Bild → Video", "Meine Bilder"]);
+    expect(kindTools("image").map((t) => t.title)).toEqual(["Create image", "Director", "Image → Video", "My images"]);
     expect(kindTools("video").map((t) => t.href)).toEqual(["/video", "/video?mode=image", "/director"]);
   });
 });
 
 describe("tagline", () => {
   it("splits the maker off the description", () => {
-    expect(splitTagline("ByteDance · fotorealistisch, 4K")).toEqual({ maker: "ByteDance", text: "fotorealistisch, 4K" });
+    expect(splitTagline("ByteDance · photorealistic, 4K")).toEqual({ maker: "ByteDance", text: "photorealistic, 4K" });
   });
 
   it("keeps a tagline without maker whole", () => {
-    expect(splitTagline("Dein Video: Bewegung übertragen")).toEqual({ maker: null, text: "Dein Video: Bewegung übertragen" });
+    expect(splitTagline("Your video: transfer motion")).toEqual({ maker: null, text: "Your video: transfer motion" });
   });
 });
 
 describe("price text", () => {
-  it("says «ab» when settings make it cheaper than the default", () => {
-    expect(priceText({ from: 30, standard: 85 })).toBe("ab 30 Credits");
+  it("says \"from\" when settings make it cheaper than the default", () => {
+    expect(priceText({ from: 30, standard: 85 })).toBe("from 30 Credits");
   });
 
   it("gives one price when every setting costs the same", () => {
     expect(priceText({ from: 10, standard: 10 })).toBe("10 Credits");
   });
 
-  it("drops the unit in the menu rows, where the column says «Credits»", () => {
-    expect(priceText({ from: 30, standard: 85 }, { short: true })).toBe("ab 30");
+  it("drops the unit in the menu rows, where the column says \"Credits\"", () => {
+    expect(priceText({ from: 30, standard: 85 }, { short: true })).toBe("from 30");
     expect(priceText({ from: 10, standard: 10 }, { short: true })).toBe("10");
   });
 
-  it("formats thousands the Swiss way and stays empty without a price", () => {
-    // The separator comes from the runtime's ICU («’» in browsers, «'» in some Node builds), as everywhere in the studio.
-    expect(priceText({ from: 1200, standard: 1500 })).toBe(`ab ${(1200).toLocaleString("de-CH")} Credits`);
-    expect(priceText({ from: 1200, standard: 1500 })).toMatch(/^ab 1\D200 Credits$/);
+  it("formats thousands with a comma and stays empty without a price", () => {
+    expect(priceText({ from: 1200, standard: 1500 })).toBe("from 1,200 Credits");
     expect(priceText(undefined)).toBeNull();
   });
 });
@@ -100,7 +98,7 @@ describe("poster lines", () => {
   it("puts the first word on its own line and the rest under it", () => {
     expect(posterLines("Seedream 4.5")).toEqual(["Seedream", "4.5"]);
     expect(posterLines("Veo 3.1 Lite")).toEqual(["Veo", "3.1 Lite"]);
-    expect(posterLines("Bild → Video")).toEqual(["Bild", "→ Video"]);
+    expect(posterLines("Image → Video")).toEqual(["Image", "→ Video"]);
   });
 
   it("keeps a single word on one line", () => {
@@ -136,14 +134,14 @@ describe("placement", () => {
 
 describe("stamp", () => {
   it("breaks a description at the comma nearest its middle", () => {
-    expect(stampLines("Aus Text in Sekunden, Preis vor dem Start")).toEqual(["Aus Text in Sekunden,", "Preis vor dem Start"]);
-    expect(stampLines("fotorealistisch, 4K")).toEqual(["fotorealistisch,", "4K"]);
-    expect(stampLines("Ein Foto, ein fertiger Clip, ein Klick")).toEqual(["Ein Foto, ein fertiger Clip,", "ein Klick"]);
+    expect(stampLines("From text in seconds, price before you start")).toEqual(["From text in seconds,", "price before you start"]);
+    expect(stampLines("photorealistic, 4K")).toEqual(["photorealistic,", "4K"]);
+    expect(stampLines("One photo, a finished clip, one click")).toEqual(["One photo, a finished clip,", "one click"]);
   });
 
   it("breaks between words otherwise, and leaves one word alone", () => {
-    expect(stampLines("feine Details")).toEqual(["feine", "Details"]);
-    expect(stampLines("Szene planen und Final rendern")).toEqual(["Szene planen", "und Final rendern"]);
-    expect(stampLines("Vielseitig")).toEqual(["Vielseitig"]);
+    expect(stampLines("fine details")).toEqual(["fine", "details"]);
+    expect(stampLines("Plan the scene and render the final")).toEqual(["Plan the scene", "and render the final"]);
+    expect(stampLines("Versatile")).toEqual(["Versatile"]);
   });
 });

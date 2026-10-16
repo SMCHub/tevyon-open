@@ -14,15 +14,15 @@ export type MenuFamily<E> = { key: string; name: string; maker: string | null; m
 /** Tools that work today, each a real link. What is not built yet stays in SOON, compact and honest. */
 const TOOLS: Record<Kind, MenuTool[]> = {
   image: [
-    { title: "Bild erstellen", desc: "Aus Text in Sekunden, Preis vor dem Start", href: "/image", badge: "top" },
-    { title: "Director", desc: "Idee im Gespräch entwickeln, er schreibt die Prompts", href: "/director" },
-    { title: "Bild → Video", desc: "Dein Bild als Startbild für einen Clip", href: "/video?mode=image" },
-    { title: "Meine Bilder", desc: "Alle Ergebnisse, erneut verwenden", href: "/assets" },
+    { title: "Create image", desc: "From text in seconds, price before you start", href: "/image", badge: "top" },
+    { title: "Director", desc: "Develop an idea in conversation, it writes the prompts", href: "/director" },
+    { title: "Image → Video", desc: "Your image as the start frame of a clip", href: "/video?mode=image" },
+    { title: "My images", desc: "All results, ready to reuse", href: "/assets" },
   ],
   video: [
-    { title: "Video erstellen", desc: "Aus einem Satz ein Clip, mit Ton", href: "/video", badge: "top" },
-    { title: "Bild → Video", desc: "Ein Standbild in Bewegung setzen", href: "/video?mode=image" },
-    { title: "Director", desc: "Szene planen, Entwurf und Final in einem Gespräch", href: "/director" },
+    { title: "Create video", desc: "A clip from one sentence, with sound", href: "/video", badge: "top" },
+    { title: "Image → Video", desc: "Set a still image in motion", href: "/video?mode=image" },
+    { title: "Director", desc: "Plan a scene, draft and final in one conversation", href: "/director" },
   ],
 };
 
@@ -39,7 +39,7 @@ export function kindTools(kind: Kind): MenuTool[] {
   return TOOLS[kind];
 }
 
-/** «ByteDance · fotorealistisch, 4K» → maker and description; a tagline without « · » has no maker. */
+/** "ByteDance · photorealistic, 4K" → maker and description; a tagline without " · " has no maker. */
 export function splitTagline(tagline: string): { maker: string | null; text: string } {
   const at = tagline.indexOf(" · ");
   return at < 0 ? { maker: null, text: tagline } : { maker: tagline.slice(0, at).trim(), text: tagline.slice(at + 3).trim() };
@@ -47,8 +47,8 @@ export function splitTagline(tagline: string): { maker: string | null; text: str
 
 const TIER_WORD = /^(pro|max|lite|flash|fast|mini|klein|flare|turbo|plus|ultra)$/i;
 /**
- * A family's display name: the leading words of its first model up to the version or tier («GPT Image 2.5» →
- * «GPT Image», «Nano Banana Pro» → «Nano Banana»), else the first word without its version («FLUX.2 Pro» → «FLUX»).
+ * A family's display name: the leading words of its first model up to the version or tier ("GPT Image 2.5" →
+ * "GPT Image", "Nano Banana Pro" → "Nano Banana"), else the first word without its version ("FLUX.2 Pro" → "FLUX").
  */
 const familyName = (model: string) => {
   const words = model.trim().split(/\s+/);
@@ -78,13 +78,13 @@ export function menuFamilies<E extends Entry>(catalog: E[], kind: Kind): MenuFam
 }
 
 /**
- * The price a model starts at, in credits (Swiss thousands); «ab» when other settings make it cheaper than the default.
+ * The price a model starts at, in credits (US thousands separator); "from" when other settings make it cheaper than the default.
  * `short` leaves the unit to a column head.
  */
 export function priceText(price: { from: number; standard: number } | undefined, opts: { short?: boolean } = {}): string | null {
   if (!price) return null;
-  const n = (v: number) => v.toLocaleString("de-CH");
-  const text = price.from < price.standard ? `ab ${n(price.from)}` : n(price.standard);
+  const n = (v: number) => v.toLocaleString("en-US");
+  const text = price.from < price.standard ? `from ${n(price.from)}` : n(price.standard);
   return opts.short ? text : `${text} Credits`;
 }
 

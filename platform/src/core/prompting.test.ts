@@ -49,7 +49,7 @@ describe("check: hints before the job starts, without any model call", () => {
     expect(codes(setup().check("flux", { prompt: 'a poster with the headline "Summer Sale" in bold letters' }))).not.toContain("text_unquoted");
   });
 
-  it("reads a guardrail like «No on-screen text» as no text wanted (FLUX 3 Video's own prompts end with it)", () => {
+  it("reads a guardrail like “No on-screen text” as no text wanted (FLUX 3 Video's own prompts end with it)", () => {
     expect(codes(setup().check("flux", { prompt: "a baker slides bread into the oven, warm light. No on-screen text, no subtitles." }))).not.toContain("text_unquoted");
     expect(codes(setup().check("flux", { prompt: "a quiet harbour at dawn, gulls overhead. No other text." }))).not.toContain("text_unquoted");
   });

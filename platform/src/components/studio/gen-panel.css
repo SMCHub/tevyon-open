@@ -78,12 +78,13 @@
 .gp-go:disabled .gp-go__price { background: rgb(var(--fg) / 0.06); }
 .gp-go__price svg { width: 14px; height: 14px; }
 .gp-go__hint { font-size: 12px; font-weight: 500; }
+.gp-go__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gp-foot .note { font-size: 12px; }
 
-/* The model row already names the model: its picker button just says «Wechseln». */
+/* The model row already names the model: its picker button just says "Change". */
 .gp-model__switch .pill-btn__thumb, .gp-model__switch .pill-btn__text { display: none; }
 .gp-model__switch .pill-btn { gap: 6px; padding: 0 10px 0 12px; font-size: 12.5px; font-weight: 600; color: rgb(var(--fg) / 0.85); }
-.gp-model__switch .pill-btn::before { content: "Wechseln"; }
+.gp-model__switch .pill-btn::before { content: "Change"; }
 
 /* ---------- Button grammar (14.10.2026): actions are pills in capitals, glass or hairline at rest and white while
    hovered; tabs and filters are tags (rounded rectangles in capitals), white when chosen; values keep their case. */
@@ -144,7 +145,7 @@
 
 /* Settings as fields in fixed columns (GpOptions), two to a row: how many rows follows the model's options, never a
    value. Label left, value right, a long value
-   ends in «…»; an odd last field takes the whole row. */
+   ends in "…"; an odd last field takes the whole row. */
 .gp-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .gp-opts > .pop { min-width: 0; }
 .gp-opts > .pop:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -178,7 +179,7 @@
 .gp--compact .gp-modes__btn[aria-selected="true"] { border-color: var(--line-strong); background: rgb(var(--fg) / 0.05); box-shadow: none; color: var(--photon); }
 .gp--compact .gp-modes__btn:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 1px; }
 
-/* Model: a flat row, no card; «Wechseln» as a quiet hairline control on the right */
+/* Model: a flat row, no card; "Change" as a quiet hairline control on the right */
 .gp--compact .mpick > .pill-btn { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; }
 .gp--compact .mpick > .pill-btn:hover:not(:disabled), .gp--compact .mpick > .pill-btn[aria-expanded="true"] { border: 0; background: none; }
 .gp--compact .mpick__cover, .gp--compact .gp-model__cover { width: 38px; height: 38px; border-radius: 7px; }
@@ -215,7 +216,7 @@
 .gp--compact .refs-box, .gp--compact .picked { border-radius: 10px; }
 
 /* Settings: one table, two fixed columns split by hairlines; label in capitals above the value, no icons. How many
-   rows follows the model's options, never a value: a long value ends in «…». An odd last field takes the whole row. */
+   rows follows the model's options, never a value: a long value ends in "…". An odd last field takes the whole row. */
 .gp--compact .gp-opts { gap: 1px; border: 1px solid var(--line); border-radius: 10px; background: var(--line); }
 .gp--compact .gp-opts > .pop { display: flex; min-width: 0; border-radius: 0; background: var(--surface); }
 .gp--compact .gp-opts > .pop:nth-child(1) { border-top-left-radius: 9px; }

@@ -38,52 +38,52 @@ const or = (slug: string) => ({ provider: "comfy" as const, slug });
 export const TEXT_MODELS: TextModelDef[] = [
   {
     id: "claude-fable-5-1", name: "Claude Fable 5.1", maker: "Anthropic", tier: "beste", vision: true,
-    tagline: "Das stärkste Modell: Storyboards, genaue Prompts, durchdachte Ideen",
+    tagline: "The strongest model: storyboards, precise prompts, well-thought-out ideas",
     route: or("anthropic/claude-fable-5.1"), price: { inputPerM: 10, outputPerM: 50, approved: APPROVED },
   },
   {
     id: "claude-opus-5-5", name: "Claude Opus 5.5", maker: "Anthropic", tier: "beste", vision: true,
-    tagline: "Sehr stark und schneller als Fable",
+    tagline: "Very strong and faster than Fable",
     route: or("anthropic/claude-opus-5.5"), price: { inputPerM: 4, outputPerM: 20, approved: APPROVED },
   },
   {
     id: "gpt-6-astra", name: "GPT-6 Astra", maker: "OpenAI", tier: "beste", vision: true,
-    tagline: "OpenAIs Spitzenmodell für anspruchsvolle Konzepte",
+    tagline: "OpenAI's top model for demanding concepts",
     route: or("openai/gpt-6-astra"), price: { inputPerM: 10, outputPerM: 50, approved: APPROVED },
   },
   {
     id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", maker: "Anthropic", tier: "ausgewogen", vision: true, default: true,
-    tagline: "Kreativ, schnell und zuverlässig: der Standard",
+    tagline: "Creative, fast and reliable: the default",
     route: or("anthropic/claude-sonnet-5.5"), price: { inputPerM: 2, outputPerM: 10, approved: APPROVED },
   },
   {
     id: "gpt-6-1-sol", name: "GPT-6.1 Sol", maker: "OpenAI", tier: "ausgewogen", vision: true,
-    tagline: "OpenAIs Allrounder für Ideen und Prompts",
+    tagline: "OpenAI's all-rounder for ideas and prompts",
     route: or("openai/gpt-6.1-sol"), price: { inputPerM: 2, outputPerM: 10, approved: APPROVED },
   },
   {
     id: "gemini-3-1-pro", name: "Gemini 3.1 Pro", maker: "Google", tier: "ausgewogen", vision: true,
-    tagline: "Stark beim Verstehen von Fotos und langen Briefings",
+    tagline: "Strong at understanding photos and long briefs",
     route: or("google/gemini-3.1-pro-preview"), price: { inputPerM: 2, outputPerM: 12, approved: APPROVED },
   },
   {
     id: "grok-4-7", name: "Grok 4.7", maker: "xAI", tier: "ausgewogen", vision: true,
-    tagline: "Frech und direkt, gut für schräge virale Ideen",
+    tagline: "Bold and direct, good for quirky viral ideas",
     route: or("x-ai/grok-4.7"), price: { inputPerM: 2, outputPerM: 6, approved: APPROVED },
   },
   {
     id: "claude-haiku-5-5", name: "Claude Haiku 5.5", maker: "Anthropic", tier: "schnell", vision: true,
-    tagline: "Blitzschnell für kurze Rückfragen",
+    tagline: "Lightning fast for quick questions",
     route: or("anthropic/claude-haiku-5.5"), price: { inputPerM: 0.1, outputPerM: 0.5, approved: APPROVED },
   },
   {
     id: "gpt-6-luna", name: "GPT-6 Luna", maker: "OpenAI", tier: "schnell", vision: true,
-    tagline: "Schnell und sparsam",
+    tagline: "Fast and economical",
     route: or("openai/gpt-6-luna"), price: { inputPerM: 0.1, outputPerM: 0.5, approved: APPROVED },
   },
   {
     id: "gemini-3-8-flash", name: "Gemini 3.8 Flash", maker: "Google", tier: "schnell", vision: true,
-    tagline: "Schnell mit gutem Blick für Fotos",
+    tagline: "Fast, with a good eye for photos",
     route: or("google/gemini-3.8-flash"), price: { inputPerM: 0.75, outputPerM: 3.75, approved: APPROVED },
   },
 ];
@@ -117,7 +117,7 @@ export const isPaid = (m: TextModelDef) => m.tier === "beste";
 
 /**
  * What one Comfy credit is worth in USD, to price chat turns (billed in USD per token) in credits like media jobs.
- * platform.comfy.org billing page (16.10.2026): «You pay 1 USD for 211 credits». USD_PER_COMFY_CREDIT overrides it.
+ * platform.comfy.org billing page (16.10.2026): "You pay 1 USD for 211 credits". USD_PER_COMFY_CREDIT overrides it.
  */
 export const USD_PER_COMFY_CREDIT: number = (() => {
   const raw = Number(globalThis.process?.env?.USD_PER_COMFY_CREDIT);

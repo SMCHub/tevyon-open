@@ -3,7 +3,7 @@ import { PLANS, type PlanId } from "./pricing";
 
 /**
  * Monthly plans (Abo) as the payment provider reports them. The credits of a month come from its paid invoice
- * (billing.ts «fulfilPlanInvoice»); this record only says which plan an account has, until when, and who the customer
+ * (billing.ts “fulfilPlanInvoice”); this record only says which plan an account has, until when, and who the customer
  * is at the provider (for the customer portal). Server-only.
  */
 export type SubscriptionStatus = "active" | "trialing" | "past_due" | "unpaid" | "canceled" | "incomplete" | "incomplete_expired" | "paused";

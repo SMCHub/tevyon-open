@@ -4,13 +4,13 @@ import { useState } from "react";
 import type { ConsentState } from "@/core/consent";
 
 const DONE: Record<Exclude<ConsentState, "pending">, string> = {
-  confirmed: "Bestätigt. Der Agent kann den Job jetzt einmal starten. Du kannst dieses Fenster schliessen.",
-  declined: "Abgelehnt. Mit diesen Bildern startet kein Job.",
-  used: "Diese Einwilligung wurde schon für einen Job verwendet.",
-  expired: "Diese Anfrage ist abgelaufen. Der Agent kann eine neue stellen.",
+  confirmed: "Confirmed. The agent can now start the job once. You can close this window.",
+  declined: "Declined. No job starts with these images.",
+  used: "This consent was already used for a job.",
+  expired: "This request has expired. The agent can send a new one.",
 };
 
-/** «Ablehnen» and «Bestätigen»: the person's decision, sent from this page only (POST /api/consent/{id}). */
+/** "Decline" and "Confirm": the person's decision, sent from this page only (POST /api/consent/{id}). */
 export function ConsentDecision({ id, state: initial }: { id: string; state: ConsentState }) {
   const [state, setState] = useState<ConsentState>(initial);
   const [busy, setBusy] = useState(false);
@@ -24,15 +24,15 @@ export function ConsentDecision({ id, state: initial }: { id: string; state: Con
     setBusy(false);
     if (d?.ok) return setState(action === "confirm" ? "confirmed" : "declined");
     if (d?.error === "expired" || d?.error === "used" || d?.error === "declined" || d?.error === "confirmed") return setState(d.error);
-    setError("Das liess sich gerade nicht speichern. Lade die Seite neu und versuch es noch einmal.");
+    setError("That could not be saved. Reload the page and try again.");
   }
 
   if (state !== "pending") return <p className="consent__done" role="status">{DONE[state]}</p>;
   return (
     <>
       <div className="grant__actions">
-        <button className="auth__button grant__deny" type="button" onClick={() => void decide("decline")} disabled={busy}>Ablehnen</button>
-        <button className="auth__button grant__allow" type="button" onClick={() => void decide("confirm")} disabled={busy}>Bestätigen</button>
+        <button className="auth__button grant__deny" type="button" onClick={() => void decide("decline")} disabled={busy}>Decline</button>
+        <button className="auth__button grant__allow" type="button" onClick={() => void decide("confirm")} disabled={busy}>Confirm</button>
       </div>
       {error && <p className="auth__error" role="alert">{error}</p>}
     </>

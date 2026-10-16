@@ -1,5 +1,5 @@
 /**
- * The MCP tools as the «API & MCP» console shows them: one line each, and whether a call only reads, spends credits,
+ * The MCP tools as the "API & MCP" console shows them: one line each, and whether a call only reads, spends credits,
  * brings in a file, plans (the Director: free within a daily budget, credits only with the strongest models) or shares a
  * result in the community.
  * src/server/mcp.test.ts keeps this list equal to the tools the server registers.
@@ -7,20 +7,20 @@
 export type ToolEffect = "read" | "spend" | "upload" | "plan" | "share";
 
 export const TOOL_CARDS: { name: string; text: string; effect: ToolEffect }[] = [
-  { name: "list_models", text: "Alle Bild- und Videomodelle mit Parametern, Startpreis und Lebenszyklus.", effect: "read" },
-  { name: "get_price", text: "Der Preis in Credits, bevor etwas startet. Kostenlos.", effect: "read" },
-  { name: "generate", text: "Startet ein Bild oder Video mit Preisgrenze. Credits zurück bei Fehlschlag.", effect: "spend" },
-  { name: "get_job", text: "Status und Ergebnis eines Jobs, wartet auf Wunsch bis er fertig ist.", effect: "read" },
-  { name: "list_jobs", text: "Die letzten Jobs des Kontos mit Status und Links zum Ergebnis.", effect: "read" },
-  { name: "get_account", text: "Das angemeldete Konto und sein Credit-Stand.", effect: "read" },
-  { name: "get_credits", text: "Verfügbar, reserviert, ausgegeben, dazu die letzten Buchungen.", effect: "read" },
-  { name: "set_visibility", text: "Teilt ein fertiges Ergebnis in der Community oder macht es wieder privat. Nur auf Wunsch.", effect: "share" },
-  { name: "create_upload", text: "Eine signierte Adresse, um ein eigenes Startbild hochzuladen.", effect: "upload" },
-  { name: "import_image", text: "Holt ein öffentliches Bild aus dem Web als Startbild.", effect: "upload" },
-  { name: "reuse_result", text: "Macht aus einem eigenen fertigen Ergebnis einen Upload für Referenz oder Startbild.", effect: "upload" },
-  { name: "request_consent", text: "Jobs mit echten Personen: holt vor dem Start deine Bestätigung im Studio ein.", effect: "plan" },
-  { name: "ask_director", text: "Der Director macht aus einem Wunsch zwei bis drei Vorschläge mit Preis. Startet nichts.", effect: "plan" },
-  { name: "list_director_models", text: "Die Sprachmodelle des Directors und was eine Nachricht heute kostet.", effect: "read" },
+  { name: "list_models", text: "Every image and video model with parameters, starting price and lifecycle.", effect: "read" },
+  { name: "get_price", text: "The price in Credits before anything starts. Free.", effect: "read" },
+  { name: "generate", text: "Starts an image or video with a price cap. Credits back on failure.", effect: "spend" },
+  { name: "get_job", text: "Status and result of a job; can wait until it is done.", effect: "read" },
+  { name: "list_jobs", text: "The account's latest jobs with status and result links.", effect: "read" },
+  { name: "get_account", text: "The signed-in account and its Credits balance.", effect: "read" },
+  { name: "get_credits", text: "Available, reserved, spent, plus the latest transactions.", effect: "read" },
+  { name: "set_visibility", text: "Shares a finished result in the Community or makes it private again. Only on request.", effect: "share" },
+  { name: "create_upload", text: "A signed address to upload your own start image.", effect: "upload" },
+  { name: "import_image", text: "Fetches a public image from the web as a start image.", effect: "upload" },
+  { name: "reuse_result", text: "Turns one of your finished results into an upload for a reference or start image.", effect: "upload" },
+  { name: "request_consent", text: "Jobs with real people: asks for your confirmation in the studio before starting.", effect: "plan" },
+  { name: "ask_director", text: "The Director turns a wish into two or three priced proposals. Starts nothing.", effect: "plan" },
+  { name: "list_director_models", text: "The Director's language models and what a message costs today.", effect: "read" },
 ];
 
-export const EFFECT_LABEL: Record<ToolEffect, string> = { read: "liest", spend: "bucht Credits", upload: "lädt hoch", plan: "plant", share: "teilt" };
+export const EFFECT_LABEL: Record<ToolEffect, string> = { read: "reads", spend: "spends Credits", upload: "uploads", plan: "plans", share: "shares" };

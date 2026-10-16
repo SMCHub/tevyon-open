@@ -12,16 +12,16 @@ import { Columns, Shot } from "./wall";
 
 export type Filter = "all" | Kind;
 export const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "Alle" },
-  { id: "image", label: "Bilder" },
+  { id: "all", label: "All" },
+  { id: "image", label: "Images" },
   { id: "video", label: "Videos" },
 ];
-/** «Neu», «Beliebt» and, signed in, «Gefolgt» (only creators the account follows). */
+/** “New”, “Popular” and, signed in, “Following” (only creators the account follows). */
 export type Order = FeedSort | "following";
 export const ORDERS: { id: Order; label: string }[] = [
-  { id: "new", label: "Neu" },
-  { id: "popular", label: "Beliebt" },
-  { id: "following", label: "Gefolgt" },
+  { id: "new", label: "New" },
+  { id: "popular", label: "Popular" },
+  { id: "following", label: "Following" },
 ];
 /** A creator's page also carries the public profile, counts and whether the viewer follows (whatever the filter). */
 export type CreatorHead = { profile: PublicProfile; counts: Record<Kind, number>; followers: number; following: number; followed?: boolean };
@@ -111,8 +111,8 @@ function factsOf(c: Creation, showCreator: boolean): string[] {
 }
 
 /**
- * Beside «Prompt übernehmen» in the preview of a public creation: like (with the count), the creator's page and
- * «Melden». Your own creation shows only its count; without a login like and «Melden» lead to the login first.
+ * Beside “Use prompt” in the preview of a public creation: like (with the count), the creator's page and
+ * “Report”. Your own creation shows only its count; without a login like and “Report” lead to the login first.
  */
 function CreationActions({ c, own, guest, showCreator, onLiked, onNote }: {
   c: Creation; own: boolean; guest: boolean; showCreator: boolean;
@@ -140,7 +140,7 @@ function CreationActions({ c, own, guest, showCreator, onLiked, onNote }: {
       setLiked(!next);
       setLikes(c.likes);
       if (res.error === "unauthorized") return void (window.location.href = loginHere());
-      onNote("Das liess sich gerade nicht speichern. Versuch es noch einmal.");
+      onNote("That couldn't be saved just now. Please try again.");
     }
   }
 
@@ -151,7 +151,7 @@ function CreationActions({ c, own, guest, showCreator, onLiked, onNote }: {
       ) : (
         <button type="button" className="btn cm-like" aria-pressed={liked} onClick={() => void toggle()} disabled={busy}>
           <Heart aria-hidden="true" />
-          <span className="lb-actions__label">{liked ? "Gefällt dir" : "Gefällt mir"}</span>
+          <span className="lb-actions__label">{liked ? "Liked" : "Like"}</span>
           <span className="cm-like__n">{likes}</span>
         </button>
       )}
@@ -160,7 +160,7 @@ function CreationActions({ c, own, guest, showCreator, onLiked, onNote }: {
       )}
       {!own && (
         <button type="button" className="btn" onClick={() => (guest ? void (window.location.href = loginHere()) : setReport(true))}>
-          <Flag aria-hidden="true" /><span className="lb-actions__label">Melden</span>
+          <Flag aria-hidden="true" /><span className="lb-actions__label">Report</span>
         </button>
       )}
       {report && (
@@ -179,8 +179,8 @@ function CreationActions({ c, own, guest, showCreator, onLiked, onNote }: {
 
 /**
  * Public creations in the dense wall, each the one tile of every wall (`Shot`): only the picture at rest, creator,
- * likes and format on hover, a click opens it large with its prompt, «Prompt übernehmen», the mark that it is made with
- * AI, and like, the creator and «Melden». «Mehr laden» (and automatically when the end scrolls into view).
+ * likes and format on hover, a click opens it large with its prompt, “Use prompt”, the mark that it is made with
+ * AI, and like, the creator and “Report”. “Load more” (and automatically when the end scrolls into view).
  * `ownHandle`: the viewer's own handle; `guest`: no login.
  */
 export function CommunityWall({ feed, showCreator = true, ownHandle, guest = false, empty }: {
@@ -226,15 +226,15 @@ export function CommunityWall({ feed, showCreator = true, ownHandle, guest = fal
       i,
     );
 
-  if (status === "loading" && !items.length) return <p className="cm-note" role="status">Lade die Community …</p>;
-  if (status === "failed") return <p className="cm-note" role="alert">Die Community ist gerade nicht erreichbar. Lade die Seite gleich noch einmal.</p>;
+  if (status === "loading" && !items.length) return <p className="cm-note" role="status">Loading the Community …</p>;
+  if (status === "failed") return <p className="cm-note" role="alert">The Community can't be reached right now. Reload the page in a moment.</p>;
   if (!items.length) return <>{empty}</>;
 
   return (
     <>
       <Columns items={items} ratio={creationHeight} keyOf={(c) => c.id} min={170} dense>
         {(c, i) => {
-          const label = (c.prompt ?? c.preset?.title ?? `${c.kind === "video" ? "Video" : "Bild"} von @${c.creator.handle}`).slice(0, 200);
+          const label = (c.prompt ?? c.preset?.title ?? `${c.kind === "video" ? "Video" : "Image"} by @${c.creator.handle}`).slice(0, 200);
           return (
             <Shot
               media={c.kind === "video" ? (
@@ -251,7 +251,7 @@ export function CommunityWall({ feed, showCreator = true, ownHandle, guest = fal
         }}
       </Columns>
       <div ref={end} className="cm-more">
-        {next && <button type="button" className="cm-btn" onClick={() => void more()} disabled={busy}>{busy ? "Lade …" : "Mehr laden"}</button>}
+        {next && <button type="button" className="cm-btn" onClick={() => void more()} disabled={busy}>{busy ? "Loading …" : "Load more"}</button>}
       </div>
       {note && <Toast text={note} onDone={() => setNote(null)} />}
     </>

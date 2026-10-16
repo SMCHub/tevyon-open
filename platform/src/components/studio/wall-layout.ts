@@ -27,7 +27,7 @@ export function distribute(heights: number[], cols: number, { gap = 0.06 }: { ga
   return columns;
 }
 
-/** «007»: a tile's number with as many digits as the count needs, at least two. */
+/** “007”: a tile's number with as many digits as the count needs, at least two. */
 export function tileNo(i: number, total: number): string {
   return String(i + 1).padStart(Math.max(2, String(total).length), "0");
 }
@@ -41,11 +41,11 @@ const MAX_LINES = 3;
 
 /**
  * A title as poster type. Up to twelve letters (no hyphen, no slash) are split into rows of three, a row as two cells
- * «AN T / HR A / ZI T»; a lone last letter is avoided (four letters make «LÖ / W E»). Longer titles, and the ones with
+ * “AN T / HR A / ZI T”; a lone last letter is avoided (four letters make “LÖ / W E”). Longer titles, and the ones with
  * a hyphen or slash, are set as up to three plain lines broken at words and after hyphens.
  */
 export function posterType(title: string): PosterType {
-  const upper = title.toLocaleUpperCase("de-CH").trim();
+  const upper = title.toLocaleUpperCase("en-US").trim();
   const letters = upper.replace(/[^\p{L}\p{N}]/gu, "");
   if (/[-/]/.test(upper) || letters.length > MAX_SPLIT) return { kind: "lines", lines: lines(upper) };
 

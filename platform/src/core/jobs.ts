@@ -170,9 +170,9 @@ export function createJobs(deps: {
   }
 
   /**
-   * Identical starts of one account that arrive at the same time share one prompt-writer call: the Studio's «Anzahl 4»
+   * Identical starts of one account that arrive at the same time share one prompt-writer call: the Studio's “Count 4”
    * sends the same request four times at once, and four calls would cost four times. Nothing is kept afterwards, so a
-   * later start (a «Variante», a final after a blocked draft) always gets a freshly written prompt.
+   * later start (a “Variation”, a final after a blocked draft) always gets a freshly written prompt.
    */
   const compiling = new Map<string, Promise<PromptPlan>>();
   function compileOnce(accountId: string, jobType: string, params: Record<string, unknown>, mode: PromptMode): Promise<PromptPlan> {

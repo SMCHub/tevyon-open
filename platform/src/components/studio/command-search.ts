@@ -1,7 +1,7 @@
 /** One entry of the command palette: a page, a model, a preset or an action. */
 export type Command = { id: string; group: string; label: string; hint?: string; keywords?: string[] };
 
-/** Lower case without accents, so «über» finds «Über» and «uber» alike. */
+/** Lower case without accents, so "café" finds "Café" and "cafe" alike. */
 function fold(s: string): string {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }

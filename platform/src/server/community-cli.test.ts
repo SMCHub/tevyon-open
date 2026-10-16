@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCommunity, createPostgresCommunityStore, type PublishableJob } from "../core/community";
 import { pgliteDb } from "../core/testing/repositories";
 import { run } from "./community-cli";
+import { REASON_LABEL } from "./notify";
 
 const LENA = "00000000-0000-4000-8000-00000000000a";
 const MAX = "00000000-0000-4000-8000-00000000000b";
@@ -46,7 +47,7 @@ describe("community cli", () => {
 
     expect(await cli("forget", "LENA@example.com")).toBe(0);
     expect(out.join("\n")).toMatch(/@lena/);
-    expect(out.join("\n")).toMatch(/Nichts geändert/);
+    expect(out.join("\n")).toMatch(/Nothing changed/);
     expect(await community.profile(LENA)).not.toBeNull();
 
     expect(await cli("forget", "lena@example.com", "--yes")).toBe(0);
@@ -58,7 +59,7 @@ describe("community cli", () => {
   it("finds no account behind an unknown address and changes nothing", async () => {
     const { out, cli } = await setup();
     expect(await cli("forget", "nobody@example.com", "--yes")).toBe(1);
-    expect(out.join("\n")).toMatch(/Kein Konto/);
+    expect(out.join("\n")).toMatch(/No account/);
   });
 
   it("lists reported profiles, never who reported, and hides and restores one by its handle", async () => {
@@ -68,15 +69,15 @@ describe("community cli", () => {
 
     expect(await cli("list")).toBe(0);
     expect(out.join("\n")).toMatch(/@max/);
-    expect(out.join("\n")).toMatch(/Reale Person/);
+    expect(out.join("\n")).toContain(REASON_LABEL.person);
     expect(out.join("\n")).toMatch(/Fake/);
     expect(out.join("\n")).not.toContain(LENA);
 
-    expect(await cli("hide", "@max", "Fremdes", "Gesicht")).toBe(0);
+    expect(await cli("hide", "@max", "Stolen", "face")).toBe(0);
     expect(await community.creator("max")).not.toBeNull();
-    expect(await cli("hide", "@max", "Fremdes", "Gesicht", "--yes")).toBe(0);
+    expect(await cli("hide", "@max", "Stolen", "face", "--yes")).toBe(0);
     expect(await community.creator("max")).toBeNull();
-    expect(await community.profile(MAX)).toMatchObject({ hidden: "Fremdes Gesicht" });
+    expect(await community.profile(MAX)).toMatchObject({ hidden: "Stolen face" });
 
     expect(await cli("unhide", "@max", "--yes")).toBe(0);
     expect(await community.creator("max")).not.toBeNull();
@@ -87,7 +88,7 @@ describe("community cli", () => {
     addJob(MAX, J2);
     await community.saveProfile(MAX, { handle: "max", name: "Max", acceptTerms: true });
     await community.publish(MAX, J2);
-    expect(await cli("hide", J2, "Gewalt", "--yes")).toBe(0);
+    expect(await cli("hide", J2, "Violence", "--yes")).toBe(0);
     expect((await community.feed()).items).toEqual([]);
     expect(await cli("hide", "10000000-0000-4000-8000-0000000000ff", "x", "--yes")).toBe(1);
   });

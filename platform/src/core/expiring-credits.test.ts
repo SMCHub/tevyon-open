@@ -4,7 +4,7 @@ import { repositories } from "./testing/repositories";
 /**
  * Plan credits (Abo) expire with their period, bought and welcome credits never do.
  * Plan credits are spent first. A job keeps what it reserved before the period ended; if it fails afterwards, its credits
- * come back as normal credits, because «Credits zurück bei Fehlschlag» has to hold at the boundary too.
+ * come back as normal credits, because “credits back on failure” has to hold at the boundary too.
  */
 const ACC = "00000000-0000-4000-8000-0000000000e1";
 const JOB_1 = "10000000-0000-4000-8000-0000000000e1";

@@ -26,7 +26,7 @@ function recordingFetch(response: Response) {
 
 const SSE = [
   ": OPENROUTER PROCESSING",
-  `data: ${JSON.stringify({ choices: [{ delta: { content: "Hallo " } }] })}`,
+  `data: ${JSON.stringify({ choices: [{ delta: { content: "Hello " } }] })}`,
   `data: ${JSON.stringify({ choices: [{ delta: { content: "Welt" } }] })}`,
   `data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, function: { name: "propose_preset", arguments: '{"preset_id":"portal"}' } }] } }] })}`,
   `data: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 100, completion_tokens: 20, cost: 0.0004 } })}`,
@@ -48,7 +48,7 @@ describe("Director language model over the provider", () => {
     const events = await collect(model([{ role: "user", content: "hi" }], [{ name: "propose_preset", description: "d", parameters: {} }]));
 
     expect(events).toEqual([
-      { type: "text", delta: "Hallo " },
+      { type: "text", delta: "Hello " },
       { type: "text", delta: "Welt" },
       { type: "tool_call", call: { name: "propose_preset", args: { preset_id: "portal" } } },
       { type: "usage", costUsd: 0.0004, inputTokens: 100, outputTokens: 20 },

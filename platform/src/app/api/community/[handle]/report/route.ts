@@ -21,11 +21,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/community/[hand
       const note = typeof body.note === "string" && body.note.trim() ? body.note.trim().slice(0, 500) : "";
       const page = `${publicBase(req)}/moderation`;
       after(() =>
-        notifyOperator("Tevyon: neue Meldung zu einem Profil", [
-          `Das Profil @${name.replace(/^@/, "").toLowerCase()} wurde gemeldet.`,
-          `Grund: ${REASON_LABEL[String(body.reason)] ?? String(body.reason)}`,
-          ...(note ? [`Hinweis: ${note}`] : []),
-          `Prüfen: ${page}`,
+        notifyOperator("Tevyon: new report on a profile", [
+          `The profile @${name.replace(/^@/, "").toLowerCase()} was reported.`,
+          `Reason: ${REASON_LABEL[String(body.reason)] ?? String(body.reason)}`,
+          ...(note ? [`Note: ${note}`] : []),
+          `Review: ${page}`,
         ]),
       );
     }

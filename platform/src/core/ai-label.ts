@@ -1,6 +1,6 @@
 /**
  * Machine-readable AI label for every result Tevyon stores (AI Act Art. 50 (2): synthetic output marked in a
- * machine-readable format). An XMP packet with the IPTC digital source type «trainedAlgorithmicMedia» and Tevyon as
+ * machine-readable format). An XMP packet with the IPTC digital source type “trainedAlgorithmicMedia” and Tevyon as
  * the creator tool, never a vendor or model name (the supply route stays on the server). The picture or video itself is never
  * re-encoded: PNG gets an iTXt chunk, JPEG an APP1 segment, WebP an XMP chunk (with the VP8X header that requires),
  * MP4 a uuid box at the end.
@@ -69,7 +69,7 @@ function crc32(bytes: Uint8Array): number {
   return (c ^ 0xffffffff) >>> 0;
 }
 
-/** PNG: an iTXt chunk «XML:com.adobe.xmp» right after IHDR. */
+/** PNG: an iTXt chunk “XML:com.adobe.xmp” right after IHDR. */
 function png(data: Uint8Array): Uint8Array | null {
   const sig = [137, 80, 78, 71, 13, 10, 26, 10];
   if (data.length < 33 || !sig.every((b, i) => data[i] === b) || !startsWith(data, 12, "IHDR")) return null;
@@ -95,7 +95,7 @@ function jpeg(data: Uint8Array): Uint8Array | null {
   return concat(data.subarray(0, at), segment, data.subarray(at));
 }
 
-/** WebP: an «XMP » chunk, flagged in VP8X (built from the VP8 or VP8L header of a simple file). */
+/** WebP: an “XMP ” chunk, flagged in VP8X (built from the VP8 or VP8L header of a simple file). */
 function webp(data: Uint8Array): Uint8Array | null {
   if (data.length < 30 || !startsWith(data, 0, "RIFF") || !startsWith(data, 8, "WEBP")) return null;
   const pad = XMP_BYTES.length % 2 ? new Uint8Array([0]) : new Uint8Array(0);
@@ -132,7 +132,7 @@ function webp(data: Uint8Array): Uint8Array | null {
 
 /**
  * MP4: a top-level uuid box with the XMP UUID, appended: no offset inside the file moves. Only for a file whose
- * top-level boxes add up to its length; a last box «to the end of the file» (size 0) would swallow the label.
+ * top-level boxes add up to its length; a last box “to the end of the file” (size 0) would swallow the label.
  */
 function mp4(data: Uint8Array): Uint8Array | null {
   if (data.length < 12 || !startsWith(data, 4, "ftyp")) return null;

@@ -16,15 +16,15 @@ const load = cache(async (handle: string) => {
 export async function generateMetadata({ params }: PageProps<"/profile/[handle]">): Promise<Metadata> {
   const { handle } = await params;
   const page = await load(handle);
-  if (!page) return { title: "Profil nicht gefunden – Tevyon", robots: { index: false, follow: false } };
+  if (!page) return { title: "Profile not found – Tevyon", robots: { index: false, follow: false } };
   const { profile, counts } = page;
   const title = `${profile.name} (@${profile.handle}) – Tevyon`;
   const parts = [
-    counts.image ? `${counts.image} ${counts.image === 1 ? "Bild" : "Bilder"}` : null,
-    counts.video ? `${counts.video} ${counts.video === 1 ? "Video" : "Videos"}` : null,
+    counts.image ? `${counts.image} ${counts.image === 1 ? "image" : "images"}` : null,
+    counts.video ? `${counts.video} ${counts.video === 1 ? "video" : "videos"}` : null,
   ].filter(Boolean);
   const description =
-    profile.bio || (parts.length ? `${parts.join(" und ")} von ${profile.name}, mit KI erstellt und auf Tevyon geteilt.` : `${profile.name} auf Tevyon: Bilder und Videos, mit KI erstellt.`);
+    profile.bio || (parts.length ? `${parts.join(" and ")} by ${profile.name}, made with AI and shared on Tevyon.` : `${profile.name} on Tevyon: images and videos made with AI.`);
   const image = profile.avatar ?? page.items.find((c) => c.kind === "image")?.media.url;
   return {
     title,

@@ -13,18 +13,18 @@ export type Value = string | number | boolean;
 
 export const PARAM_LABEL: Record<string, string> = {
   aspect_ratio: "Format",
-  resolution: "Auflösung",
-  duration: "Dauer",
-  generate_audio: "Ton",
-  mode: "Modus",
-  quality: "Qualität",
-  scale: "Vergrösserung",
+  resolution: "Resolution",
+  duration: "Duration",
+  generate_audio: "Sound",
+  mode: "Mode",
+  quality: "Quality",
+  scale: "Upscale",
 };
 
 /** Words for option values that are codes (recast's mode). */
 const VALUE_LABEL: Record<string, Record<string, string>> = {
-  mode: { motion: "Bewegung übertragen", replace: "Objekt tauschen" },
-  quality: { low: "Entwurf", medium: "Mittel", high: "Hoch", xhigh: "Sehr hoch", max: "Maximal" },
+  mode: { motion: "Transfer motion", replace: "Swap object" },
+  quality: { low: "Draft", medium: "Medium", high: "High", xhigh: "Very high", max: "Max" },
 };
 
 /** Selectable values of one parameter, or null for free input (e.g. the prompt). Durations up to 30 s are whole seconds. */
@@ -38,7 +38,7 @@ export function choices(s: JsonSchema): Value[] | null {
   return null;
 }
 
-/** «480p» → 480, «2K» → 2000, «4K» → 4000: only to rank resolutions, so 2K sits above 1080p. */
+/** "480p" → 480, "2K" → 2000, "4K" → 4000: only to rank resolutions, so 2K sits above 1080p. */
 function resolutionRank(v: string): number {
   const p = /^(\d+)p?$/i.exec(v);
   if (p) return Number(p[1]);
@@ -59,7 +59,7 @@ export function modelSpec(schema: JsonSchema): { resolution: string | null; seco
 }
 
 /**
- * What the model list shows about a model: the highest resolution, the duration span and «Ton» when sound can be
+ * What the model list shows about a model: the highest resolution, the duration span and "Sound" when sound can be
  * switched on. Never a guess: a model that does not list it gets no fact.
  */
 export function modelFacts(schema: JsonSchema): string[] {
@@ -67,12 +67,12 @@ export function modelFacts(schema: JsonSchema): string[] {
   const facts: string[] = [];
   if (resolution) facts.push(resolution);
   if (seconds) facts.push(seconds.min === seconds.max ? `${seconds.max} s` : `${seconds.min}–${seconds.max} s`);
-  if (sound) facts.push("Ton");
+  if (sound) facts.push("Sound");
   return facts;
 }
 
 export function showValue(key: string, v: unknown): string {
-  if (typeof v === "boolean") return v ? "Mit Ton" : "Ohne Ton";
+  if (typeof v === "boolean") return v ? "Sound on" : "Sound off";
   if (key === "duration") return `${v} s`;
   return VALUE_LABEL[key]?.[String(v)] ?? String(v);
 }
