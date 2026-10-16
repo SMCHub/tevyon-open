@@ -8,6 +8,8 @@ do anything the web studio can.
 
 Built for Comfy's *Open Source* challenge, October 2026. Licensed under Apache-2.0.
 
+**Demo (66 s):** [docs/demo.mp4](docs/demo.mp4): the studio, a real FLUX 3 image and Veo 3.1 clip, the CLI and the MCP server.
+
 ## What is in here
 
 | | |
