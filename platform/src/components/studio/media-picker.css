@@ -1,0 +1,70 @@
+/*
+ * Media picker (media-picker.tsx): a card beside the upload field, portalled to the body. Monochrome and quiet like the
+ * video panel: hairlines, 10 px radius, one calm surface; ink only for what is chosen or hovered. On phones a sheet.
+ */
+.mpk {
+  position: fixed; z-index: 80; display: flex; flex-direction: column; gap: 12px; width: 372px; max-height: min(600px, calc(100vh - 24px));
+  padding: 14px; border: 1px solid var(--line-strong); border-radius: 14px; background: rgb(var(--panel));
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.14), 0 2px 8px rgb(0 0 0 / 0.06); color: var(--photon);
+  animation: mpk-in 0.18s var(--ease, ease) both;
+}
+.mpk.is-drag { border-color: var(--photon); }
+.mpk.is-drag::after { content: "Hier loslassen"; position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; border-radius: inherit; background: rgb(var(--panel) / 0.92); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+@keyframes mpk-in { from { opacity: 0; transform: translateY(4px) scale(0.99); } }
+
+.mpk__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mpk__title { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--fg) / 0.7); }
+.mpk__x { width: 28px; height: 28px; border-color: transparent; background: none; }
+.mpk__x:hover { border-color: var(--line-strong); }
+.mpk__x svg { width: 14px; height: 14px; }
+
+/* «Vom Computer»: one quiet row with a dashed hairline, like the upload fields */
+.mpk__computer { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: 10px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+.mpk__computer:hover { border-color: rgb(var(--fg) / 0.36); background: rgb(var(--fg) / 0.03); }
+.mpk__computer:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 1px; }
+.mpk__computer-icon { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; }
+.mpk__computer-icon svg { width: 15px; height: 15px; }
+.mpk__computer-text { display: grid; gap: 2px; min-width: 0; }
+.mpk__computer-title { font-size: 13px; font-weight: 600; }
+.mpk__computer-sub { overflow: hidden; color: rgb(var(--fg) / 0.5); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Source tabs: plain type, a calm surface when chosen (same as the panel's modes) */
+.mpk__tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.mpk__tab { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border: 1px solid transparent; border-radius: 8px; background: none; color: rgb(var(--fg) / 0.5); font: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; transition: color 0.15s ease, background 0.15s ease; }
+.mpk__tab:hover { color: rgb(var(--fg) / 0.85); }
+.mpk__tab[aria-selected="true"] { border-color: var(--line-strong); background: rgb(var(--fg) / 0.05); color: var(--photon); }
+.mpk__tab:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 1px; }
+.mpk__n { color: rgb(var(--fg) / 0.4); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+/* The grid: square thumbnails, 4 px gaps; chosen = an ink ring and its number */
+.mpk__body { min-height: 120px; margin: 0 -4px; padding: 0 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.mpk__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.mpk__item { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden; border: 0; border-radius: 6px; background: var(--surface-2); cursor: pointer; }
+.mpk__item img, .mpk__item video { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease, opacity 0.2s ease; }
+.mpk__item:hover img, .mpk__item:hover video { transform: scale(1.04); }
+.mpk__item::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(var(--fg) / 0.08); pointer-events: none; }
+.mpk__item.is-on::after { box-shadow: inset 0 0 0 2px var(--photon); }
+.mpk__item:focus-visible { outline: 2px solid var(--photon); outline-offset: 1px; }
+.mpk__item:disabled { cursor: progress; }
+.mpk__item:disabled img, .mpk__item:disabled video { opacity: 0.6; }
+.mpk__mark { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--photon); color: var(--void); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mpk__mark svg { width: 12px; height: 12px; }
+.mpk__empty { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 120px; margin: 0; color: rgb(var(--fg) / 0.5); font-size: 12.5px; text-align: center; }
+
+.mpk__error { margin: 0; color: var(--photon); font-size: 12px; }
+.mpk__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.mpk__note { display: inline-flex; align-items: center; gap: 6px; color: rgb(var(--fg) / 0.5); font-size: 11px; }
+.mpk__note svg { flex: none; width: 13px; height: 13px; }
+.mpk__go { height: 32px; padding: 0 12px; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; }
+
+@media (max-width: 639px) {
+  .mpk { max-height: 78vh; border-radius: 14px; }
+  .mpk__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mpk { animation: none; }
+  .mpk__item img, .mpk__item video { transition: none; }
+}
+
+/* The upload field whose picker is open */
+.drop.is-open { border-style: solid; border-color: rgb(var(--fg) / 0.4); }

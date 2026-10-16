@@ -1,0 +1,135 @@
+/* Media preview (media-preview.tsx, preview-host.tsx). The overlay itself reuses .lightbox from studio.css; here: the
+   sound chip on the stage, the preview button on tiles, and tiles split into their own click area plus that button
+   (a button may not sit inside another button or a link). */
+
+.lightbox:focus { outline: none; }
+/* Media keep their own shape on the stage: a portrait clip's controls span the clip, not the whole stage. */
+.lightbox__stage > .media:is(video, img) { width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 64px); }
+/* On a phone the media fit the room the side sheet leaves (the stage's single cell, see the side panel below). */
+@media (max-width: 760px) { .lightbox__stage > .media:is(video, img), .lightbox > .lightbox__stage > .media-state { max-height: 100%; } }
+
+/* ---------- Side panel (15.10.2026): quiet, and it does not scroll. A meta line instead of a chip, the prompt in a
+   few lines with «Mehr», settings as key and value, small hairline pills that wrap instead of running out of the
+   panel. The prompt gives way first in a low window; only a very low one (or a phone) scrolls, so no action is ever
+   cut off. ---------- */
+.lightbox__side { position: relative; display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 18px 20px 0; border-right: 1px solid var(--line); background: linear-gradient(180deg, rgb(var(--fg) / 0.03), rgb(var(--fg) / 0) 200px), var(--surface); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
+/* Left like every input panel (13.10.2026); grid items paint in order-modified order, so without z-index the panel
+   would sit under the backdrop. */
+@media (min-width: 761px) { .lightbox__side { order: -1; z-index: 1; } }
+.lightbox__side > * { flex: none; min-width: 0; }
+.lightbox__side > .lb-prompt { flex: 0 1 auto; min-height: 0; }
+
+.lb-head { display: flex; align-items: center; gap: 8px; }
+.lb-chip { display: inline-flex; align-items: center; gap: 6px; color: var(--ash); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.lb-chip svg { width: 13px; height: 13px; }
+.lb-time { overflow: hidden; color: var(--ash); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.lb-time::before { content: "·"; margin-right: 8px; }
+.lb-head .lb-close { flex: none; width: 30px; height: 30px; margin-left: auto; }
+.lb-head .lb-close svg { width: 14px; height: 14px; }
+.lightbox__model { margin: -8px 0 0; font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; overflow-wrap: anywhere; }
+.pv-text { margin: -10px 0 0; color: var(--ash); font-size: 13.5px; line-height: 1.55; }
+
+.lb-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; margin-bottom: 4px; color: var(--ash); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.lb-copy, .lb-more { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 0; border-radius: 8px; background: none; color: var(--ash); font-family: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; }
+.lb-copy { margin-right: -8px; }
+.lb-copy:hover, .lb-more:hover { background: rgb(var(--fg) / 0.08); color: var(--photon); }
+.lb-copy svg, .lb-more svg { width: 12px; height: 12px; }
+.lb-copy:focus-visible, .lb-more:focus-visible { outline: 1.5px solid var(--photon); outline-offset: 1px; }
+
+/* The prompt: plain lines instead of a box with its own scrollbar. */
+.lb-prompt { display: flex; flex-direction: column; }
+.lb-prompt > :not(.lb-text) { flex: none; }
+.lb-text { min-height: 0; margin: 0; color: rgb(var(--fg) / 0.84); font-size: 13.5px; line-height: 1.6; overflow-wrap: anywhere; }
+.lb-text:not(.is-open) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 8; overflow: hidden; }
+/* A longer prompt fades out at its foot, also when a low window takes lines away. */
+.lb-text.is-long { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 2.4em), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 2.4em), transparent); }
+.lb-text.is-open { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.lb-more { align-self: flex-start; margin: 4px 0 0 -8px; }
+.lb-recipe { margin: 0 0 4px; font-size: 13.5px; font-weight: 600; line-height: 1.5; }
+
+.lb-refs__row { display: flex; flex-wrap: wrap; gap: 6px; }
+.lb-refs__img { width: 52px; height: 52px; border: 1px solid var(--line); border-radius: 10px; object-fit: cover; }
+
+/* Settings: key over value, three to a row. Details of an example: one quiet line. */
+.lb-specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; margin: 0; }
+.lb-specs > div { display: grid; gap: 2px; min-width: 0; }
+.lb-specs dt { overflow: hidden; color: var(--ash); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.lb-specs dd { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin: 0; overflow: hidden; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lb-facts { display: flex; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.lb-facts li + li::before { content: "·"; margin: 0 8px; color: var(--ash); }
+
+/* Actions: small pills, two to a row where they fit (download in glass, the rest hairline); a lone pill or a long
+   label takes the whole row. */
+.lb-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding: 14px 0 16px; border-top: 1px solid var(--line); }
+.lb-actions .btn { flex: 1 1 0; max-width: 100%; height: 32px; gap: 6px; padding: 0 12px; border-color: var(--line-strong); font-size: 11px; letter-spacing: 0.07em; }
+.lb-actions .btn svg { flex: none; width: 13px; height: 13px; }
+.lb-actions__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.lb-actions .lb-actions__main, .lb-actions .note, .lb-actions .lightbox__hint { flex: 1 1 100%; }
+.lb-actions .btn--primary { border-color: rgb(var(--fg) / 0.28); }
+.lb-price { display: inline-flex; flex: none; align-items: center; gap: 3px; color: var(--ash); letter-spacing: 0; font-variant-numeric: tabular-nums; transition: color 0.2s ease; }
+.lb-actions .lb-price svg { width: 11px; height: 11px; }
+.lb-actions .btn:hover:not(:disabled) .lb-price { color: inherit; }
+.lb-actions .go__price { height: 20px; padding: 0 7px; font-size: 11px; }
+.lb-actions .go__price svg { width: 12px; height: 12px; }
+.lb-actions .note { margin: 2px 0 0; font-size: 12px; text-align: center; }
+
+.lightbox__hint { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 2px 0 0; color: var(--ash); font-size: 11px; }
+.lightbox__hint kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: 5px; font: inherit; font-size: 10px; }
+.lightbox__hint kbd + kbd { margin-left: -1px; }
+.lightbox__hint kbd:nth-of-type(3), .lightbox__hint kbd:nth-of-type(4) { margin-left: 8px; }
+/* Phones have no keys to press (narrow windows drop the hint too, see below). */
+@media (hover: none) { .lightbox__hint { display: none; } }
+
+@media (max-width: 760px) {
+  .lightbox__side { order: 1; max-height: 60vh; gap: 12px; padding: 14px 16px 0; border-right: 0; border-top: 1px solid var(--line); }
+  /* The sheet keeps its lines (it scrolls only on a very small phone); the stage above takes the room left over. */
+  .lightbox__side > .lb-prompt { flex: none; }
+  .lightbox > .lightbox__stage { grid-template: minmax(0, 1fr) / minmax(0, 1fr); padding: 16px; }
+  .lightbox__model { font-size: 19px; }
+  .lb-label { min-height: 20px; }
+  .lb-text:not(.is-open) { -webkit-line-clamp: 3; }
+  .lb-refs__img { width: 40px; height: 40px; border-radius: 8px; }
+  .lb-actions { padding: 12px 0 14px; }
+  .lightbox__hint { display: none; }
+}
+
+/* Sound on the stage: «Ton an» while the clip plays muted, a speaker to mute it, «Ohne Ton» for clips without sound. */
+.pv-sound { position: absolute; top: 24px; left: 24px; z-index: 2; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 15px; border: 1px solid var(--line-strong); border-radius: 8px; background: rgb(var(--bg) / 0.78); color: var(--photon); font-size: 13px; font-weight: 600; }
+.pv-sound svg { width: 16px; height: 16px; }
+button.pv-sound { cursor: pointer; transition: background 0.2s ease, transform 0.2s var(--ease); }
+button.pv-sound:hover { background: rgb(var(--fg) / 0.16); transform: translateY(-1px); }
+.pv-sound--icon { width: 36px; padding: 0; }
+.pv-sound--none { color: var(--ash); }
+.pv-sound--call { border-color: rgb(var(--hi) / calc(0.34 * var(--hi-k))); background: rgb(var(--fg) / 0.14); animation: pv-call 2.4s ease-in-out infinite; }
+@keyframes pv-call {
+  0%, 100% { box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.1 * var(--hi-k))), 0 0 0 0 rgb(var(--fg) / 0.28); }
+  55% { box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.1 * var(--hi-k))), 0 0 0 9px rgb(var(--fg) / 0); }
+}
+@media (prefers-reduced-motion: reduce) { .pv-sound--call { animation: none; } }
+
+/* Preview button on a tile: glass, top right, visible on hover or keyboard focus, always on touch screens. */
+.pv-open { position: absolute; top: 10px; right: 10px; z-index: 3; opacity: 0; transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s var(--ease); }
+:hover > .pv-open, :focus-within > .pv-open { opacity: 1; }
+@media (hover: none) { .pv-open { opacity: 1; } }
+.pv-open--left { right: auto; left: 10px; }
+.pv-open--beside { right: 52px; }
+.pv-open--sm { top: 8px; right: 8px; width: 28px; height: 28px; }
+.pv-open--sm svg { width: 13px; height: 13px; }
+
+/* Tiles whose own click stays (prompt, preset page, template): the click area fills the tile under the button. */
+.insp__hit { display: block; width: 100%; padding: 0; border: 0; border-radius: inherit; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.insp__hit:focus-visible, .preset-tile__link:focus-visible, .mini-preset__hit:focus-visible, .ms-tile__hit:focus-visible { outline: 2px solid var(--photon); outline-offset: -2px; }
+.insp__hit:focus-visible .insp__cta { opacity: 1; transform: none; }
+.preset-tile__link { position: absolute; inset: 0; border-radius: inherit; color: inherit; }
+.mini-preset__hit, .ms-tile__hit { position: absolute; inset: 0; padding: 0; border: 0; border-radius: inherit; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ms-tile__hit:disabled { cursor: default; }
+.ms-tile__hit:focus-visible .ms-tile__hover { opacity: 1; }
+
+/* Media that opens the preview on click. */
+button.runs__item { padding: 0; cursor: zoom-in; }
+.dr-msg__zoom { display: block; padding: 0; border: 0; border-radius: 14px; background: none; cursor: zoom-in; }
+
+/* ---------- Button grammar (14.10.2026): actions are pills in capitals, glass or hairline at rest and white while
+   hovered; tabs and filters are tags (rounded rectangles in capitals), white when chosen; values keep their case. */
+.pv-sound { border-radius: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+button.pv-sound:hover { border-color: var(--photon); background: var(--photon); color: var(--void); box-shadow: none; transform: none; }

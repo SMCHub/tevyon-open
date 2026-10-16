@@ -1,0 +1,8 @@
+/* Option pickers (options.tsx). Long durations (Wan 3.0, Seedance 2.5: up to 30 s) open as a grid of seconds. */
+/* The label in a trigger stays hidden unless a page shows it (the video panel's settings grid in gen-panel.css). */
+.pill-btn__label { display: none; }
+.choice--nums { grid-template-columns: repeat(6, 46px); gap: 4px; }
+.choice--nums .pop__head { grid-column: 1 / -1; }
+.choice--nums .choice__item { justify-content: center; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 9px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.choice--nums .choice__item.is-on { border-color: var(--photon); background: rgb(var(--fg) / 0.1); }
+.choice--nums .choice__item:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 1px; }

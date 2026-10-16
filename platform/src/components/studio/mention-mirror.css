@@ -1,0 +1,17 @@
+/* The prompt's @-mentions marked behind the textarea (MentionMirror in references.tsx): the mirror sits under the
+   transparent textarea with the same font, padding and width; only the marks are visible, the text is the textarea's.
+   Monochrome: a calm filled mark, no frame; a mention without its image dashed. */
+.mention-field { position: relative; }
+.mention-field > textarea { position: relative; z-index: 1; background: transparent; }
+.mention-mirror {
+  position: absolute; z-index: 0; overflow: hidden; margin: 0; border: 0;
+  color: transparent; white-space: pre-wrap; overflow-wrap: break-word; pointer-events: none; user-select: none;
+}
+/* Equal negative margin and padding: the frame breathes, the words keep their place. */
+.mention-mark {
+  margin: 0 -4px; padding: 2px 4px; border-radius: 6px; color: transparent;
+  background: rgb(var(--fg) / 0.1);
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+/* A mention without its image: no fill, a dashed hairline, so it reads as «still missing». */
+.mention-mark.is-loose { background: none; outline: 1px dashed rgb(var(--fg) / 0.45); outline-offset: -1px; }

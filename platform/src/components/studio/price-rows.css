@@ -1,0 +1,80 @@
+/* Plans and packs as an editorial index (price-rows.tsx): hairlines, display numerals, the row under the pointer in glass. */
+.prows { list-style: none; padding: 0; border-bottom: 1px solid var(--line); counter-reset: none; }
+
+.prow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 0.7fr) minmax(0, 1.35fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 18px;
+  border-top: 1px solid var(--line);
+  isolation: isolate;
+}
+/* The glass under the pointer: a layer, so the hairlines keep their place. */
+.prow::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0;
+  z-index: -1;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+  background: linear-gradient(180deg, rgb(var(--hi) / calc(0.16 * var(--hi-k))), rgb(var(--hi) / calc(0.04 * var(--hi-k))));
+  border-color: rgb(var(--hi) / calc(0.18 * var(--hi-k)));
+  border-top-color: rgb(var(--hi) / calc(0.4 * var(--hi-k)));
+  box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.25 * var(--hi-k))), 0 18px 40px rgb(0 0 0 / calc(0.25 * var(--shadow-k)));
+}
+.prow:hover::before, .prow:focus-within::before, .prow.is-mine::before { opacity: 1; }
+.prow:hover + .prow, .prow.is-mine + .prow { border-top-color: transparent; }
+
+.prow__no { align-self: start; padding-top: 10px; color: rgb(var(--fg) / 0.42); font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; transition: color 0.3s ease; }
+.prow:hover .prow__no { color: var(--photon); }
+
+.prow__title { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; transition: transform 0.45s var(--ease); }
+.prow:hover .prow__title { transform: translateX(6px); }
+.prow__credits { font-family: var(--font-display); font-size: clamp(30px, 3.4vw, 46px); font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.prow__unit { color: rgb(var(--fg) / 0.62); font-family: var(--font-body); font-size: 16px; }
+.prow__tag { padding: 4px 8px; border-radius: 7px; background: var(--photon); color: var(--void); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.prow__price, .prow__per { display: flex; flex-direction: column; gap: 3px; font-variant-numeric: tabular-nums; }
+.prow__price { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.prow__per { font-size: 15px; font-weight: 500; }
+.prow__price small, .prow__per small { color: rgb(var(--fg) / 0.5); font-family: var(--font-body); font-size: 12px; font-weight: 500; letter-spacing: 0; }
+
+.prow__eq { display: flex; flex-direction: column; gap: 3px; color: rgb(var(--fg) / 0.66); font-size: 13.5px; line-height: 1.35; }
+
+.prow__go {
+  display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 5px 0 18px;
+  border: 1px solid rgb(var(--hi) / calc(0.3 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.5 * var(--hi-k))); border-radius: 9px;
+  background: linear-gradient(180deg, rgb(var(--hi) / calc(0.18 * var(--hi-k))), rgb(var(--hi) / calc(0.06 * var(--hi-k))));
+  box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.3 * var(--hi-k)));
+  color: var(--photon); font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap;
+  cursor: pointer; transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+.prow__go:hover:not(:disabled) { border-color: var(--photon); background: var(--photon); color: var(--void); }
+.prow__go:active:not(:disabled) { transform: scale(0.98); }
+.prow__go:disabled { opacity: 0.45; cursor: not-allowed; }
+.prow__arrow { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: rgb(var(--fg) / 0.08); transition: background 0.25s ease, transform 0.3s var(--ease); }
+.prow__arrow svg { width: 16px; height: 16px; }
+.prow__go:hover:not(:disabled) .prow__arrow { background: rgb(var(--bg) / 0.14); transform: translateX(2px); }
+
+@media (max-width: 1080px) {
+  .prow { grid-template-columns: 44px minmax(0, 1fr) auto auto; grid-template-areas: "no title price per" "no eq eq eq" "no go go go"; row-gap: 12px; }
+  .prow__no { grid-area: no; }
+  .prow__title { grid-area: title; }
+  .prow__price { grid-area: price; }
+  .prow__per { grid-area: per; }
+  .prow__eq { grid-area: eq; }
+  .prow__go { grid-area: go; justify-self: start; }
+}
+@media (max-width: 640px) {
+  .prow { grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-areas: "no title title" "no price per" "no eq eq" "no go go"; gap: 10px 14px; padding: 18px 10px; }
+  .prow__credits { font-size: 32px; }
+  .prow__unit { font-size: 17px; }
+  .prow__go { justify-self: stretch; justify-content: space-between; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prow__title, .prow:hover .prow__title { transform: none; transition: none; }
+}

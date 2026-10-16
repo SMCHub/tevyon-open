@@ -1,0 +1,262 @@
+/*
+ * Generation sidebar (video studio, presets), scoped to .gp so the shared studio.css stays as it is.
+ * Order: mode switch (sticky), model row, numbered steps, settings, sticky footer. Monochrome; on = glass.
+ */
+.panel.gp { gap: 10px; padding: 0 12px; }
+.gp > :first-child { margin-top: 12px; }
+
+/* Mode switch */
+.gp-modes { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; margin: 0 -12px; padding: 12px 12px 10px; background: linear-gradient(180deg, var(--surface) 78%, transparent); }
+.gp-modes::before { content: ""; position: absolute; inset: 12px 12px 10px; z-index: -1; border: 1px solid var(--line); border-radius: 14px; background: rgb(var(--fg) / 0.03); }
+.gp-modes__btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; margin: 3px 0; border: 1px solid transparent; border-radius: 11px; background: none; color: var(--ash); font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.2s ease, background 0.25s ease; }
+.gp-modes__btn:first-child { margin-left: 3px; }
+.gp-modes__btn:last-child { margin-right: 3px; }
+.gp-modes__btn svg { width: 15px; height: 15px; opacity: 0.8; }
+.gp-modes__btn:hover { color: var(--photon); }
+.gp-modes__btn[aria-selected="true"] { border-color: rgb(var(--hi) / calc(0.2 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.36 * var(--hi-k))); background: linear-gradient(180deg, rgb(var(--hi) / calc(0.15 * var(--hi-k))), rgb(var(--hi) / calc(0.05 * var(--hi-k)))); color: var(--photon); box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.18 * var(--hi-k))), 0 6px 18px rgb(0 0 0 / calc(0.3 * var(--shadow-k))); }
+
+/* Model row */
+.gp-model { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--fg) / 0.03); }
+.gp-model__cover { display: block; width: 52px; height: 52px; border-radius: 11px; object-fit: cover; background: var(--surface-2); }
+.gp-model__text { display: grid; gap: 1px; min-width: 0; }
+.gp-model__kicker { color: rgb(var(--ash-rgb) / 0.85); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp-model__name { overflow: hidden; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
+.gp-model__tag { overflow: hidden; color: rgb(var(--fg) / 0.6); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.gp-model__switch .pill-btn { height: 34px; border-color: var(--line); background: rgb(var(--fg) / 0.05); }
+.gp-model__switch .pop__panel--start { left: auto; right: 0; }
+
+/* Steps */
+.gp-step { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--fg) / 0.02); }
+.gp-step__head { display: flex; align-items: center; gap: 9px; min-height: 20px; }
+.gp-step__n { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: 7px; color: var(--photon); font-size: 10.5px; font-weight: 700; }
+.gp-step.is-done .gp-step__n { border-color: rgb(var(--hi) / calc(0.5 * var(--hi-k))); background: rgb(var(--fg) / 0.14); }
+.gp-step__title { color: rgb(var(--fg) / 0.92); font-size: 13px; font-weight: 600; }
+.gp-step__meta { margin-left: auto; color: rgb(var(--ash-rgb) / 0.9); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+/* Uploads inside steps: flat and horizontal instead of tall boxes */
+.gp .drop { min-height: 96px; border-radius: 13px; }
+.gp .drop__empty { flex-direction: row; justify-content: flex-start; gap: 14px; width: 100%; padding: 14px 16px; text-align: left; }
+.gp .drop__icon { width: 42px; height: 42px; }
+.gp .drop__icon svg { width: 17px; height: 17px; }
+.gp .drop__text { gap: 3px; }
+.gp .drop__title { font-size: 14px; }
+.gp .drop__sub { font-size: 12px; }
+.gp .drop img, .gp .drop video { height: 176px; }
+.gp .refs-box { padding: 10px; border-radius: 13px; }
+.gp .modeswitch { border-radius: 13px; }
+.gp .modeswitch__item { height: 38px; font-size: 13px; }
+
+/* Prompt */
+.gp-prompt { display: grid; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); transition: border-color 0.2s ease; }
+.gp-prompt:focus-within { border-color: var(--line-strong); }
+.gp-prompt__input { width: 100%; min-height: 96px; padding: 12px 13px 4px; border: 0; background: none; font-size: 14.5px; line-height: 1.5; resize: vertical; }
+.gp-prompt__input:focus { outline: none; }
+.gp-prompt__input::placeholder { color: rgb(var(--ash-rgb) / 0.75); }
+.gp-prompt__foot { display: flex; justify-content: space-between; padding: 0 13px 9px; color: rgb(var(--ash-rgb) / 0.7); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* Settings */
+.gp-settings { border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--fg) / 0.02); }
+.gp-settings__head { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 0 12px; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.gp-settings__sum { overflow: hidden; margin-left: auto; color: rgb(var(--fg) / 0.7); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.gp-settings__chev { flex: none; width: 15px; height: 15px; color: var(--ash); transition: transform 0.25s var(--ease); }
+.gp-settings.is-open .gp-settings__chev { transform: rotate(180deg); }
+.gp-settings__body { padding: 0 6px 6px; }
+.gp-settings__body .opts { border: 0; background: none; }
+
+/* Consent */
+.gp-consent { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; padding: 2px 4px; color: rgb(var(--ash-rgb) / 0.95); font-size: 12px; line-height: 1.45; cursor: pointer; }
+.gp-consent input { width: 16px; height: 16px; margin-top: 1px; accent-color: var(--photon); }
+
+/* Footer */
+.gp-foot { position: sticky; bottom: 0; z-index: 5; display: grid; gap: 8px; margin: auto -12px 0; padding: 12px; border-top: 1px solid var(--line); background: rgb(var(--panel) / 0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.gp-foot__sum { overflow: hidden; color: rgb(var(--fg) / 0.7); font-size: 12px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.gp-go { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 50px; padding: 0 8px 0 18px; border: 0; border-radius: 15px; background: var(--photon); color: var(--void); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.2s var(--ease), box-shadow 0.2s ease; }
+.gp-go:hover:not(:disabled) { box-shadow: 0 10px 34px rgb(var(--fg) / 0.16); transform: translateY(-1px); }
+.gp-go:active:not(:disabled) { transform: scale(0.99); }
+.gp-go:disabled { background: rgb(var(--fg) / 0.07); color: rgb(var(--fg) / 0.45); cursor: not-allowed; }
+.gp-go__price { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 11px; border-radius: 10px; background: rgb(var(--bg) / 0.08); font-size: 14px; font-variant-numeric: tabular-nums; }
+.gp-go:disabled .gp-go__price { background: rgb(var(--fg) / 0.06); }
+.gp-go__price svg { width: 14px; height: 14px; }
+.gp-go__hint { font-size: 12px; font-weight: 500; }
+.gp-foot .note { font-size: 12px; }
+
+/* The model row already names the model: its picker button just says «Wechseln». */
+.gp-model__switch .pill-btn__thumb, .gp-model__switch .pill-btn__text { display: none; }
+.gp-model__switch .pill-btn { gap: 6px; padding: 0 10px 0 12px; font-size: 12.5px; font-weight: 600; color: rgb(var(--fg) / 0.85); }
+.gp-model__switch .pill-btn::before { content: "Wechseln"; }
+
+/* ---------- Button grammar (14.10.2026): actions are pills in capitals, glass or hairline at rest and white while
+   hovered; tabs and filters are tags (rounded rectangles in capitals), white when chosen; values keep their case. */
+.gp-modes__btn { border-radius: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.gp-modes__btn[aria-selected="true"] { border-color: var(--photon); background: var(--photon); color: var(--void); box-shadow: none; }
+.gp-go { min-height: 48px; padding: 0 6px 0 18px; border: 1px solid rgb(var(--fg) / 0.28); background: rgb(var(--fg) / 0.1); box-shadow: none; border-radius: 12px; color: var(--photon); font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.gp-go:hover:not(:disabled) { border-color: var(--photon); background: var(--photon); color: var(--void); box-shadow: none; transform: none; }
+.gp-go__price { height: 30px; border-radius: 8px; background: rgb(var(--fg) / 0.1); font-size: 12.5px; letter-spacing: 0; text-transform: none; }
+.gp-go:hover:not(:disabled) .gp-go__price { background: rgb(var(--bg) / 0.14); }
+
+/* ---------- Compact panel ----------
+   Flat sections instead of a card per step, a slim pill switch, the model row opens the grouped model list
+   (draft.tsx, model-picker.css), the settings sit as pills under the text, uploads stay low until filled. */
+.panel.gp.gp--compact { gap: 14px; padding: 0 12px; }
+.gp--compact .gp-modes { padding: 10px 12px 6px; }
+.gp--compact .gp-modes::before { inset: 10px 12px 6px; border-radius: 12px; background: rgb(var(--fg) / 0.04); }
+.gp--compact .gp-modes__btn { gap: 6px; height: 32px; margin: 3px 0; font-size: 11.5px; }
+.gp--compact .gp-modes__btn svg { width: 14px; height: 14px; }
+
+/* Static model row (recast) in the shape of the picker row */
+.gp--compact .gp-model { grid-template-columns: 40px minmax(0, 1fr); gap: 11px; min-height: 54px; padding: 6px; border-radius: 14px; }
+.gp--compact .gp-model__cover { width: 40px; height: 40px; border-radius: 10px; }
+.gp--compact .gp-model__kicker { display: none; }
+.gp--compact .gp-model__name { font-size: 15.5px; }
+.gp--compact .gp-model__tag { font-size: 11.5px; }
+
+/* Steps: a small head over their content, no box around each one */
+.gp--compact .gp-step { gap: 7px; padding: 0; border: 0; border-radius: 0; background: none; }
+.gp--compact .gp-step__head { gap: 7px; min-height: 18px; padding: 0 2px; }
+.gp--compact .gp-step__n { width: 17px; height: 17px; border-radius: 5px; font-size: 10px; }
+.gp--compact .gp-step__title { color: rgb(var(--fg) / 0.86); font-size: 12px; font-weight: 600; }
+.gp--compact .gp-step__meta { font-size: 11px; }
+
+/* Prompt */
+.gp--compact .gp-prompt { border-radius: 12px; }
+.gp--compact .gp-prompt__input { min-height: 88px; padding: 10px 12px 2px; font-size: 14px; line-height: 1.45; }
+.gp--compact .gp-prompt__foot { padding: 0 12px 7px; font-size: 10.5px; }
+
+/* Uploads: one low row until something is in, then a short preview */
+.gp--compact .drop { min-height: 62px; border-radius: 12px; }
+.gp--compact .drop__empty { gap: 12px; padding: 10px 12px; }
+.gp--compact .drop__icon { width: 34px; height: 34px; }
+.gp--compact .drop__icon svg { width: 15px; height: 15px; }
+.gp--compact .drop__icons .drop__icon + .drop__icon { margin-left: -8px; }
+.gp--compact .drop__title { font-size: 13px; }
+.gp--compact .drop__sub { font-size: 11.5px; }
+.gp--compact .drop img, .gp--compact .drop video { height: 132px; }
+.gp--compact .refs-box { padding: 8px; border-radius: 12px; }
+.gp--compact .refs-box__add { width: 44px; height: 44px; }
+.gp--compact .picked { padding: 8px; border-radius: 12px; }
+
+/* Recast mode: one full-width switch; the values keep their case, so both fit at 400 px */
+.gp-seg .segmented { display: flex; width: 100%; padding: 3px; }
+.gp-seg .segmented__thumb { top: 3px; height: calc(100% - 6px); }
+.gp-seg .segmented__item { flex: 1 1 0; justify-content: center; gap: 6px; min-width: 0; height: 32px; padding: 0 8px; font-size: 12.5px; letter-spacing: 0; text-transform: none; }
+.gp-seg .segmented__item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-seg .segmented__item svg { flex: none; width: 14px; height: 14px; }
+
+/* Settings as fields in fixed columns (GpOptions), two to a row: how many rows follows the model's options, never a
+   value. Label left, value right, a long value
+   ends in «…»; an odd last field takes the whole row. */
+.gp-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.gp-opts > .pop { min-width: 0; }
+.gp-opts > .pop:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.gp-opts .pill-btn { width: 100%; min-width: 0; justify-content: flex-start; gap: 7px; height: 36px; padding: 0 10px; border-color: var(--line); background: rgb(var(--fg) / 0.03); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.gp-opts .pill-btn svg { flex: none; width: 14px; height: 14px; color: rgb(var(--fg) / 0.6); }
+.gp-opts .pill-btn__label { display: inline; flex: none; color: rgb(var(--fg) / 0.55); font-size: 12px; font-weight: 500; }
+.gp-opts .pill-btn__label:has(+ .pill-btn__text.is-empty) { display: none; }
+.gp-opts .pill-btn__text { min-width: 0; margin-left: auto; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.gp-opts .pill-btn__chev { width: 12px !important; height: 12px !important; }
+
+/* Consent and footer */
+.gp--compact .gp-consent { padding: 0 2px; font-size: 11.5px; }
+.gp--compact .gp-foot { gap: 6px; padding: 10px 12px 12px; }
+.gp--compact .gp-go { min-height: 46px; }
+
+/* ---------- Video panel, redesigned ----------
+   Quiet throughout: the modes as plain tabs over a hairline, the model as a flat row, the text as the large field that
+   fills the free height, the settings as one table in two fixed columns, a footer of one line and the button.
+   Hairlines and calm surfaces; ink only for what is chosen or hovered. Everything scoped to .gp--compact (video only). */
+.panel.gp.gp--compact { gap: 18px; padding: 0 16px; }
+.gp--compact > :first-child { margin-top: 0; }
+/* Nothing in the panel shrinks when it runs taller than the screen (the panel scrolls); only the text field grows. */
+.gp--compact > * { flex-shrink: 0; }
+
+/* Modes: tabs in fixed columns, plain type at rest, a calm surface with a hairline when chosen */
+.gp--compact .gp-modes { gap: 4px; margin: 0 -16px; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.gp--compact .gp-modes::before { content: none; }
+.gp--compact .gp-modes__btn, .gp--compact .gp-modes__btn:first-child, .gp--compact .gp-modes__btn:last-child { height: 32px; margin: 0; border: 1px solid transparent; border-radius: 8px; background: none; box-shadow: none; color: rgb(var(--fg) / 0.5); font-size: 11.5px; letter-spacing: 0.07em; transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+.gp--compact .gp-modes__btn svg { width: 14px; height: 14px; opacity: 0.75; }
+.gp--compact .gp-modes__btn:hover { color: rgb(var(--fg) / 0.85); }
+.gp--compact .gp-modes__btn[aria-selected="true"] { border-color: var(--line-strong); background: rgb(var(--fg) / 0.05); box-shadow: none; color: var(--photon); }
+.gp--compact .gp-modes__btn:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 1px; }
+
+/* Model: a flat row, no card; «Wechseln» as a quiet hairline control on the right */
+.gp--compact .mpick > .pill-btn { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.gp--compact .mpick > .pill-btn:hover:not(:disabled), .gp--compact .mpick > .pill-btn[aria-expanded="true"] { border: 0; background: none; }
+.gp--compact .mpick__cover, .gp--compact .gp-model__cover { width: 38px; height: 38px; border-radius: 7px; }
+.gp--compact .mpick__name { font-size: 15px; font-weight: 650; }
+.gp--compact .mpick__sub, .gp--compact .gp-model__tag { color: rgb(var(--fg) / 0.5); font-size: 11.5px; }
+.gp--compact .mpick__name .tag--top { background: none; box-shadow: inset 0 0 0 1px var(--line-strong); color: rgb(var(--fg) / 0.62); }
+.gp--compact .mpick__switch { height: 28px; padding: 0 7px 0 10px; border: 1px solid var(--line); border-radius: 8px; background: none; color: rgb(var(--fg) / 0.62); font-size: 10.5px; }
+.gp--compact .mpick > .pill-btn:hover .mpick__switch, .gp--compact .mpick > .pill-btn[aria-expanded="true"] .mpick__switch { border-color: var(--line-strong); background: rgb(var(--fg) / 0.05); color: var(--photon); }
+.gp--compact .gp-model { grid-template-columns: 38px minmax(0, 1fr); gap: 12px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.gp--compact .gp-model__name { font-size: 15px; font-weight: 650; }
+
+/* Steps (image, recast): a small label line, number and title in capitals, what it needs on the right */
+.gp--compact .gp-step { gap: 8px; }
+.gp--compact .gp-step__head { gap: 8px; min-height: 16px; padding: 0; }
+.gp--compact .gp-step__n, .gp--compact .gp-step.is-done .gp-step__n { width: auto; height: auto; border: 0; border-radius: 0; background: none; color: rgb(var(--fg) / 0.4); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.gp--compact .gp-step__n { display: inline-block; }
+.gp--compact .gp-step__n::before { content: "0"; }
+.gp--compact .gp-step__title { color: rgb(var(--fg) / 0.7); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp--compact .gp-step__meta { color: rgb(var(--fg) / 0.45); font-size: 11px; }
+
+/* Text: the large field. In the text mode it fills the free height, so no gap opens above the footer. */
+.gp--compact .gp-grow { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 200px; }
+.gp--compact .gp-grow > .gp-prompt { flex: 1 1 auto; }
+.gp--compact .gp-prompt { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); transition: border-color 0.15s ease; }
+.gp--compact .gp-prompt:hover { border-color: var(--line-strong); }
+.gp--compact .gp-prompt:focus-within { border-color: rgb(var(--fg) / 0.36); }
+.gp--compact .gp-prompt__input { flex: 1 1 auto; min-height: 96px; padding: 14px 14px 6px; font-size: 15px; line-height: 1.5; resize: none; }
+.gp--compact .gp-prompt__input::placeholder { color: rgb(var(--fg) / 0.36); }
+.gp--compact .gp-prompt__foot { padding: 0 14px 10px; color: rgb(var(--fg) / 0.36); font-size: 10.5px; }
+
+/* Uploads: hairline, no fill */
+.gp--compact .drop { border-color: var(--line-strong); border-radius: 10px; background: none; }
+.gp--compact .drop:hover { background: rgb(var(--fg) / 0.025); }
+.gp--compact .refs-box, .gp--compact .picked { border-radius: 10px; }
+
+/* Settings: one table, two fixed columns split by hairlines; label in capitals above the value, no icons. How many
+   rows follows the model's options, never a value: a long value ends in «…». An odd last field takes the whole row. */
+.gp--compact .gp-opts { gap: 1px; border: 1px solid var(--line); border-radius: 10px; background: var(--line); }
+.gp--compact .gp-opts > .pop { display: flex; min-width: 0; border-radius: 0; background: var(--surface); }
+.gp--compact .gp-opts > .pop:nth-child(1) { border-top-left-radius: 9px; }
+.gp--compact .gp-opts > .pop:nth-child(2) { border-top-right-radius: 9px; }
+.gp--compact .gp-opts > .pop:last-child { border-bottom-right-radius: 9px; }
+.gp--compact .gp-opts > .pop:last-child:nth-child(odd), .gp--compact .gp-opts > .pop:nth-last-child(2):nth-child(odd) { border-bottom-left-radius: 9px; }
+.gp--compact .gp-opts > .pop:only-child { border-radius: 9px; }
+.gp--compact .gp-opts .pill-btn { display: grid; flex: 1 1 auto; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label chev" "value chev"; align-items: center; row-gap: 3px; width: 100%; height: auto; min-height: 54px; padding: 9px 10px 9px 12px; border: 0; border-radius: inherit; background: none; text-align: left; }
+.gp--compact .gp-opts .pill-btn:hover, .gp--compact .gp-opts .pill-btn[aria-expanded="true"] { background: rgb(var(--fg) / 0.035); }
+.gp--compact .gp-opts .pill-btn:focus-visible { outline: 2px solid var(--line-strong); outline-offset: -2px; }
+.gp--compact .gp-opts .pill-btn > svg:not(.pill-btn__chev) { display: none; }
+.gp--compact .gp-opts .pill-btn__label { grid-area: label; color: rgb(var(--fg) / 0.45); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp--compact .gp-opts .pill-btn__text { grid-area: value; margin: 0; color: var(--photon); font-size: 14px; font-weight: 600; }
+.gp--compact .gp-opts .pill-btn__label:has(+ .pill-btn__text.is-empty) { display: inline; }
+.gp--compact .gp-opts .pill-btn__text.is-empty { color: rgb(var(--fg) / 0.4); font-weight: 500; }
+.gp--compact .gp-opts .pill-btn__chev { grid-area: chev; color: rgb(var(--fg) / 0.35); }
+
+/* Recast mode switch and consent in the same quiet language */
+.gp--compact .gp-seg .segmented { border: 1px solid var(--line); border-radius: 10px; background: none; }
+.gp--compact .gp-seg .segmented__thumb { border: 1px solid var(--line-strong); border-radius: 8px; background: rgb(var(--fg) / 0.05); box-shadow: none; }
+.gp--compact .gp-seg .segmented__item { color: rgb(var(--fg) / 0.5); }
+.gp--compact .gp-seg .segmented__item[aria-checked="true"] { color: var(--photon); }
+.gp--compact .gp-consent { color: rgb(var(--fg) / 0.6); }
+
+/* Footer: the shortfall as one quiet line, the button with its price, the fine print */
+.gp--compact .gp-foot { gap: 10px; margin: auto -16px 0; padding: 12px 16px 14px; border-top: 1px solid var(--line); background: rgb(var(--panel) / 0.94); }
+.gp--compact .gp-foot .short { gap: 12px; padding: 0; border: 0; border-radius: 0; background: none; }
+.gp--compact .gp-foot .short__title { font-size: 12px; }
+.gp--compact .gp-foot .short__bar { height: 1px; background: var(--line); }
+.gp--compact .gp-foot .short__bar > span { background: rgb(var(--fg) / 0.5); }
+.gp--compact .gp-foot .short__cta { height: auto; padding: 0; border: 0; background: none; color: rgb(var(--fg) / 0.7); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp--compact .gp-foot .short__cta:hover { background: none; color: var(--photon); }
+.gp--compact .gp-go { min-height: 46px; padding: 0 14px 0 16px; border: 1px solid rgb(var(--fg) / 0.3); border-radius: 10px; background: rgb(var(--fg) / 0.05); color: var(--photon); font-size: 12px; letter-spacing: 0.08em; }
+.gp--compact .gp-go:hover:not(:disabled) { border-color: var(--photon); background: var(--photon); color: var(--void); }
+.gp--compact .gp-go:disabled { border-color: var(--line); background: none; color: rgb(var(--fg) / 0.4); }
+.gp--compact .gp-go__price, .gp--compact .gp-go:disabled .gp-go__price, .gp--compact .gp-go:hover:not(:disabled) .gp-go__price { height: 22px; padding: 0 0 0 12px; border-left: 1px solid currentColor; border-radius: 0; background: none; font-size: 13px; }
+.gp--compact .gp-go__price { border-left-color: rgb(var(--fg) / 0.18); }
+.gp--compact .gp-go:hover:not(:disabled) .gp-go__price { border-left-color: rgb(var(--bg) / 0.3); }
+
+/* Video tools (/video/tools): one-click starts above the instruction field */
+.gp--compact .vt-ideas { display: flex; flex-wrap: wrap; gap: 6px; }
+.gp--compact .vt-ideas .chip { height: 28px; padding: 0 10px; border-color: var(--line); background: none; color: rgb(var(--fg) / 0.6); font-size: 10.5px; }
+.gp--compact .vt-ideas .chip:hover { border-color: var(--line-strong); color: var(--photon); }
+.gp--compact .vt-ideas .chip.is-on { border-color: var(--line-strong); background: rgb(var(--fg) / 0.06); color: var(--photon); }

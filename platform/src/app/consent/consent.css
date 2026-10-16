@@ -1,0 +1,6 @@
+/* Consent page (/consent/[id]): the two pictures of a swap side by side in the grant card of oauth.css. */
+.consent__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
+.consent__pair figure { display: grid; gap: 6px; margin: 0; min-width: 0; }
+.consent__pair img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); }
+.consent__pair figcaption { color: var(--ash); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.consent__done { padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); line-height: 1.5; }

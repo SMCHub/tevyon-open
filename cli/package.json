@@ -1,0 +1,29 @@
+{
+  "name": "@tevyon/cli",
+  "version": "0.1.0",
+  "description": "Tevyon from the command line: images and videos with leading models, the price before every job.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tevyon": "./bin/tevyon.ts",
+    "tachyon": "./bin/tevyon.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

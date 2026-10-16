@@ -1,0 +1,101 @@
+/* ===== Profile (/profile): the account's own page =====
+   Same quiet shadcn roles as the community (tokens on .cm in components/studio/community.css): a plain header, four
+   figures in fixed columns, two cards with a hairline, the creations as the dense wall. Monochrome; the credit meter
+   keeps its own colours from credits.css. */
+
+.pf { display: grid; gap: 22px; max-inline-size: 1440px; margin-inline: auto; }
+
+/* ---------- Header ---------- */
+.pf-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
+.pf-hero__who { display: flex; align-items: center; gap: 18px; min-inline-size: 0; flex: 1 1 360px; }
+.pf-hero__copy { display: grid; gap: 6px; min-inline-size: 0; }
+.pf-hero__top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.pf-hero h1 { font-size: clamp(24px, 2.4vw, 32px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; overflow-wrap: anywhere; }
+.pf-hero__sub { max-inline-size: 72ch; color: rgb(var(--fg) / 0.78); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.pf-dim { color: var(--cm-muted-fg); }
+
+.pf-callout {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 16px;
+  border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--cm-muted);
+  & > svg { inline-size: 18px; block-size: 18px; color: var(--cm-muted-fg); }
+  & p { color: var(--cm-muted-fg); font-size: 13.5px; line-height: 1.5; }
+  & strong { color: var(--photon); font-weight: 600; }
+}
+
+/* ---------- Four figures: fixed columns, a long value never moves the others ---------- */
+.pf-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.pf-kpi {
+  position: relative; display: grid; align-content: start; gap: 6px; min-inline-size: 0; min-block-size: 132px; padding: 16px;
+  border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--cm-card); box-shadow: var(--cm-shadow);
+}
+.pf-kpi__label { display: flex; align-items: center; gap: 8px; color: var(--cm-muted-fg); font-size: 12.5px; font-weight: 500; & svg { inline-size: 15px; block-size: 15px; } }
+.pf-kpi__value { font-family: var(--font-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1.1; }
+.pf-kpi__sub { overflow: hidden; color: var(--cm-muted-fg); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.pf-kpi__link {
+  position: absolute; inset-block-start: 12px; inset-inline-end: 12px; display: inline-flex; align-items: center; gap: 4px; block-size: 26px; padding: 0 8px;
+  border-radius: 6px; color: var(--cm-muted-fg); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  transition: background 0.15s ease, color 0.15s ease;
+  & svg { inline-size: 13px; block-size: 13px; }
+  &:hover { background: var(--photon); color: var(--void); }
+}
+/* 30 days as thin bars under the figure. */
+.pf-spark { display: flex; align-items: flex-end; gap: 2px; block-size: 26px; margin-block-start: 2px; }
+.pf-spark i { flex: 1; min-block-size: 2px; block-size: calc(var(--h) * 100%); border-radius: 1px; background: rgb(var(--fg) / 0.7); }
+.pf-spark i[data-zero] { background: rgb(var(--fg) / 0.12); }
+
+/* ---------- Cards: usage and account ---------- */
+.pf-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.pf-panel { display: grid; gap: 16px; min-inline-size: 0; padding: 20px; border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--cm-card); box-shadow: var(--cm-shadow); }
+.pf-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; & h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; } }
+.pf-label { margin-block-end: 10px; color: var(--cm-muted-fg); font-family: var(--font-body); font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.pf-usage { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; padding-block-start: 16px; border-block-start: 1px solid var(--cm-border); }
+.pf-bars { display: grid; gap: 10px; padding: 0; list-style: none; }
+.pf-bars li { display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr) 4.5em; align-items: center; gap: 10px; font-size: 13px; }
+.pf-bars__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-bars__track { block-size: 6px; border-radius: 3px; background: rgb(var(--fg) / 0.07); overflow: hidden; & span { display: block; block-size: 100%; border-radius: inherit; background: var(--photon); } }
+.pf-bars__value { font-variant-numeric: tabular-nums; text-align: end; }
+.pf-rows { display: grid; padding: 0; list-style: none; }
+.pf-rows li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto 4.5em; align-items: baseline; gap: 10px; padding-block: 7px; border-block-end: 1px solid var(--cm-border);
+  font-size: 13px;
+  &:last-child { border-block-end: 0; }
+  & .pf-dim { font-size: 12px; }
+  & strong { font-variant-numeric: tabular-nums; font-weight: 600; text-align: end; }
+}
+.pf-facts { display: grid; margin: 0; }
+.pf-facts > div { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 12px; padding-block: 8px; border-block-end: 1px solid var(--cm-border); font-size: 13.5px; }
+.pf-facts dt { color: var(--cm-muted-fg); }
+.pf-facts dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-links { display: grid; gap: 2px; }
+.pf-links a {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; block-size: 38px; padding: 0 10px;
+  border-radius: var(--cm-r); font-size: 13.5px; transition: background 0.15s ease;
+  & svg { inline-size: 16px; block-size: 16px; color: var(--cm-muted-fg); }
+  &:hover { background: var(--cm-muted); }
+}
+
+/* ---------- Creations ---------- */
+.pf-works { display: grid; gap: 14px; scroll-margin-block-start: 96px; }
+.pf-works__head { display: grid; gap: 4px; & h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; } & p { max-inline-size: 72ch; color: var(--cm-muted-fg); font-size: 13.5px; line-height: 1.55; } }
+.pf-warn {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--cm-border); border-radius: var(--cm-r);
+  color: var(--cm-muted-fg); font-size: 13px; & svg { flex: none; inline-size: 15px; block-size: 15px; }
+}
+.pf-links-inline a { color: var(--photon); text-decoration: underline; text-underline-offset: 2px; }
+
+@media (max-width: 1100px) {
+  .pf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .pf-hero__who { flex-basis: 100%; }
+  .pf-hero .cm-head__actions { inline-size: 100%; & .cm-btn { flex: 1 1 0; } }
+  .pf-callout { grid-template-columns: minmax(0, 1fr); & > svg { display: none; } }
+  .pf-kpi { min-block-size: 120px; padding: 14px; }
+  .pf-kpi__value { font-size: 26px; }
+  .pf-usage { grid-template-columns: minmax(0, 1fr); }
+  .pf .cm-bar { display: grid; }
+}
+@media (max-width: 420px) {
+  .pf-kpi__link { position: static; justify-self: start; margin-inline-start: -8px; }
+}

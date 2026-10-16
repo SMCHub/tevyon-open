@@ -1,0 +1,224 @@
+/* ===== Header mega menus (Bild, Video, Presets) =====
+   The grammar of our template (Bulletproof, as on Entdecken and the landing): the panel drops like a blind from under
+   the bar and dims the page, lines rise out of their own frame one after another, lists dim every row but the one under
+   the pointer, pictures zoom and lose their colour under the pointer, links draw their line from the left, and the
+   action fills from below. Monochrome; white only under the pointer. */
+
+/* The page under the menu dims from the panel's top edge down; the bar above keeps its own glass. */
+.mg-scrim { position: fixed; inset: var(--mg-top, 72px) 0 0; z-index: 39; background: rgb(0 0 0 / 0.42); animation: mg-fade 0.5s ease both; }
+:root[data-theme="light"] .mg-scrim { background: rgb(10 10 11 / 0.16); }
+.mg-scrim.is-closing { animation: mg-fade-out 0.38s ease both; }
+/* Behind the full-width bar (z 40 above it): the panel's glass, so the header reads on it even over a picture. */
+.mg-cap { position: fixed; z-index: 39; top: 0; left: var(--mg-left, 0px); width: var(--mg-width, 100vw); height: var(--mg-top, 72px); background: rgb(var(--bg) / 0.93); -webkit-backdrop-filter: blur(26px) saturate(160%); backdrop-filter: blur(26px) saturate(160%); animation: mg-fade 0.3s ease both; pointer-events: none; }
+.mg-cap.is-closing { animation: mg-fade-out 0.38s ease 0.1s both; }
+
+.mg {
+  --mg-gx: clamp(20px, 2.4vw, 32px);
+  position: fixed; z-index: 45; top: var(--mg-top, 72px); left: var(--mg-left, 0px); width: var(--mg-width, 100vw); height: var(--mg-h, auto);
+  overflow: hidden; color: var(--photon);
+  border-bottom: 1px solid var(--line);
+  background: rgb(var(--bg) / 0.93);
+  -webkit-backdrop-filter: blur(26px) saturate(160%); backdrop-filter: blur(26px) saturate(160%);
+  box-shadow: 0 60px 90px -40px rgb(0 0 0 / calc(0.6 * var(--shadow-k)));
+  /* The clip reaches past the sides and the bottom, so the shadow stays; opening moves its bottom edge down. */
+  clip-path: inset(-60px -60px -160px -60px);
+  animation: mg-open 0.75s var(--ease) both;
+  transition: height 0.55s var(--ease);
+}
+.mg--float {
+  --mg-gx: 26px;
+  border: 1px solid rgb(var(--hi) / calc(0.16 * var(--hi-k)));
+  border-top-color: rgb(var(--hi) / calc(0.28 * var(--hi-k)));
+  border-radius: 18px;
+}
+.mg.is-closing { animation: mg-close 0.38s cubic-bezier(0.7, 0, 0.84, 0) both; pointer-events: none; }
+@keyframes mg-open { from { clip-path: inset(0 -60px 100% -60px); } to { clip-path: inset(-60px -60px -160px -60px); } }
+@keyframes mg-close { from { clip-path: inset(-60px -60px -160px -60px); } to { clip-path: inset(0 -60px 100% -60px); } }
+@keyframes mg-fade { from { opacity: 0; } }
+@keyframes mg-fade-out { to { opacity: 0; } }
+/* Lines rise out of their own frame (the parent clips). */
+@keyframes mg-rise { from { transform: translateY(112%); } }
+@keyframes mg-slide { from { opacity: 0; transform: translateX(calc(var(--dir, 0) * 32px)); } }
+@keyframes mg-card { from { opacity: 0; transform: translateY(26px); } }
+
+.mg__scroll { max-height: calc(100svh - var(--mg-top, 72px) - 12px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.mg__inner { max-width: 1560px; margin: 0 auto; padding: clamp(20px, 3.2vh, 34px) var(--mg-gx) 0; container: mg / inline-size; }
+.mg__content { animation: mg-slide 0.6s var(--ease) both; }
+.mg :focus-visible { outline: 2px solid var(--photon); outline-offset: 3px; }
+
+.mg-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 14px; color: rgb(var(--fg) / 0.62); font: 600 11.5px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.mg-head__count { color: rgb(var(--fg) / 0.36); font-variant-numeric: tabular-nums; }
+.mg-head__end { margin-left: auto; color: rgb(var(--fg) / 0.36); }
+.mg-rise { display: inline-block; animation: mg-rise 0.85s var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms + 90ms); }
+
+.mg-badge { flex: none; align-self: center; padding: 2px 6px; border: 1px solid rgb(var(--fg) / 0.2); border-radius: 6px; color: var(--ash); font: 600 9.5px/1.25 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.mg-badge--top { border-color: rgb(var(--fg) / 0.42); color: rgb(var(--fg) / 0.86); }
+
+/* ---------- Bild and Video: index · models · poster ---------- */
+.mg-kind { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) clamp(220px, 19vw, 300px); gap: clamp(24px, 3vw, 56px); align-items: start; }
+.mg-col { min-width: 0; container-type: inline-size; }
+
+/* The tools: a numbered index in display type. Its size follows the column, so the longest name keeps one line. */
+.mg-index { display: grid; margin: 0; padding: 0; list-style: none; }
+.mg-index__row { position: relative; display: grid; grid-template-columns: 26px auto auto minmax(18px, 1fr); align-items: center; column-gap: 10px; padding: 5px 0; transition: opacity 0.35s ease; }
+.mg-index__num { align-self: start; padding-top: 0.55em; color: var(--ash); font: 500 11px/1 var(--font-body); font-variant-numeric: tabular-nums; }
+.mg-index__name { display: block; overflow: clip; padding-bottom: 0.06em; font-family: var(--font-display); font-size: clamp(18px, calc((100cqi - 100px) / (var(--longest, 14) * 0.64)), 32px); font-weight: 600; line-height: 1; letter-spacing: -0.035em; text-transform: uppercase; white-space: nowrap; transition: transform 0.6s var(--ease); }
+.mg-index__row > .mg-badge { grid-column: 3; }
+.mg-index__arrow { grid-column: 4; justify-self: end; width: 18px; height: 18px; opacity: 0; transform: translateX(-14px); transition: opacity 0.3s ease, transform 0.6s var(--ease); }
+.mg-index__row.is-on .mg-index__arrow { opacity: 1; transform: none; }
+.mg-index__row:focus-visible { outline: none; }
+.mg-index__row:focus-visible .mg-index__name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.14em; }
+@media (hover: hover) {
+  .mg-index:has(.mg-index__row:hover) .mg-index__row:not(:hover) { opacity: 0.34; }
+  .mg-index__row:hover .mg-index__name { transform: translateX(6px); }
+}
+
+.mg-soon { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: rgb(var(--fg) / 0.4); font: 600 11px/1.4 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.mg-soon__label { color: rgb(var(--fg) / 0.66); }
+
+/* The models, grouped by family, each with what it costs at least. */
+/* Two balanced columns read top to bottom in the register's order; a family always stays together. */
+.mg-families { columns: 2; column-gap: clamp(18px, 2.2vw, 36px); }
+.mg-family { padding-bottom: 16px; break-inside: avoid; animation: mg-card 0.8s var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms + 60ms); }
+.mg-family__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 2px; padding-bottom: 8px; border-bottom: 1px solid var(--line); break-after: avoid; break-inside: avoid; }
+.mg-family__name { font: 600 14px/1 var(--font-display); letter-spacing: 0.01em; text-transform: uppercase; }
+.mg-family__maker { color: var(--ash); font-size: 11.5px; white-space: nowrap; }
+.mg-family__list { margin: 0; padding: 0; list-style: none; }
+.mg-model { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 1px 12px; padding: 7px 0; transition: opacity 0.35s ease; }
+.mg-model.is-off { opacity: 0.45; cursor: default; }
+.mg-model__name { display: flex; align-items: center; gap: 7px; min-width: 0; font: 600 15.5px/1.2 var(--font-display); letter-spacing: -0.01em; }
+/* The name's line draws in from the left under the pointer. */
+.mg-model__label { min-width: 0; padding-bottom: 1px; background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size 0.6s var(--ease); }
+.mg-model__price { color: var(--ash); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; transition: color 0.25s ease; }
+.mg-model__desc { grid-column: 1 / -1; color: var(--ash); font-size: 12.5px; line-height: 1.35; }
+a.mg-model:hover .mg-model__label, a.mg-model:focus-visible .mg-model__label { background-size: 100% 1px; }
+a.mg-model:hover .mg-model__price { color: var(--photon); }
+a.mg-model:focus-visible { outline: none; }
+@media (hover: hover) {
+  .mg-families:has(a.mg-model:hover) .mg-model:not(:hover) { opacity: 0.36; }
+}
+
+/* The poster: picture, name in giant type, description as a stamp, the way in sliding in under the pointer. */
+.mg-poster { position: relative; display: block; align-self: start; aspect-ratio: 3 / 4; max-height: calc(100svh - var(--mg-top, 72px) - 150px); min-height: 260px; overflow: hidden; border-radius: 6px; background: #111113; color: #f5f5f2; container-type: inline-size; isolation: isolate; animation: mg-card 0.9s var(--ease) both; animation-delay: 0.12s; }
+.mg-poster__img, .mg-poster__clip { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.mg-poster__img { opacity: 0; transform: scale(1.1); transition: opacity 0.5s ease, transform 1.4s var(--ease), filter 0.6s ease; }
+.mg-poster__img.is-on { opacity: 1; transform: scale(1); }
+.mg-poster__clip { z-index: 1; animation: mg-fade 0.6s ease both; transition: transform 1.2s var(--ease), filter 0.6s ease; }
+@media (hover: hover) {
+  .mg-poster:hover .mg-poster__img.is-on, .mg-poster:hover .mg-poster__clip { transform: scale(1.05); filter: saturate(0); }
+}
+.mg-poster__shade { position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgb(10 10 11 / 0.6) 0%, rgb(10 10 11 / 0) 36%, rgb(10 10 11 / 0) 46%, rgb(10 10 11 / 0.82) 100%); }
+.mg-poster__top { position: absolute; z-index: 3; top: 12px; left: 14px; right: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 600 10.5px/1.2 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; }
+.mg-poster__price { flex: none; padding: 4px 8px; border: 1px solid rgb(255 255 255 / 0.3); border-radius: 6px; background: rgb(10 10 11 / 0.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; text-transform: none; white-space: nowrap; }
+.mg-poster__stamp { position: absolute; z-index: 3; top: 44px; right: 14px; display: grid; justify-items: end; max-width: 76%; font: 400 clamp(13px, 6.97cqi, 20px)/1.18 var(--font-body); text-align: right; text-shadow: 0 2px 16px rgb(0 0 0 / 0.45); }
+.mg-poster__stamp > span { display: block; overflow: clip; padding-bottom: 0.06em; }
+.mg-poster__stamp > span > span { display: inline-block; animation: mg-rise 0.9s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 140ms); }
+.mg-poster__letters { position: absolute; z-index: 3; left: 12px; right: 10px; bottom: 54px; display: grid; font-family: var(--font-display); font-size: min(19cqi, calc(92cqi / (var(--len, 8) * 0.74))); font-weight: 700; line-height: 0.86; letter-spacing: -0.04em; text-transform: uppercase; white-space: nowrap; }
+.mg-poster__row { display: block; overflow: clip; padding-bottom: 0.05em; transition: transform 0.8s var(--ease); }
+/* Every second row steps in, like the split letters on the posters of the template. */
+.mg-poster__row:nth-child(even) { padding-left: 0.5em; }
+.mg-poster__row > span { display: inline-block; animation: mg-rise 0.95s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms); }
+@media (hover: hover) {
+  .mg-poster:hover .mg-poster__row:nth-child(odd) { transform: translateX(0.2em); }
+  .mg-poster:hover .mg-poster__row:nth-child(even) { transform: translateX(-0.2em); }
+}
+.mg-poster__foot { position: absolute; z-index: 3; left: 14px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mg-poster__credit { font: 600 10px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.72; }
+.mg-poster__cta { display: grid; flex: none; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #f5f5f2; color: #0a0a0b; transform: translateX(calc(100% + 16px)); transition: transform 0.75s var(--ease); }
+.mg-poster__cta svg { width: 16px; height: 16px; transform: rotate(-45deg); transition: transform 0.6s var(--ease); }
+.mg-poster:hover .mg-poster__cta, .mg-poster:focus-visible .mg-poster__cta, .mg-preset:hover .mg-poster__cta, .mg-preset:focus-visible .mg-poster__cta { transform: none; }
+.mg-poster:hover .mg-poster__cta svg, .mg-preset:hover .mg-poster__cta svg { transform: none; }
+
+/* ---------- Poster, calm ----------
+   The picture stays the hero. Name in sentence case at the foot with its description under it, no giant zigzag letters,
+   no stamp over the picture, no grey-out on hover; the price a quiet hairline mark, the arrow a small square. */
+.mg-poster { border-radius: 10px; }
+@media (hover: hover) {
+  .mg-poster:hover .mg-poster__img.is-on, .mg-poster:hover .mg-poster__clip { transform: scale(1.03); filter: none; }
+  .mg-poster:hover .mg-poster__row:nth-child(odd), .mg-poster:hover .mg-poster__row:nth-child(even) { transform: none; }
+}
+.mg-poster__shade { background: linear-gradient(180deg, rgb(10 10 11 / 0.32) 0%, rgb(10 10 11 / 0) 22%, rgb(10 10 11 / 0) 50%, rgb(10 10 11 / 0.74) 100%); }
+.mg-poster__top { top: 14px; left: 16px; right: 14px; font-size: 10px; letter-spacing: 0.12em; opacity: 0.85; }
+.mg-poster__price { padding: 3px 7px; border-color: rgb(255 255 255 / 0.28); background: rgb(10 10 11 / 0.28); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.mg-poster__body { position: absolute; z-index: 3; left: 16px; right: 14px; bottom: 14px; display: grid; gap: 6px; }
+.mg-poster__letters { position: static; font-size: clamp(22px, 11cqi, 34px); font-weight: 600; line-height: 1.04; letter-spacing: -0.02em; text-transform: none; white-space: normal; }
+.mg-poster__letters { display: block; }
+.mg-poster__row { display: inline; }
+.mg-poster__stamp { display: block; }
+.mg-poster__stamp > span { display: inline; }
+.mg-poster__stamp > span + span::before { content: " "; }
+.mg-poster__row + .mg-poster__row::before { content: " "; }
+.mg-poster__row:nth-child(even) { padding-left: 0; }
+.mg-poster__stamp { position: static; justify-items: start; max-width: 92%; font-size: 13px; line-height: 1.4; text-align: left; text-shadow: none; opacity: 0.78; }
+.mg-poster__foot { position: static; margin-top: 8px; padding-top: 10px; border-top: 1px solid rgb(255 255 255 / 0.18); }
+.mg-poster__credit { font-size: 9.5px; opacity: 0.6; }
+.mg-poster__cta { width: 28px; height: 28px; border: 1px solid rgb(255 255 255 / 0.35); border-radius: 8px; background: none; color: #f5f5f2; transform: none; opacity: 0.7; transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease; }
+.mg-poster__cta svg { width: 14px; height: 14px; transform: none; }
+.mg-poster:hover .mg-poster__cta, .mg-poster:focus-visible .mg-poster__cta { opacity: 1; border-color: #f5f5f2; background: #f5f5f2; color: #0a0a0b; }
+
+/* ---------- Presets: the promise · the shelf of posters ---------- */
+.mg-presets { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 2.2fr); gap: clamp(24px, 3vw, 56px); align-items: start; }
+.mg-statement { display: grid; margin: 2px 0 18px; font-family: var(--font-display); font-size: clamp(24px, 10.5cqi, 46px); font-weight: 600; line-height: 0.92; letter-spacing: -0.045em; text-transform: uppercase; }
+.mg-statement > span { display: block; overflow: clip; padding-bottom: 0.05em; }
+.mg-statement > span:nth-child(2) { padding-left: 0.6em; color: rgb(var(--fg) / 0.34); }
+.mg-statement__note { max-width: 30ch; margin: 0; color: rgb(var(--fg) / 0.8); font: 400 clamp(14px, 1.15vw, 18px)/1.2 var(--font-body); }
+.mg-shelf { display: flex; gap: 12px; margin: 0; padding: 0 0 4px; overflow-x: auto; list-style: none; scrollbar-width: none; }
+.mg-shelf::-webkit-scrollbar { display: none; }
+.mg-shelf__item { position: relative; flex: 1 1 210px; min-width: 176px; max-width: 300px; animation: mg-card 0.9s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 80ms); }
+/* 3:4 like the posters of the template; it also crops the bars the 9:16 preview stills carry. */
+.mg-preset { position: relative; display: flex; flex-direction: column; aspect-ratio: 3 / 4; max-height: calc(100svh - var(--mg-top, 72px) - 160px); min-height: 240px; padding: 12px; overflow: hidden; border-radius: 6px; background: #111113; color: #f5f5f2; container-type: inline-size; isolation: isolate; transition: opacity 0.35s ease; }
+.mg-preset.is-off { opacity: 0.5; }
+.mg-preset__img, .mg-preset__clip { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.mg-preset__img { z-index: -3; }
+.mg-preset__clip { z-index: -2; animation: mg-fade 0.5s ease both; }
+.mg-preset__shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(10 10 11 / 0.55) 0%, rgb(10 10 11 / 0) 30%, rgb(10 10 11 / 0) 50%, rgb(10 10 11 / 0.85) 100%); }
+.mg-preset__top { display: flex; justify-content: space-between; gap: 8px; font: 600 10.5px/1.2 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; }
+.mg-preset__stamp { margin-top: 10px; font: 400 clamp(13px, 7.65cqi, 16px)/1.18 var(--font-body); text-shadow: 0 2px 14px rgb(0 0 0 / 0.45); }
+.mg-preset__title { margin-top: auto; font-family: var(--font-display); font-size: clamp(20px, 13cqi, 30px); font-weight: 700; line-height: 0.9; letter-spacing: -0.04em; text-transform: uppercase; }
+.mg-preset__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.mg-preset__price { font: 600 11px/1 var(--font-body); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.mg-preset--all { justify-content: space-between; border: 1px solid var(--line-strong); background: transparent; color: var(--photon); transition: border-color 0.3s ease, background 0.3s ease; }
+.mg-preset--all .mg-head { margin: 0; }
+.mg-preset--all .mg-poster__cta { background: var(--photon); color: var(--void); }
+.mg-preset__all { font-family: var(--font-display); font-size: clamp(26px, 16cqi, 40px); font-weight: 600; line-height: 0.92; letter-spacing: -0.045em; text-transform: uppercase; }
+.mg-preset--all:hover { border-color: var(--photon); background: rgb(var(--fg) / 0.04); }
+@media (hover: hover) {
+  .mg-preset:hover .mg-preset__img, .mg-preset:hover .mg-preset__clip { transform: scale(1.05); }
+  .mg-shelf:has(.mg-shelf__item:hover) .mg-shelf__item:not(:hover) .mg-preset { opacity: 0.42; }
+}
+
+/* ---------- Foot: the note, a text link and the action ---------- */
+.mg-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: clamp(18px, 2.6vh, 28px); padding: 14px 0 16px; border-top: 1px solid var(--line); }
+.mg-foot__note { margin: 0; color: var(--ash); font-size: 12.5px; }
+.mg-foot__actions { display: flex; align-items: center; gap: 24px; }
+.mg-link { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 5px 0; color: rgb(var(--fg) / 0.72); font: 600 12px/1 var(--font-body); letter-spacing: 0.07em; text-transform: uppercase; transition: color 0.25s ease; }
+.mg-link::before, .mg-link::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; }
+.mg-link::before { opacity: 0.24; }
+.mg-link::after { transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease); }
+.mg-link:hover, .mg-link:focus-visible { color: var(--photon); }
+.mg-link:hover::after, .mg-link:focus-visible::after { transform: scaleX(1); }
+.mg-link svg { width: 14px; height: 14px; transition: transform 0.6s var(--ease); }
+.mg-link:hover svg { transform: scale(0.8); }
+/* The action: label and arrow as two glass pills; under the pointer white rises from below and the arrow turns. */
+.mg-cta { display: inline-flex; align-items: stretch; gap: 3px; height: 42px; font: 600 12px/1 var(--font-body); letter-spacing: 0.07em; text-transform: uppercase; }
+.mg-cta__text, .mg-cta__arrow { position: relative; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgb(var(--hi) / calc(0.26 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.42 * var(--hi-k))); border-radius: 9px; background: linear-gradient(180deg, rgb(var(--hi) / calc(0.16 * var(--hi-k))), rgb(var(--hi) / calc(0.05 * var(--hi-k)))); isolation: isolate; transition: color 0.3s ease, border-color 0.3s ease; }
+.mg-cta__text { padding: 0 18px; }
+.mg-cta__arrow { width: 42px; }
+.mg-cta__text::after, .mg-cta__arrow::after { content: ""; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; background: var(--photon); transform: translateY(104%); transition: transform 0.7s var(--ease); }
+.mg-cta__arrow::after { transition-delay: 0.05s; }
+.mg-cta__arrow svg { width: 16px; height: 16px; transition: transform 0.6s var(--ease); }
+.mg-cta:hover .mg-cta__text, .mg-cta:hover .mg-cta__arrow, .mg-cta:focus-visible .mg-cta__text, .mg-cta:focus-visible .mg-cta__arrow { border-color: var(--photon); color: var(--void); }
+.mg-cta:hover .mg-cta__text::after, .mg-cta:hover .mg-cta__arrow::after, .mg-cta:focus-visible .mg-cta__text::after, .mg-cta:focus-visible .mg-cta__arrow::after { transform: none; }
+.mg-cta:hover .mg-cta__arrow svg { transform: rotate(-45deg); }
+
+/* A narrow floating card: the poster steps back so names and prices keep their room. */
+@container mg (max-width: 1000px) {
+  .mg-kind { grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr); }
+  .mg-poster { display: none; }
+  .mg-presets { grid-template-columns: minmax(200px, 0.8fr) minmax(0, 2.2fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mg, .mg-scrim, .mg-cap, .mg__content, .mg-rise, .mg-family, .mg-poster, .mg-shelf__item, .mg-poster__row > span, .mg-poster__stamp > span > span, .mg-poster__clip, .mg-preset__clip { animation: none !important; }
+  .mg { transition: none; }
+}

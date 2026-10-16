@@ -1,0 +1,24 @@
+# Dependencies and builds
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets: never commit keys
+.env
+.env.*
+!.env.example
+*.pem
+
+# Local data: media, model state, logs, smoke results, backups
+.data/
+*.log
+
+# Tools and OS
+.vercel/
+.DS_Store
+.plan.md

@@ -1,0 +1,34 @@
+/* Command palette (⌘K), shadcn «Command» in Tevyon's monochrome: one search field, rows with icon, name and hint,
+   the chosen row tinted, keys in small caps at the foot. Glass panel over a dimmed, blurred page. */
+.cmdk { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 12px 12px; background: rgb(0 0 0 / calc(0.42 * var(--shadow-k))); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: cmdk-fade 0.18s ease; }
+.cmdk__panel { display: flex; flex-direction: column; width: min(640px, 100%); max-height: min(70vh, 560px); overflow: hidden; border: 1px solid rgb(var(--hi) / calc(0.16 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.3 * var(--hi-k))); border-radius: 16px; background: rgb(var(--panel) / 0.94); box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.06 * var(--hi-k))), 0 40px 100px rgb(0 0 0 / calc(0.5 * var(--shadow-k))); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); animation: cmdk-in 0.22s var(--ease); }
+.cmdk__search { display: flex; flex: none; align-items: center; gap: 10px; height: 54px; padding: 0 14px 0 16px; border-bottom: 1px solid var(--line); }
+.cmdk__search > svg { flex: none; width: 18px; height: 18px; color: var(--ash); }
+.cmdk__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font-size: 15px; outline: none; }
+.cmdk__search input::placeholder { color: rgb(var(--fg) / 0.45); }
+.cmdk kbd { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid var(--line-strong); border-radius: 6px; background: rgb(var(--fg) / 0.05); color: rgb(var(--fg) / 0.72); font: 600 10.5px/1 var(--font-body); }
+.cmdk__list { flex: 1; min-height: 0; margin: 0; padding: 6px; overflow-y: auto; list-style: none; scrollbar-width: thin; }
+.cmdk__group { display: block; padding: 10px 10px 6px; color: rgb(var(--fg) / 0.55); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.cmdk__item { display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 0 10px; border-radius: 10px; color: rgb(var(--fg) / 0.86); font-size: 14px; cursor: pointer; }
+.cmdk__item > svg:first-child { flex: none; width: 17px; height: 17px; color: rgb(var(--fg) / 0.6); }
+.cmdk__item.is-on { background: rgb(var(--fg) / 0.08); color: var(--photon); }
+.cmdk__item.is-on > svg:first-child { color: var(--photon); }
+.cmdk__label { flex: none; font-weight: 500; }
+.cmdk__hint { flex: 1; min-width: 0; overflow: hidden; color: var(--ash); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.cmdk__tag { flex: none; height: 20px; padding: 0 7px; border: 1px solid var(--line); border-radius: 6px; color: rgb(var(--fg) / 0.6); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; line-height: 18px; text-transform: uppercase; }
+.cmdk__go { flex: none; width: 15px; height: 15px; margin-left: auto; opacity: 0; transition: opacity 0.15s ease, transform 0.2s var(--ease); }
+.cmdk__item.is-on .cmdk__go { opacity: 0.7; transform: translateX(2px); }
+.cmdk__empty { padding: 28px 12px; color: var(--ash); text-align: center; }
+.cmdk__foot { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px 14px; border-top: 1px solid var(--line); color: var(--ash); font-size: 12px; }
+.cmdk__foot span { display: inline-flex; align-items: center; gap: 4px; }
+.cmdk__foot-end { margin-left: auto; }
+@keyframes cmdk-fade { from { opacity: 0; } }
+@keyframes cmdk-in { from { opacity: 0; transform: translateY(-8px) scale(0.985); } }
+@media (max-width: 560px) {
+  .cmdk { padding-top: 8vh; }
+  .cmdk__hint { display: none; }
+  .cmdk__foot-end { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cmdk, .cmdk__panel { animation: none; }
+}

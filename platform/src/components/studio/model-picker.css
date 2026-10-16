@@ -1,0 +1,59 @@
+/*
+ * Model picker: models grouped by family, one compact row each
+ * with highest resolution, longest clip, sound and the price it starts at. Monochrome; the chosen model is glass.
+ */
+.pop__panel.mlist-panel { width: min(400px, calc(100vw - 32px)); padding: 6px; background: rgb(var(--panel)); }
+.mlist { display: grid; max-height: calc(var(--pop-max, min(64vh, 640px)) - 14px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.mlist__head { display: flex; align-items: baseline; justify-content: space-between; margin: 0; padding: 6px 10px 4px; }
+.mlist__count { color: rgb(var(--ash-rgb) / 0.75); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.mlist__family { display: grid; gap: 1px; padding: 2px 0 6px; }
+.mlist__family + .mlist__family { border-top: 1px solid var(--line); }
+.mlist__fam { display: flex; align-items: baseline; gap: 8px; margin: 0; padding: 9px 10px 4px; color: var(--photon); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.mlist__maker { color: rgb(var(--ash-rgb) / 0.9); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
+
+.mlist__item {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; grid-template-areas: "thumb name price" "thumb desc facts";
+  align-items: center; column-gap: 10px; row-gap: 1px; width: 100%; padding: 6px 10px 6px 6px;
+  border: 1px solid transparent; border-radius: 11px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.mlist__item:hover { background: rgb(var(--fg) / 0.06); }
+.mlist__item:focus-visible { border-color: var(--line-strong); background: rgb(var(--fg) / 0.06); outline: none; }
+.mlist__item.is-on {
+  border-color: rgb(var(--hi) / calc(0.22 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.34 * var(--hi-k)));
+  background: linear-gradient(180deg, rgb(var(--hi) / calc(0.13 * var(--hi-k))), rgb(var(--hi) / calc(0.04 * var(--hi-k))));
+  box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.14 * var(--hi-k)));
+}
+.mlist__item:disabled { opacity: 0.45; cursor: not-allowed; }
+.mlist__thumb { grid-area: thumb; display: block; width: 34px; height: 34px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+.mlist__name { grid-area: name; display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; color: var(--photon); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.mlist__name .tag { flex: none; }
+.mlist__desc { grid-area: desc; min-width: 0; overflow: hidden; color: rgb(var(--fg) / 0.55); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.mlist__price { grid-area: price; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; color: rgb(var(--fg) / 0.82); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mlist__price svg { width: 11px; height: 11px; }
+.mlist__facts { grid-area: facts; display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; color: rgb(var(--ash-rgb) / 0.95); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mlist__facts svg { width: 12px; height: 12px; }
+
+/* The model row of a generation panel as the trigger (variant "row"): cover, name, maker with facts, «Wechseln». */
+.mpick > .pill-btn {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 11px; width: 100%; height: auto; min-height: 54px;
+  padding: 6px 8px 6px 6px; border: 1px solid var(--line); border-radius: 14px; background: rgb(var(--fg) / 0.03);
+  color: inherit; font-size: inherit; text-align: left; white-space: normal;
+}
+.mpick > .pill-btn:hover:not(:disabled), .mpick > .pill-btn[aria-expanded="true"] { border-color: var(--line-strong); background: rgb(var(--fg) / 0.06); }
+.mpick > .pill-btn:focus-visible { outline: 2px solid var(--line-strong); outline-offset: 2px; }
+.mpick__cover { display: block; width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: var(--surface-2); }
+.mpick__text { display: grid; gap: 2px; min-width: 0; }
+.mpick__name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; font-family: var(--font-display); font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.mpick__name .tag { flex: none; }
+.mpick__sub { overflow: hidden; color: rgb(var(--fg) / 0.6); font-size: 11.5px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.mpick__switch { display: inline-flex; align-items: center; gap: 3px; height: 28px; padding: 0 7px 0 10px; border-radius: 9px; background: rgb(var(--fg) / 0.07); color: rgb(var(--fg) / 0.82); font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; transition: background 0.2s ease, color 0.2s ease; }
+.mpick__switch svg { width: 13px !important; height: 13px !important; transition: transform 0.25s var(--ease); }
+.mpick > .pill-btn:hover .mpick__switch { background: var(--photon); color: var(--void); }
+.mpick > .pill-btn[aria-expanded="true"] .mpick__switch svg { transform: rotate(180deg); }
+/* Inside the panel the list is as wide as the row, so it never runs past the panel's edge. */
+.mpick .pop__panel.mlist-panel { right: 0; left: 0; width: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mlist__item, .mpick__switch, .mpick__switch svg { transition: none; }
+}

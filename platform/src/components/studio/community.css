@@ -1,0 +1,269 @@
+/* ===== Community: profile dialogs, the share switch, the community wall (community.tsx, community-wall.tsx) =====
+   The quiet shadcn/ui roles of /settings/api and /preise on the monochrome tokens of globals.css: hairlines, a soft
+   shadow on cards, tabs on a muted track. Brand button rule: rounded rectangles, hairline or a calm surface
+   at rest, white only on hover or selected, actions and tabs in capitals; round only avatars and dots. The wall uses
+   the one tile of every wall (`Shot` in wall.tsx): a click opens the preview, creator and format show on hover. */
+
+.cm {
+  --cm-card: var(--surface);
+  --cm-muted: rgb(var(--fg) / 0.045);
+  --cm-muted-fg: rgb(var(--fg) / 0.6);
+  --cm-faint: rgb(var(--fg) / 0.4);
+  --cm-border: rgb(var(--fg) / 0.11);
+  --cm-input: rgb(var(--fg) / 0.16);
+  --cm-strong: rgb(var(--fg) / 0.3);
+  --cm-ring: rgb(var(--fg) / 0.24);
+  --cm-r: 8px;
+  --cm-r-lg: 12px;
+  --cm-shadow: 0 1px 2px rgb(0 0 0 / calc(0.08 * var(--shadow-k))), 0 1px 3px rgb(0 0 0 / calc(0.05 * var(--shadow-k)));
+  --cm-shadow-lg: 0 10px 30px -8px rgb(0 0 0 / calc(0.25 * var(--shadow-k))), 0 2px 6px rgb(0 0 0 / calc(0.06 * var(--shadow-k)));
+  font-size: 14px;
+}
+.cm :is(button, a, input, textarea, select):focus-visible { outline: none; box-shadow: 0 0 0 3px var(--cm-ring); }
+.cm h1, .cm h2 { font-family: var(--font-body); text-wrap: balance; }
+.cm p { text-wrap: pretty; }
+
+/* ---------- Atoms ---------- */
+.cm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none;
+  block-size: 36px; padding: 0 14px; border: 1px solid var(--cm-input); border-radius: var(--cm-r); background: none;
+  color: var(--photon); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  & svg { inline-size: 16px; block-size: 16px; }
+  &:hover:not(:disabled) { border-color: var(--photon); background: var(--photon); color: var(--void); }
+  &:disabled { opacity: 0.5; cursor: progress; }
+}
+.cm-btn--primary { border-color: var(--cm-strong); background: rgb(var(--fg) / 0.08); }
+.cm-btn--quiet { border-color: transparent; color: var(--cm-muted-fg); &:hover:not(:disabled) { border-color: transparent; background: var(--cm-muted); color: var(--photon); } }
+.cm-btn--sm { block-size: 32px; padding: 0 12px; font-size: 12px; }
+
+.cm-iconbtn {
+  display: grid; place-items: center; flex: none; inline-size: 32px; block-size: 32px;
+  border: 1px solid var(--cm-input); border-radius: var(--cm-r); background: none; color: var(--cm-muted-fg); cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  &:hover { background: var(--cm-muted); color: var(--photon); }
+  & svg { inline-size: 16px; block-size: 16px; }
+}
+
+.cm-avatar {
+  display: inline-grid; place-items: center; flex: none; inline-size: 24px; block-size: 24px; border-radius: 50%;
+  background: var(--photon); color: var(--void); font-family: var(--font-display); font-size: 12px; font-weight: 600; line-height: 1;
+}
+.cm-avatar--md { inline-size: 40px; block-size: 40px; font-size: 18px; }
+.cm-avatar--lg { inline-size: 72px; block-size: 72px; font-size: 32px; }
+
+.cm-badge {
+  display: inline-flex; align-items: center; gap: 6px; block-size: 22px; padding: 0 8px; border: 1px solid var(--cm-border); border-radius: 6px;
+  color: var(--cm-muted-fg); font-size: 12px; font-weight: 500; white-space: nowrap;
+  & svg { inline-size: 12px; block-size: 12px; }
+}
+
+/* ---------- Dialogs ---------- */
+.cm-dialog {
+  inline-size: min(520px, calc(100vw - 32px)); max-block-size: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto;
+  border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--surface); color: var(--photon);
+  box-shadow: var(--cm-shadow-lg);
+  opacity: 1; scale: 1;
+  transition: opacity 0.2s ease, scale 0.2s var(--ease), display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+}
+.cm-dialog:not([open]) { opacity: 0; scale: 0.98; }
+@starting-style { .cm-dialog[open] { opacity: 0; scale: 0.98; } }
+.cm-dialog::backdrop { background: rgb(0 0 0 / 0.3); transition: background-color 0.2s ease, display 0.2s allow-discrete, overlay 0.2s allow-discrete; }
+.cm-dialog:not([open])::backdrop { background: rgb(0 0 0 / 0); }
+@starting-style { .cm-dialog[open]::backdrop { background: rgb(0 0 0 / 0); } }
+.cm-dialog__head { display: flex; align-items: center; gap: 12px; padding: 18px 16px 0 20px; & h2 { flex: 1; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; } }
+.cm-dialog__icon {
+  display: grid; place-items: center; inline-size: 32px; block-size: 32px; border: 1px solid var(--cm-border); border-radius: var(--cm-r);
+  background: var(--cm-muted); color: var(--cm-muted-fg); & svg { inline-size: 16px; block-size: 16px; }
+}
+.cm-dialog__form { display: grid; gap: 16px; padding: 18px 20px 20px; }
+.cm-dialog__lead { color: var(--cm-muted-fg); font-size: 14px; line-height: 1.55; }
+.cm-dialog__fine { color: var(--cm-faint); font-size: 12.5px; line-height: 1.5; }
+.cm-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-block-start: 4px; }
+
+.cm-field {
+  display: grid; gap: 8px; min-inline-size: 0; margin: 0; padding: 0; border: 0;
+  & > span, & > legend { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0; color: var(--photon); font-size: 13px; font-weight: 500; }
+  & > legend { margin-block-end: 8px; }
+  & input, & textarea {
+    inline-size: 100%; min-inline-size: 0; padding: 0 12px; border: 1px solid var(--cm-input); border-radius: var(--cm-r); background: var(--surface); font-size: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    &:focus { border-color: rgb(var(--fg) / 0.4); outline: none; box-shadow: 0 0 0 3px rgb(var(--fg) / 0.12); }
+    &::placeholder { color: var(--cm-faint); }
+  }
+  & input { block-size: 36px; }
+  & textarea { padding-block: 8px; line-height: 1.5; resize: none; }
+  & small { color: var(--cm-muted-fg); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+}
+.cm-count { color: var(--cm-faint); font-size: 12px; font-style: normal; font-weight: 400; font-variant-numeric: tabular-nums; }
+.cm-input-at {
+  position: relative; display: block;
+  & > span { position: absolute; inset-block: 0; inset-inline-start: 12px; display: grid; place-items: center; color: var(--cm-faint); font-size: 14px; pointer-events: none; }
+  & input { padding-inline-start: 28px; }
+}
+.cm-check {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 12px; border: 1px solid var(--cm-border); border-radius: var(--cm-r);
+  color: var(--cm-muted-fg); font-size: 13px; line-height: 1.5; cursor: pointer;
+  & input { inline-size: 16px; block-size: 16px; margin-block-start: 2px; accent-color: var(--photon); }
+  & strong { display: block; color: var(--photon); font-weight: 600; }
+  & a { color: var(--photon); text-decoration: underline; text-underline-offset: 2px; }
+}
+.cm-reasons { display: grid; gap: 6px; }
+.cm-reason {
+  display: flex; align-items: center; gap: 10px; min-block-size: 38px; padding: 0 12px; border: 1px solid var(--cm-border); border-radius: var(--cm-r);
+  font-size: 13.5px; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease;
+  & input { inline-size: 15px; block-size: 15px; accent-color: var(--photon); }
+  &:hover { background: var(--cm-muted); }
+  &:has(input:checked) { border-color: var(--cm-strong); background: var(--cm-muted); }
+}
+.cm-error { color: var(--danger); font-size: 13px; line-height: 1.45; }
+
+/* Profile picture in the dialog: the round preview and its two actions. */
+.cm-avatar-row { display: flex; align-items: center; gap: 14px; }
+.cm-avatar-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-inline-size: 0; & small { flex-basis: 100%; color: var(--cm-faint); font-size: 12px; } }
+img.cm-avatar { object-fit: cover; background: var(--cm-muted); }
+.cm-dialog__spacer { flex: 1; }
+.cm-btn--danger { color: var(--danger-soft); &:hover:not(:disabled) { background: rgb(var(--danger-rgb) / 0.1); color: var(--danger-soft); } }
+
+/* ---------- The menu of a public creation (PublicMenu) ---------- */
+.cm-menu {
+  position: fixed; z-index: 120; display: grid; gap: 2px; min-inline-size: 230px; padding: 6px;
+  border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--surface); color: var(--photon); box-shadow: var(--cm-shadow-lg);
+}
+.cm-menu__head { display: flex; align-items: center; gap: 8px; padding: 6px 8px 8px; color: var(--cm-muted-fg); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; & svg { inline-size: 14px; block-size: 14px; } }
+.cm-menu__item {
+  display: flex; align-items: center; gap: 10px; block-size: 36px; padding: 0 8px; border: 0; border-radius: var(--cm-r); background: none;
+  color: var(--photon); font-size: 13.5px; text-align: start; cursor: pointer;
+  & svg { inline-size: 15px; block-size: 15px; color: var(--cm-muted-fg); }
+  &:hover:not(:disabled), &:focus-visible { background: var(--cm-muted); outline: none; }
+  &:disabled { opacity: 0.5; cursor: progress; }
+}
+/* A quiet switch: track and knob, the knob white on ink when on. */
+.cm-menu__switch {
+  position: relative; flex: none; inline-size: 26px; block-size: 16px; border-radius: 8px; background: rgb(var(--fg) / 0.14); transition: background 0.15s ease;
+  &::after { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 12px; block-size: 12px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgb(0 0 0 / 0.2); transition: translate 0.15s ease; }
+  &[data-on] { background: var(--photon); &::after { translate: 10px 0; } }
+}
+
+/* ---------- A public creation in the preview: like, the creator, «Melden» (EntryAside extra) ---------- */
+.cm-like[aria-pressed="true"] svg { fill: currentColor; }
+.cm-like .cm-like__n { font-variant-numeric: tabular-nums; }
+
+/* ---------- Status line ---------- */
+/* Above the preview (.lightbox, z-index 100) and the share menu (120): a note from inside the preview must show. */
+.cm-toast {
+  position: fixed; inset-block-end: 24px; inset-inline-start: 50%; z-index: 130; translate: -50% 0;
+  max-inline-size: min(440px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 10px;
+  background: var(--photon); color: var(--void); box-shadow: var(--cm-shadow-lg, 0 10px 30px -8px rgb(0 0 0 / 0.3));
+  font-size: 13.5px; line-height: 1.45; animation: cm-toast 0.25s var(--ease);
+}
+@keyframes cm-toast { from { opacity: 0; translate: -50% 8px; } }
+
+/* ---------- The share switch on an own result (JobCard actions) ---------- */
+.cm-vis[data-state="public"] { color: var(--photon); }
+.cm-vis[data-state="hidden"] { opacity: 0.7; }
+.card__chip--public svg { fill: none; }
+
+/* ---------- Community page ---------- */
+/* ---------- Page (/community), redesigned 15.10.2026: the image studio's wall page —
+   the name sideways, one quiet bar (plain tabs as in `.wall-tabs`, the AI note, text actions), then the wall. */
+.cm-page { display: grid; gap: 22px; }
+.cm-feed .cm-empty { border: 0; border-top: 1px solid var(--cm-border); border-radius: 0; }
+.wall-head.cm-feedbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: clamp(16px, 2.6vh, 28px); }
+.cm-feedbar__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cm-feedbar__sep { inline-size: 1px; block-size: 18px; background: var(--cm-border); }
+.cm-feedbar__end { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.cm-feedbar__note { margin: 0; color: var(--cm-faint); font-size: 12px; }
+.cm-link {
+  display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px;
+  color: var(--cm-muted-fg); font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  & svg { inline-size: 14px; block-size: 14px; }
+  &:hover { border-color: var(--cm-border); background: var(--cm-muted); color: var(--photon); }
+}
+/* Page header, bar and tabs of the profile and moderation pages (unchanged). */
+.cm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; }
+.cm-head__copy { display: grid; gap: 8px; min-inline-size: 0; max-inline-size: 760px; }
+.cm-head h1 { font-size: clamp(24px, 2.4vw, 32px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+.cm-head__sub { color: var(--cm-muted-fg); font-size: 14px; line-height: 1.55; }
+.cm-head__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cm-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.cm-kicker { color: var(--cm-muted-fg); font-size: 13px; font-weight: 500; }
+.cm-tabs { display: inline-grid; grid-auto-columns: minmax(96px, auto); grid-auto-flow: column; gap: 2px; padding: 3px; border-radius: 10px; background: rgb(var(--fg) / 0.06); }
+.cm-tab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; block-size: 32px; padding: 0 12px;
+  border: 1px solid transparent; border-radius: 7px; background: none; color: var(--cm-muted-fg);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  &:hover { color: var(--photon); }
+  &[aria-selected="true"] { border-color: var(--cm-border); background: var(--cm-card); box-shadow: var(--cm-shadow); color: var(--photon); }
+  & .cm-tab__n { min-inline-size: 2ch; color: var(--cm-faint); font-variant-numeric: tabular-nums; text-align: end; }
+}
+.cm-note { color: var(--cm-muted-fg); font-size: 13px; }
+.cm-bar__group { display: flex; flex-wrap: wrap; gap: 8px; }
+.cm-follow[aria-pressed="true"] { border-color: var(--cm-strong); background: var(--cm-muted); }
+
+.cm-empty {
+  display: grid; justify-items: center; gap: 10px; padding: 56px 20px; border: 1px dashed var(--cm-input); border-radius: var(--cm-r-lg);
+  color: var(--cm-muted-fg); text-align: center;
+  & svg { inline-size: 22px; block-size: 22px; }
+  & strong { color: var(--photon); font-size: 15px; font-weight: 600; }
+  & p { max-inline-size: 52ch; font-size: 13.5px; line-height: 1.55; }
+}
+.cm-more { display: flex; justify-content: center; padding-block: 8px 24px; }
+
+/* ---------- A creator's page (/profile/[handle]) ---------- */
+.cm-creator { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; padding: 20px; border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--cm-card); box-shadow: var(--cm-shadow); }
+.cm-creator__who { display: flex; align-items: center; gap: 16px; flex: 1 1 320px; min-inline-size: 0; }
+.cm-creator__copy { display: grid; gap: 4px; min-inline-size: 0; }
+.cm-creator h1 { font-size: clamp(22px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; overflow-wrap: anywhere; }
+.cm-creator__line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: var(--cm-muted-fg); font-size: 13.5px; }
+.cm-creator__bio { max-inline-size: 64ch; color: rgb(var(--fg) / 0.78); font-size: 14px; line-height: 1.55; }
+.cm-creator__stats { display: flex; gap: 22px; }
+.cm-stat { display: grid; gap: 2px; & strong { font-family: var(--font-display); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; } & span { color: var(--cm-muted-fg); font-size: 12px; } }
+
+/* ---------- Moderation (/moderation, operators only) ----------
+   One card per case: the file (or the profile picture), who and why, the decision in a fixed column on the right. */
+.md-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.md-case {
+  display: grid; grid-template-columns: 96px minmax(0, 1fr) 300px; align-items: start; gap: 16px;
+  padding: 14px; border: 1px solid var(--cm-border); border-radius: var(--cm-r-lg); background: var(--cm-card); box-shadow: var(--cm-shadow);
+}
+.md-case__media {
+  position: relative; inline-size: 96px; aspect-ratio: 1; overflow: hidden; border-radius: var(--cm-r); background: var(--cm-muted);
+  & :is(img, video) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+}
+.md-case__media--avatar { display: grid; place-items: center; background: none; }
+.md-case__body { display: grid; gap: 8px; min-inline-size: 0; }
+.md-case__title {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 15px; font-weight: 600; overflow-wrap: anywhere;
+  & a { color: inherit; text-decoration: none; }
+  & a:hover { text-decoration: underline; text-underline-offset: 2px; }
+}
+.md-case__sub { color: var(--cm-muted-fg); font-size: 12.5px; font-weight: 500; }
+.md-case__state { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--cm-muted-fg); font-size: 13px; }
+.md .cm-badge[data-state="hidden"] { border-color: var(--cm-strong); color: var(--photon); }
+.md-reports {
+  display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 13px;
+  & li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+  & strong { font-weight: 600; }
+  & time { color: var(--cm-faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+}
+.md-reports__note { color: rgb(var(--fg) / 0.78); overflow-wrap: anywhere; }
+.md-case__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.md-hide { display: grid; justify-content: stretch; gap: 8px; }
+.md-hide__row { display: flex; justify-content: flex-end; gap: 8px; }
+@media (max-width: 760px) {
+  .md-case { grid-template-columns: 72px minmax(0, 1fr); }
+  .md-case__media { inline-size: 72px; }
+  .md-case__actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .cm-tabs { grid-auto-columns: minmax(0, 1fr); inline-size: 100%; }
+  .cm-tab { padding: 0 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-dialog, .cm-dialog::backdrop, .cm-toast { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,121 @@
+/* ---------- Header: a resizable glass bar ----------
+   After the Aceternity «Resizable Navbar» and the 21st.dev «Tubelight Navbar», in Tevyon's monochrome. At the top it
+   spans the page, transparent; once the page moves it draws in to a floating glass pill. A pill of light glides under
+   the hovered area, a small lamp marks the page you are on; search (⌘K), theme and account sit on the right.
+   72 px stay reserved, so sticky bars below keep their place. Menus open in portals (mega-menu.tsx, account, sheet). */
+.hd { --hd-h: 72px; position: sticky; top: 0; z-index: 40; display: flow-root; height: 72px; pointer-events: none; }
+.hd.is-compact { --hd-h: 54px; }
+.hd__bar { pointer-events: auto; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; max-width: 100%; height: var(--hd-h); margin: 0 auto; padding: 0 clamp(16px, 2.4vw, 28px); border: 1px solid transparent; border-radius: 0; background-color: transparent; color: var(--photon); transition: max-width 0.55s var(--ease), height 0.55s var(--ease), margin 0.55s var(--ease), padding 0.55s var(--ease), border-radius 0.55s var(--ease), background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+.hd.is-compact .hd__bar { max-width: min(1120px, calc(100% - 24px)); margin-top: 9px; padding: 0 8px 0 18px; border-color: rgb(var(--hi) / calc(0.16 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.3 * var(--hi-k))); border-radius: 999px; background-color: rgb(var(--panel) / 0.74); box-shadow: inset 0 1px 0 rgb(var(--hi) / calc(0.08 * var(--hi-k))), 0 18px 50px rgb(0 0 0 / calc(0.28 * var(--shadow-k))); -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%); }
+/* Over Entdecken's dark hero (the header carries `theme-dark` there): a soft shade for the light type. */
+.hd.is-hero:not(.is-compact) .hd__bar { background-image: linear-gradient(180deg, rgb(10 10 11 / 0.5), rgb(10 10 11 / 0)); }
+.hd :focus-visible { outline: 2px solid var(--photon); outline-offset: 3px; }
+
+.hd__brand { justify-self: start; display: inline-flex; align-items: center; height: 40px; padding: 0 4px; border-radius: 8px; }
+/* The wordmark alone: its T carries the light trail, the symbol (T plus particle) is the favicon. 15 px tall puts the
+   caps at ~14.5 px, a step above the 14 px menu. Ratio = the SVG's viewBox (prototype/assets/brand/tevyon-logo.json). */
+.hd__logo { display: block; height: 15px; aspect-ratio: 5524 / 834; background: currentColor; -webkit-mask: url("/tevyon-wordmark.svg") center / contain no-repeat; mask: url("/tevyon-wordmark.svg") center / contain no-repeat; transition: height 0.55s var(--ease); }
+.hd.is-compact .hd__logo { height: 14px; }
+
+.hd__nav { position: relative; display: flex; align-items: center; gap: 2px; }
+.hd__glide { position: absolute; top: 50%; left: 0; width: var(--w, 0); height: 34px; border-radius: 9px; background: rgb(var(--fg) / 0.08); opacity: 0; pointer-events: none; transform: translate(var(--x, 0), -50%); transition: transform 0.35s var(--ease), width 0.35s var(--ease), opacity 0.2s ease; }
+.hd__glide.is-on { opacity: 1; }
+.hd__link { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 13px; border-radius: 9px; color: rgb(var(--fg) / 0.7); font-size: 14px; font-weight: 500; white-space: nowrap; transition: color 0.2s ease; }
+.hd__link:hover, .hd__link.is-open, .hd__link.is-on { color: var(--photon); }
+.hd__chev { width: 13px; height: 13px; margin-right: -3px; opacity: 0.6; transition: transform 0.3s var(--ease); }
+.hd__link.is-open .hd__chev { transform: rotate(180deg); }
+/* The lamp over the page you are on: a short bar of light on the bar's top edge with a soft cone of light under it. */
+.hd__lamp { position: absolute; top: calc((34px - var(--hd-h)) / 2); left: 50%; width: 26px; height: 3px; border-radius: 0 0 4px 4px; background: var(--photon); box-shadow: 0 0 14px 2px rgb(var(--fg) / 0.42); transform: translateX(-50%); transition: top 0.55s var(--ease); pointer-events: none; }
+.hd__lamp::after { content: ""; position: absolute; top: 2px; left: 50%; width: 58px; height: 24px; background: radial-gradient(ellipse at top, rgb(var(--fg) / 0.2), rgb(var(--fg) / 0) 70%); filter: blur(4px); transform: translateX(-50%); }
+
+.hd__tools { justify-self: end; display: flex; align-items: center; gap: 6px; }
+.hd__note { height: 24px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 6px; color: rgb(var(--fg) / 0.72); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; line-height: 22px; text-transform: uppercase; }
+.hd__search { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 5px 0 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: rgb(var(--fg) / 0.04); color: rgb(var(--fg) / 0.62); font: inherit; font-size: 13px; cursor: pointer; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+.hd__search:hover { border-color: rgb(var(--fg) / 0.3); background: rgb(var(--fg) / 0.08); color: var(--photon); }
+.hd__search > svg { width: 15px; height: 15px; }
+.hd__search-label { min-width: 74px; text-align: left; }
+.hd__search kbd { display: inline-grid; place-items: center; height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 5px; background: rgb(var(--fg) / 0.06); color: rgb(var(--fg) / 0.72); font: 600 11px/1 var(--font-body); }
+.hd__icon { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: none; color: rgb(var(--fg) / 0.75); cursor: pointer; transition: background 0.2s ease, color 0.2s ease; }
+.hd__icon:hover { background: rgb(var(--fg) / 0.08); color: var(--photon); transform: none; }
+.hd__icon svg { width: 17px; height: 17px; }
+.hd__avatar { display: grid; place-items: center; width: 34px; height: 34px; margin-left: 2px; padding: 0; border: 1px solid rgb(var(--fg) / 0.24); border-radius: 50%; background: rgb(var(--fg) / 0.06); color: var(--photon); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.hd__avatar:hover, .hd__avatar[aria-expanded="true"] { border-color: var(--photon); box-shadow: 0 0 0 3px rgb(var(--fg) / 0.12); }
+.hd__menu { display: none; }
+
+@media (max-width: 1060px) {
+  .hd__bar { grid-template-columns: auto minmax(0, 1fr); }
+  .hd__nav { display: none; }
+  .hd__menu { display: grid; }
+  .hd__search { width: 36px; padding: 0; justify-content: center; }
+  .hd__search-label, .hd__search kbd { display: none; }
+  .hd.is-compact .hd__bar { padding: 0 6px 0 16px; }
+}
+
+/* ---------- Account menu: laid out like every app's ----------
+   Who is signed in, the balance with a way to top up, the account's places, the theme, sign out. */
+.acct { position: relative; }
+.acct__menu { position: fixed; z-index: 45; right: clamp(12px, 2vw, 28px); top: 74px; width: 300px; max-height: calc(100vh - 96px); overflow-y: auto; padding: 6px; border: 1px solid rgb(var(--hi) / calc(0.16 * var(--hi-k))); border-radius: 14px; background: rgb(var(--panel) / 0.97); box-shadow: 0 24px 64px rgb(0 0 0 / calc(0.5 * var(--shadow-k))); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); color: var(--photon); animation: drop 0.18s var(--ease); }
+.acct__who { display: flex; align-items: center; gap: 12px; padding: 10px 10px 12px; }
+.acct__avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--photon); color: var(--void); font-size: 16px; font-weight: 700; }
+.acct__id { display: grid; gap: 2px; min-width: 0; }
+.acct__name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.acct__mail { overflow: hidden; color: var(--ash); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.acct__balance { margin: 0 4px 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgb(var(--fg) / 0.04); }
+.acct__balance.is-empty { border-color: rgb(var(--danger-rgb) / 0.5); }
+.acct__balance-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.acct__balance-label { color: var(--ash); font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.acct__topup { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid rgb(var(--fg) / 0.25); border-radius: 9px; font-size: 12px; font-weight: 600; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+.acct__topup:hover, .acct__topup:focus-visible { border-color: var(--photon); background: var(--photon); color: var(--void); }
+.acct__topup svg { width: 14px; height: 14px; }
+.acct__balance-sum { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.acct__balance-num { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.acct__balance-unit { align-self: flex-end; color: var(--ash); font-size: 13px; }
+.acct__balance-hold { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--ash); font-size: 12px; }
+.acct__group { display: grid; gap: 1px; padding: 4px 0; border-top: 1px solid var(--line); }
+.acct__item { display: flex; align-items: center; gap: 10px; width: 100%; height: 38px; padding: 0 10px; border: 0; border-radius: 9px; background: none; color: var(--photon); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; }
+.acct__item:hover, .acct__item:focus-visible { background: rgb(var(--fg) / 0.07); outline: none; }
+.acct__item svg { width: 16px; height: 16px; color: var(--ash); }
+.acct__item .tag { margin-left: auto; }
+.acct__item.is-soon { opacity: 0.55; cursor: default; }
+.acct__item.is-soon:hover { background: none; }
+.acct__menu .acct__theme { margin: 0; padding: 10px; border-top: 1px solid var(--line); }
+
+/* ---------- Small screens: a sheet from the right (shadcn «Sheet») ---------- */
+.hd-sheet { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: flex-end; background: rgb(0 0 0 / calc(0.42 * var(--shadow-k))); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: hd-fade 0.2s ease; }
+.hd-sheet__panel { display: flex; flex-direction: column; gap: 16px; width: min(360px, 100%); height: 100%; padding: 16px; overflow-y: auto; border-left: 1px solid rgb(var(--hi) / calc(0.16 * var(--hi-k))); background: rgb(var(--panel) / 0.97); box-shadow: -30px 0 80px rgb(0 0 0 / calc(0.4 * var(--shadow-k))); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); animation: hd-sheet-in 0.32s var(--ease); }
+.hd-sheet__panel > * { flex-shrink: 0; }
+.hd-sheet__head { display: flex; align-items: center; justify-content: space-between; height: 40px; padding-left: 4px; }
+.hd-sheet__search { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: rgb(var(--fg) / 0.04); color: rgb(var(--fg) / 0.62); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.hd-sheet__search svg { width: 16px; height: 16px; }
+.hd-sheet__nav { display: grid; gap: 2px; }
+.hd-sheet__label { padding: 6px 12px 4px; color: rgb(var(--fg) / 0.55); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.hd-sheet__link { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; color: rgb(var(--fg) / 0.82); font-size: 15px; font-weight: 500; transition: background 0.2s ease, color 0.2s ease; }
+.hd-sheet__link svg { width: 18px; height: 18px; color: rgb(var(--fg) / 0.55); }
+.hd-sheet__link:hover, .hd-sheet__link:focus-visible { background: rgb(var(--fg) / 0.06); color: var(--photon); outline: none; }
+.hd-sheet__link.is-on { background: rgb(var(--fg) / 0.09); color: var(--photon); }
+.hd-sheet__link.is-on svg { color: var(--photon); }
+.hd-sheet__foot { display: grid; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+.hd-sheet__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+@keyframes hd-fade { from { opacity: 0; } }
+@keyframes hd-sheet-in { from { opacity: 0.6; transform: translateX(24px); } }
+@media (prefers-reduced-motion: reduce) {
+  .hd__bar, .hd__glide, .hd__lamp { transition: none; }
+  .hd-sheet, .hd-sheet__panel { animation: none; }
+}
+
+/* ---------- Profile picture and visitors without a login ---------- */
+.hd__avatar, .acct__avatar { overflow: hidden; }
+.hd__avatar-img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.hd__guest { display: flex; align-items: center; gap: 6px; }
+.hd__login, .hd__start {
+  display: inline-flex; align-items: center; justify-content: center; height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 9px;
+  color: var(--photon); font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.hd__start { border-color: rgb(var(--fg) / 0.3); }
+.hd__login:hover, .hd__start:hover { border-color: var(--photon); background: var(--photon); color: var(--void); }
+.hd__guest--sheet { width: 100%; }
+.hd__guest--sheet a { flex: 1; height: 40px; }
+@media (max-width: 1059px) {
+  .hd__guest:not(.hd__guest--sheet) .hd__login { display: none; }
+}

@@ -1,0 +1,27 @@
+/* OAuth consent (/oauth/authorize) and CLI login (/device): one card in the style of the login form (.auth). */
+.grant { display: grid; place-items: center; min-height: 100vh; padding: 40px 20px;
+  background: radial-gradient(80% 50% at 50% 0%, rgb(var(--fg) / 0.07), rgb(var(--fg) / 0) 70%), var(--void); }
+.grant__card { max-width: 440px; }
+/* The mark above the card (the favicon): without a size the SVG filled half the page (since the logo change). */
+.grant .auth__mark { display: block; width: 44px; height: 44px; }
+.grant__eyebrow { color: var(--ash); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.grant__title { font-size: 28px; }
+
+.grant__target { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); }
+.grant__target span { color: var(--ash); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.grant__target strong { font-weight: 600; word-break: break-all; }
+.grant__target em { color: var(--ash); font-style: normal; font-size: 13px; }
+
+.grant__list { display: grid; gap: 10px; padding: 0; list-style: none; }
+.grant__list li { position: relative; padding-left: 22px; color: rgb(var(--fg) / 0.86); line-height: 1.5; }
+.grant__list li::before { content: ""; position: absolute; left: 4px; top: 0.62em; width: 7px; height: 7px; border-radius: 50%; background: var(--photon); }
+
+.grant__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grant__allow { border: 0; background: var(--photon); color: var(--void); }
+.grant__deny { border: 1px solid var(--line-strong); background: transparent; color: var(--photon); }
+.grant__deny:hover { background: rgb(var(--fg) / 0.06); }
+
+.grant__code { padding: 18px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); text-align: center;
+  font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: 0.14em; }
+.grant__done { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--photon); color: var(--void); font-size: 24px; font-weight: 700; }
+.grant__form { display: grid; gap: 12px; }
