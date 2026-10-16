@@ -140,7 +140,7 @@ export function ModelPicker({
       ) : (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="pill-btn__thumb" src={cover ?? "/login-art/p1.webp"} alt="" />
+          {cover ? <img className="pill-btn__thumb" src={cover} alt="" /> : <span className="pill-btn__thumb" aria-hidden="true" />}
           <span className="pill-btn__text">{model?.model ?? "Model"}</span>
           <ChevronDown className="pill-btn__chev" aria-hidden="true" />
         </>

@@ -141,7 +141,8 @@ export function Lightbox({ jobs, index, onClose, onIndex }: { jobs: Job[]; index
   // Image inputs (start frame, references) show as thumbnails, not as raw paths.
   const isRef = (v: unknown) => typeof v === "string" && (v.startsWith("/api/media/") || /^https?:\/\//.test(v) || v.startsWith("data:image/"));
   const refs = params.flatMap(([, v]) => (Array.isArray(v) ? v : [v])).filter(isRef) as string[];
-  const specs = params.filter(([, v]) => !isRef(v) && !(Array.isArray(v) && v.some(isRef)));
+  // Files show above as references; an empty list (no references attached) is no setting at all.
+  const specs = params.filter(([, v]) => !isRef(v) && !(Array.isArray(v) && (v.length === 0 || v.some(isRef))));
 
   async function variant() {
     setNote(null);
