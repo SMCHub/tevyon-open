@@ -61,6 +61,28 @@ describe("Comfy Router provider", () => {
     expect(r.calls).toHaveLength(1);
   });
 
+  it("sends our own videos as a signed link from Comfy's asset store (the router takes videos only as links)", async () => {
+    const SD = "https://api.comfy.org/v2/models/byteplus/seedance/requests";
+    const r = router({
+      ["POST https://cloud.comfy.org/api/v2/assets"]: () => json({ id: "a1", url: "https://storage.test/a1.mp4?sig=x" }, 201),
+      [`POST ${SD}`]: () => json({ request_id: "req-9" }, 202),
+    });
+    const comfy = createComfyProvider({
+      apiKey: "k", fetch: r.fetch,
+      loadMedia: async (url) => (url.endsWith(".mp4") ? { data: new Uint8Array([7]), contentType: "video/mp4" } : { data: new Uint8Array([1]), contentType: "image/png" }),
+    });
+    const res = await comfy.submit({
+      kind: "video", providerModel: "byteplus/seedance",
+      params: { content: [{ type: "video_url", video_url: { url: "/api/media/uploads/acc/v-640x360_4s.mp4" } }, { type: "image_url", image_url: { url: "/api/media/uploads/acc/a.png" } }] },
+    });
+    expect(res).toEqual({ state: "pending", handle: "byteplus/seedance:req-9" });
+    const upload = r.calls.find((c) => c.url.endsWith("/api/v2/assets"))!;
+    expect(upload.headers.Authorization).toBe("Bearer k");
+    expect(JSON.parse(r.calls.find((c) => c.url === SD)!.body!)).toEqual({
+      content: [{ type: "video_url", video_url: { url: "https://storage.test/a1.mp4?sig=x" } }, { type: "image_url", image_url: { url: "data:image/png;base64,AQ==" } }],
+    });
+  });
+
   it("retries what the router surely did not take, and never sends a job twice once it may have", async () => {
     const busy = router({ [`POST ${BASE}`]: () => json({ error_type: "rate_limited" }, 429) });
     await expect(createComfyProvider({ apiKey: "k", fetch: busy.fetch }).submit(img)).rejects.toThrow();

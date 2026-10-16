@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sampleVideo } from "./param-space";
 import { creditsFromComfy } from "./pricing";
 import { defineRegister, jobType, type Register } from "./register";
 
@@ -15,6 +16,9 @@ const prompt = z.string().trim().min(1).max(4000);
 const OWN_IMAGE = /^\/api\/media\/uploads\/[0-9a-f-]{36}\/[A-Za-z0-9_-]+\.(png|jpe?g|webp)$/;
 const startImage = z.string().regex(OWN_IMAGE).optional();
 const references = (max: number) => z.array(z.string().regex(OWN_IMAGE)).max(max).default([]);
+/** A reference video: the caller's own upload; the server put its length in whole seconds into the name (uploads.ts). */
+const OWN_VIDEO = /^\/api\/media\/uploads\/[0-9a-f-]{36}\/[A-Za-z0-9-]+_(\d{1,3})s\.mp4$/;
+const videoSeconds = (url: string) => Number(OWN_VIDEO.exec(url)?.[1] ?? NaN);
 /** A value the provider replaces with the file's bytes as `{ bytesBase64Encoded, mimeType }` (the Veo request shape). */
 export const inlineBase64 = (url: string) => ({ $inlineBase64: url });
 
@@ -27,6 +31,16 @@ const PER_SECOND = {
   kling30Turbo: { "720p": 23.63, "1080p": 29.54 },
   veo31Lite: { "720p": { silent: 6.33, audio: 10.55 }, "1080p": { silent: 10.55, audio: 16.88 } },
 } as const;
+
+/**
+ * Seedance 2.0 Fast bills tokens: (input video seconds + output seconds) × width × height × 24 fps / 1024, at 0.996
+ * Comfy credits per 1K tokens when a video goes in (docs.comfy.org pricing, 16.10.2026). Frame sizes as rendered.
+ */
+const SEEDANCE_FRAME = {
+  "480p": { "16:9": [864, 496], "9:16": [496, 864], "1:1": [640, 640] },
+  "720p": { "16:9": [1280, 720], "9:16": [720, 1280], "1:1": [960, 960] },
+} as const;
+const SEEDANCE_PER_1K_WITH_VIDEO = 0.996;
 
 const LTX_SIZE = { "720p": { "16:9": "1280x720", "9:16": "720x1280" }, "1080p": { "16:9": "1920x1080", "9:16": "1080x1920" } } as const;
 
@@ -127,6 +141,38 @@ export function createCatalog(): Register {
         parameters: { durationSeconds: p.duration, aspectRatio: p.aspect_ratio, resolution: p.resolution, generateAudio: p.generate_audio, sampleCount: 1 },
       }),
       route: { provider: ROUTER, providerModel: "veo/veo-3.1-lite-generate-001" },
+    }),
+    jobType({
+      jobType: "recast",
+      kind: "video",
+      model: "Recast",
+      tagline: "Seedance 2.0 Fast · keeps a clip's motion and camera, swaps the scene",
+      badge: "neu",
+      family: "seedance",
+      params: z.object({
+        prompt,
+        video: z.string().regex(OWN_VIDEO).refine((u) => videoSeconds(u) >= 2 && videoSeconds(u) <= 15, "reference video: 2 to 15 s"),
+        image: startImage,
+        duration: z.number().int().min(4).max(12).default(5),
+        resolution: z.enum(["480p", "720p"]).default("480p"),
+        aspect_ratio: z.enum(["16:9", "9:16", "1:1"]).default("16:9"),
+        generate_audio: z.boolean().default(false),
+      }),
+      credits: (p) => {
+        const [w, h] = SEEDANCE_FRAME[p.resolution][p.aspect_ratio];
+        const tokens = ((videoSeconds(p.video) + p.duration) * w * h * 24) / 1024;
+        return creditsFromComfy((tokens / 1000) * SEEDANCE_PER_1K_WITH_VIDEO);
+      },
+      vendorParams: (p) => ({
+        content: [
+          { type: "text", text: p.prompt },
+          { type: "video_url", video_url: { url: p.video }, role: "reference_video" },
+          ...(p.image ? [{ type: "image_url", image_url: { url: p.image }, role: "reference_image" }] : []),
+        ],
+        resolution: p.resolution, ratio: p.aspect_ratio, duration: p.duration, generate_audio: p.generate_audio, watermark: false,
+      }),
+      sample: { video: sampleVideo(4) },
+      route: { provider: ROUTER, providerModel: "byteplus/dreamina-seedance-2-0-fast-260128" },
     }),
   ]);
 }

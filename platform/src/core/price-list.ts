@@ -19,7 +19,7 @@ export function priceList(register: Register): PriceEntry[] {
   return register.list().map((def) => {
     const standard = standardParams(def);
     const prices = paramSpace(def).map((p) => def.credits(p));
-    const settings = Object.fromEntries(Object.entries(standard).filter(([k, v]) => k !== "prompt" && !empty(v)));
+    const settings = Object.fromEntries(Object.entries(standard).filter(([k, v]) => k !== "prompt" && !(k in (def.sample ?? {})) && !empty(v)));
     return {
       jobType: def.jobType, model: def.model, kind: def.kind,
       from: Math.min(...prices), standard: def.credits(standard), settings,

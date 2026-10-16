@@ -95,7 +95,8 @@ describe("Tevyon Director", () => {
     const { model, seen } = fakeModel({ content: "ok", toolCalls: [] });
     await runDirectorTurn({ history: [{ role: "user", content: "Idea?" }], hasPhoto: true, model, quote });
     const system = String(seen[0]![0]!.content);
-    for (const def of catalog.list()) expect(system).toContain(def.jobType);
+    // Job types that need the user's own file (Recast's reference video) are started from their studio, not proposed.
+    for (const def of catalog.list().filter((d) => !d.sample)) expect(system).toContain(def.jobType);
     expect(system).toContain("Photo attached: yes");
     expect(system.toLowerCase()).not.toMatch(/preset|comfy/);
     for (const def of catalog.list()) expect(system).not.toContain(def.route.providerModel);

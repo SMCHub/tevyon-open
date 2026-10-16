@@ -9,6 +9,11 @@ import type { Provider, ProviderFailure, ProviderOutput, ProviderResult } from "
  * once a job may have been queued, a lost answer is final, because sending it again could bill it twice.
  */
 export const COMFY_ROUTER = "https://api.comfy.org";
+/** Comfy's asset store: the router takes video inputs only as links, so our videos go here first (signed, about 6 h). */
+export const COMFY_ASSETS = "https://cloud.comfy.org";
+
+/** The asset store did not take the file: nothing was queued yet, so the worker may simply try again. */
+class AssetUploadFailed extends Error {}
 
 export type ComfyTimeouts = { submit: number; poll: number; download: number };
 const TIMEOUTS: ComfyTimeouts = { submit: 60_000, poll: 30_000, download: 180_000 };
@@ -70,6 +75,8 @@ export function createComfyProvider(opts: {
   apiKey: string;
   fetch?: typeof fetch;
   baseUrl?: string;
+  /** Base of Comfy's asset store (videos go there as signed links). */
+  assetsUrl?: string;
   /** Loads one of our own media files so it can be sent inline. */
   loadMedia?: (url: string) => Promise<{ data: Uint8Array; contentType: string } | undefined>;
   timeouts?: Partial<ComfyTimeouts>;
@@ -88,7 +95,26 @@ export function createComfyProvider(opts: {
   async function load(url: string) {
     const file = await opts.loadMedia?.(url);
     if (!file) throw new Error(`media not found: ${url}`);
-    return { mimeType: file.contentType, base64: Buffer.from(file.data).toString("base64") };
+    return { mimeType: file.contentType, data: file.data, base64: Buffer.from(file.data).toString("base64") };
+  }
+
+  /** Puts one of our videos into Comfy's asset store and returns its signed link (the field order is the store's rule). */
+  async function asset(url: string, file: { mimeType: string; data: Uint8Array }) {
+    const form = new FormData();
+    form.append("content_type", file.mimeType);
+    form.append("file_path", url.split("/").pop() ?? "upload.mp4");
+    form.append("expires_in", "86400");
+    form.append("file", new Blob([new Uint8Array(file.data)], { type: file.mimeType }), url.split("/").pop() ?? "upload.mp4");
+    const assetsUrl = (opts.assetsUrl ?? COMFY_ASSETS).replace(/\/+$/, "");
+    let res: Response;
+    try {
+      res = await doFetch(`${assetsUrl}/api/v2/assets`, { method: "POST", headers: auth, body: form, signal: AbortSignal.timeout(limits.download) });
+    } catch (e) {
+      throw new AssetUploadFailed(`asset upload: ${describe(e)}`);
+    }
+    const body = (await res.json().catch(() => undefined)) as { url?: unknown } | undefined;
+    if (!res.ok || typeof body?.url !== "string") throw new AssetUploadFailed(`asset upload HTTP ${res.status}`);
+    return body.url;
   }
 
   /**
@@ -98,7 +124,7 @@ export function createComfyProvider(opts: {
   async function inline(value: unknown): Promise<unknown> {
     if (typeof value === "string" && OWN_MEDIA.test(value)) {
       const file = await load(value);
-      return `data:${file.mimeType};base64,${file.base64}`;
+      return file.mimeType.startsWith("video/") ? asset(value, file) : `data:${file.mimeType};base64,${file.base64}`;
     }
     if (Array.isArray(value)) return Promise.all(value.map(inline));
     const marker = (value as { $inlineBase64?: unknown } | null)?.$inlineBase64;
@@ -134,6 +160,7 @@ export function createComfyProvider(opts: {
       try {
         input = await inline(req.params);
       } catch (e) {
+        if (e instanceof AssetUploadFailed) throw e;
         return { state: "failed", reason: "invalid_request", detail: describe(e) };
       }
       let res: Response;

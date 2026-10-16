@@ -57,3 +57,9 @@
 @media (prefers-reduced-motion: reduce) {
   .mlist__item, .mpick__switch, .mpick__switch svg { transition: none; }
 }
+
+/* Model without a cover: its initial on a calm surface (draft.tsx modelInitial). */
+.model-mark { display: inline-grid; place-items: center; background: var(--surface-2); color: rgb(var(--fg) / 0.72); font-weight: 600; font-size: 0.5em; line-height: 1; letter-spacing: 0; }
+.mlist__thumb.model-mark { font-size: 15px; }
+.mpick__cover.model-mark { font-size: 17px; }
+.pill-btn__thumb.model-mark { font-size: 11px; }

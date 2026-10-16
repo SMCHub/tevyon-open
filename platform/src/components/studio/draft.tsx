@@ -12,6 +12,9 @@ import { TokenGlyph } from "./tachyon-token";
 import { usePrices } from "./use-prices";
 import "./model-picker.css";
 
+/** A model without a cover shows its first letter: a quiet mark instead of an empty or broken picture. */
+const modelInitial = (m?: { model: string } | null) => (m?.model ?? "").trim().charAt(0).toUpperCase();
+
 /**
  * Draft state of one generator: model, prompt, options and the live price.
  * Reads ?model=, ?prompt= and ?from=<jobId> so menus and "Reuse" can prefill it.
@@ -127,7 +130,7 @@ export function ModelPicker({
       trigger={variant === "row" ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover ? <img className="mpick__cover" src={cover} alt="" /> : <span className="mpick__cover" aria-hidden="true" />}
+          {cover ? <img className="mpick__cover" src={cover} alt="" /> : <span className="mpick__cover model-mark" aria-hidden="true">{modelInitial(model)}</span>}
           <span className="mpick__text">
             <span className="mpick__name">
               {model?.model ?? "Model"}
@@ -140,7 +143,7 @@ export function ModelPicker({
       ) : (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover ? <img className="pill-btn__thumb" src={cover} alt="" /> : <span className="pill-btn__thumb" aria-hidden="true" />}
+          {cover ? <img className="pill-btn__thumb" src={cover} alt="" /> : <span className="pill-btn__thumb model-mark" aria-hidden="true">{modelInitial(model)}</span>}
           <span className="pill-btn__text">{model?.model ?? "Model"}</span>
           <ChevronDown className="pill-btn__chev" aria-hidden="true" />
         </>
@@ -197,7 +200,7 @@ function ModelList({ families, model, onChoose }: {
             return (
               <button key={m.jobType} type="button" className={`mlist__item${on ? " is-on" : ""}`} aria-pressed={on} disabled={paused} onClick={() => onChoose(m)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {modelCover(m) ? <img className="mlist__thumb" src={modelCover(m)} alt="" /> : <span className="mlist__thumb" aria-hidden="true" />}
+                {modelCover(m) ? <img className="mlist__thumb" src={modelCover(m)} alt="" /> : <span className="mlist__thumb model-mark" aria-hidden="true">{modelInitial(m)}</span>}
                 <span className="mlist__name">
                   {m.model}
                   {m.status === "deprecated"

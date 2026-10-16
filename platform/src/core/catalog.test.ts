@@ -4,7 +4,7 @@ import { SAMPLE_UPLOAD, offeredOptions, paramSpace, standardParams } from "./par
 
 describe("catalog", () => {
   it("offers the first wave of Comfy models", () => {
-    expect(catalog.list().map((d) => d.jobType)).toEqual(["flux_3_image", "minimax_h3", "ltx_2_5_fast", "kling_3_turbo", "veo_3_1_lite"]);
+    expect(catalog.list().map((d) => d.jobType)).toEqual(["flux_3_image", "minimax_h3", "ltx_2_5_fast", "kling_3_turbo", "veo_3_1_lite", "recast"]);
   });
 
   it("gives every job type a prompt, a public name and a router id of the form provider/model", () => {
@@ -60,5 +60,23 @@ describe("catalog", () => {
     const def = catalog.get("minimax_h3")!;
     expect(def.params.safeParse({ prompt: "x", image: "https://example.com/a.png" }).success).toBe(false);
     expect(def.params.safeParse({ prompt: "x", image: SAMPLE_UPLOAD }).success).toBe(true);
+  });
+
+  it("recasts a reference video: its motion and camera, a new scene, priced by the tokens of both clips", () => {
+    const def = catalog.get("recast")!;
+    const video = "/api/media/uploads/00000000-0000-4000-8000-000000000000/ref-1280x720_4s.mp4";
+    const p = def.params.parse({ prompt: "a snowy mountain valley at night", video }) as Record<string, unknown>;
+    // Seedance bills (input + output seconds) × width × height × 24 fps / 1024 tokens; with a video input 0.996 per 1K.
+    // 480p 16:9 renders 864 × 496: (4 + 5) × 864 × 496 × 24 / 1024 = 90,396 tokens → 90.03 Comfy credits → 91.
+    expect(def.credits(p)).toBe(91);
+    expect(def.credits({ ...p, resolution: "720p" })).toBeGreaterThan(def.credits(p));
+    expect(def.vendorParams!(p)).toEqual({
+      content: [
+        { type: "text", text: "a snowy mountain valley at night" },
+        { type: "video_url", video_url: { url: video }, role: "reference_video" },
+      ],
+      resolution: "480p", ratio: "16:9", duration: 5, generate_audio: false, watermark: false,
+    });
+    expect(def.params.safeParse({ prompt: "x", video: "https://elsewhere.test/v.mp4" }).success).toBe(false);
   });
 });
