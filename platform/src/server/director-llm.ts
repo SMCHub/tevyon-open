@@ -33,8 +33,27 @@ export function createDirectorModel(opts: { apiKey: string; model: TextModelDef;
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
     if (!res.ok || !res.body) throw new Error(`director model ${res.status}`);
-    yield* parseChatStream(lines(res.body));
+    // The Comfy Router answers chat as one JSON document even when asked to stream: replay it as the stream's chunks.
+    const whole = (res.headers.get("content-type") ?? "").includes("application/json");
+    yield* parseChatStream(whole ? asStream((await res.json()) as Completion) : lines(res.body));
   };
+}
+
+type Completion = {
+  choices?: { message?: { content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] } }[];
+  usage?: Record<string, unknown>;
+};
+
+/** A complete chat answer as the `data:` lines a stream would have sent: the text, each tool call, the usage. */
+async function* asStream(c: Completion): AsyncGenerator<string> {
+  const message = c.choices?.[0]?.message;
+  const delta = {
+    ...(message?.content ? { content: message.content } : {}),
+    ...(message?.tool_calls?.length ? { tool_calls: message.tool_calls.map((t, index) => ({ index, function: t.function })) } : {}),
+  };
+  yield `data: ${JSON.stringify({ choices: [{ delta }] })}`;
+  if (c.usage) yield `data: ${JSON.stringify({ choices: [], usage: c.usage })}`;
+  yield "data: [DONE]";
 }
 
 /** Splits a byte stream into text lines, whatever the chunk boundaries. */

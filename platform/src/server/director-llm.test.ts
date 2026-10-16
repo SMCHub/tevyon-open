@@ -41,6 +41,21 @@ async function collect(stream: AsyncIterable<ModelEvent>) {
 }
 
 describe("Director language model over the provider", () => {
+  it("reads a whole JSON answer the same way (the Comfy Router answers chat in one piece, even when asked to stream)", async () => {
+    const whole = new Response(JSON.stringify({
+      choices: [{ finish_reason: "tool_calls", message: { content: "Hello Welt", tool_calls: [{ type: "function", function: { name: "propose_custom", arguments: '{"title":"x"}' } }] } }],
+      usage: { prompt_tokens: 100, completion_tokens: 20, cost: 0.0004 },
+    }), { status: 200, headers: { "content-type": "application/json" } });
+    const { f } = recordingFetch(whole);
+    const model = createDirectorModel({ apiKey: "k", model: textModel("claude-sonnet-5-5")!, fetch: f });
+
+    expect(await collect(model([{ role: "user", content: "hi" }], [{ name: "propose_custom", description: "d", parameters: {} }]))).toEqual([
+      { type: "text", delta: "Hello Welt" },
+      { type: "tool_call", call: { name: "propose_custom", args: { title: "x" } } },
+      { type: "usage", costUsd: 0.0004, inputTokens: 100, outputTokens: 20 },
+    ]);
+  });
+
   it("streams the chosen model with tools, real cost and no training on user data", async () => {
     const { f, calls } = recordingFetch(sseResponse(SSE));
     const model = createDirectorModel({ apiKey: "k", model: textModel("claude-sonnet-5-5")!, fetch: f });
