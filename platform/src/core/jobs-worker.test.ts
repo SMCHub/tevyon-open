@@ -20,9 +20,16 @@ const register = defineRegister([
     jobType: "test_video", kind: "video", model: "Test Video 1", tagline: "Test vendor · for the worker tests",
     params: z.object({ prompt: z.string().min(1) }), credits: () => 5, route: { provider: "vendor", providerModel: "vendor/video-1" },
   }),
+  // One model, two vendor ids: text alone or with a start image (Wan 2.7, HappyHorse on the router).
+  jobType({
+    jobType: "test_clip", kind: "video", model: "Test Clip 1", tagline: "Test vendor · two routes",
+    params: z.object({ prompt: z.string().min(1), image: z.string().optional() }), credits: () => 5,
+    route: { provider: "vendor", providerModel: "vendor/clip-t2v" },
+    routeFor: (p) => (p.image ? "vendor/clip-i2v" : "vendor/clip-t2v"),
+  }),
 ]);
 const skills = defineSkills([{
-  name: "prompt-test", version: "1.0.0", kind: "prompt", models: ["test_image", "test_video"], description: "Prompts for the test models.",
+  name: "prompt-test", version: "1.0.0", kind: "prompt", models: ["test_image", "test_video", "test_clip"], description: "Prompts for the test models.",
   body: "# Test", rules: { maxChars: 400, minWords: 1, negations: "ok", slots: ["subject"] },
 }], register);
 
@@ -574,5 +581,20 @@ describe.each(repositories)("worker on %s repository", (_name, makeRepo) => {
     expect(writes).toBe(1);
     expect(sent).toEqual(["A red fox in fresh snow, soft morning light"]);
     expect((await jobs.get(ACC_1, id))?.params.prompt).toBe("a fox"); // the user's own words stay in the job
+  });
+
+  it("sends a job to the vendor id its params pick, when the model has one per input (routeFor)", async () => {
+    const models: string[] = [];
+    const vendor: Provider = {
+      async submit(req) { models.push(req.providerModel); return done(); },
+      async poll() { return done(); },
+    };
+    const { jobs } = await setup(vendor);
+    for (const params of [{ prompt: "a fox" }, { prompt: "a fox", image: `/api/media/uploads/${ACC_1}/a.png` }]) {
+      const res = await jobs.start(ACC_1, "test_clip", params);
+      if (!res.ok) throw new Error(res.error);
+      await jobs.tick();
+    }
+    expect(models).toEqual(["vendor/clip-t2v", "vendor/clip-i2v"]);
   });
 });

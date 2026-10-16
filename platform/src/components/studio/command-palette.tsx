@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ArrowRight, Clapperboard, Coins, FolderOpen, Image as ImageIcon, ImagePlus, KeyRound, Search, Sparkles, UserRound, Users, Wand2,
+  ArrowRight, Clapperboard, Coins, Flame, FolderOpen, Image as ImageIcon, ImagePlus, KeyRound, LayoutGrid, Megaphone, Search, Sparkles,
+  UserRound, Users, Wand2,
 } from "lucide-react";
 import { searchCommands, type Command } from "./command-search";
+import { usePresets } from "./presets-data";
 import { useStudio } from "./studio-context";
 import "./command-palette.css";
 
@@ -18,6 +20,8 @@ const PAGES: Item[] = [
   { id: "p-image", group: "Pages", label: "Image", hint: "Image studio", href: "/image", icon: <ImagePlus />, keywords: ["photo", "picture", "create"] },
   { id: "p-video", group: "Pages", label: "Video", hint: "Video studio", href: "/video", icon: <Clapperboard />, keywords: ["clip", "film", "create"] },
   { id: "p-director", group: "Pages", label: "Director", hint: "Plan an idea in conversation", href: "/director", icon: <Wand2 />, keywords: ["chat", "plan", "direct"] },
+  { id: "p-presets", group: "Pages", label: "Presets", hint: "One photo, one finished clip", href: "/presets", icon: <LayoutGrid />, keywords: ["viral", "effects", "templates"] },
+  { id: "p-marketing", group: "Pages", label: "Marketing Agent", hint: "Ads from your product", href: "/marketing", icon: <Megaphone />, keywords: ["ad", "product", "campaign", "advertising", "ugc"] },
   { id: "p-assets", group: "Pages", label: "Assets", hint: "All your results", href: "/assets", icon: <FolderOpen />, keywords: ["results", "downloads", "history", "mine"] },
   { id: "p-credits", group: "Pages", label: "Credits", hint: "Balance and top-up", href: "/credits", icon: <Coins />, keywords: ["cost", "top up", "prices", "buy", "account", "billing"] },
   { id: "p-api", group: "Pages", label: "API & MCP", hint: "Claude, Cursor, CLI", href: "/settings/api", icon: <KeyRound />, keywords: ["key", "agent", "claude", "cli", "mcp"] },
@@ -27,9 +31,10 @@ const ACTIONS: Item[] = [
   { id: "a-i2v", group: "Actions", label: "Image → Video", hint: "Animate a photo", href: "/video?mode=image", icon: <Sparkles />, keywords: ["animate", "start image"] },
 ];
 
-/** The palette's contents while it is open: pages, actions and every live model. */
+/** The palette's contents while it is open: pages, actions, every live model and every preset. */
 function useItems(): Item[] {
   const { catalog } = useStudio();
+  const presets = usePresets();
   return useMemo(() => {
     const models: Item[] = catalog
       .filter((m) => m.status !== "paused")
@@ -42,8 +47,17 @@ function useItems(): Item[] {
         icon: m.kind === "image" ? <ImageIcon /> : <Clapperboard />,
         keywords: [m.kind === "image" ? "image" : "video", ...(m.family ? [m.family] : [])],
       }));
-    return [...PAGES, ...ACTIONS, ...models];
-  }, [catalog]);
+    const presetItems: Item[] = presets.map((p) => ({
+      id: `pr-${p.id}`,
+      group: "Presets",
+      label: p.title,
+      hint: p.credits != null ? `${p.credits} Credits · ${p.tagline}` : p.tagline,
+      href: `/presets/${p.id}`,
+      icon: <Flame />,
+      keywords: ["preset", "viral"],
+    }));
+    return [...PAGES, ...ACTIONS, ...models, ...presetItems];
+  }, [catalog, presets]);
 }
 
 function Palette({ onClose }: { onClose: () => void }) {
@@ -108,7 +122,7 @@ function Palette({ onClose }: { onClose: () => void }) {
             aria-controls="cmdk-list"
             aria-activedescendant={results[active] ? `cmdk-${results[active]!.id}` : undefined}
             aria-label="Search"
-            placeholder="Search pages or models…"
+            placeholder="Search pages, models or presets…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKey}
@@ -153,7 +167,7 @@ function Palette({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Search and jump anywhere (⌘K / Ctrl+K): pages, actions and every live model. */
+/** Search and jump anywhere (⌘K / Ctrl+K): pages, actions, every live model and every preset. */
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   return open ? <Palette onClose={onClose} /> : null;
 }

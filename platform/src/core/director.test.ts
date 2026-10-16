@@ -91,14 +91,29 @@ describe("Tevyon Director", () => {
     expect(turn.reply.toLowerCase()).not.toMatch(/comfy|veo\//);
   });
 
-  it("tells the model which models exist and whether a photo is attached, and offers no presets", async () => {
+  it("proposes a preset with its title and the price of one run, and drops one that does not exist", async () => {
+    const { model } = fakeModel({
+      content: "I make your photo speak.",
+      toolCalls: [
+        { name: "propose_preset", args: { preset_id: "say-it", wish: "with a smile", why: "Your photo says your line" } },
+        { name: "propose_preset", args: { preset_id: "does-not-exist", why: "x" } },
+      ],
+    });
+    const turn = await runDirectorTurn({ history: [{ role: "user", content: "Make my photo talk" }], hasPhoto: true, model, quote });
+    expect(turn.proposals).toEqual([
+      { type: "preset", presetId: "say-it", title: "Say it!", why: "Your photo says your line", wish: "with a smile", credits: expect.any(Number) },
+    ]);
+  });
+
+  it("tells the model which presets and models exist and whether a photo is attached", async () => {
     const { model, seen } = fakeModel({ content: "ok", toolCalls: [] });
     await runDirectorTurn({ history: [{ role: "user", content: "Idea?" }], hasPhoto: true, model, quote });
     const system = String(seen[0]![0]!.content);
     // Job types that need the user's own file (Recast's reference video) are started from their studio, not proposed.
     for (const def of catalog.list().filter((d) => !d.sample)) expect(system).toContain(def.jobType);
     expect(system).toContain("Photo attached: yes");
-    expect(system.toLowerCase()).not.toMatch(/preset|comfy/);
+    expect(system).toContain("say-it");
+    expect(system.toLowerCase()).not.toMatch(/comfy/);
     for (const def of catalog.list()) expect(system).not.toContain(def.route.providerModel);
   });
 

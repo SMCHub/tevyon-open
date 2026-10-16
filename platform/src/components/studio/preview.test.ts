@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { PresetInfo } from "./presets-data";
 import type { Job } from "./studio-context";
-import { jobMedia, readPrefs, soundOf, step } from "./preview";
+import { jobMedia, presetEntry, readPrefs, soundOf, step } from "./preview";
 
 const job = (over: Partial<Job>): Job => ({
   id: "j1", jobType: "veo_3_1_lite", model: "Veo 3.1 Lite", status: "succeeded", credits: 45,
@@ -19,6 +20,20 @@ describe("preview of a job", () => {
     expect(jobMedia(job({ outputs: [{ url: "/api/media/out/j1.png", contentType: "image/png" }] }))).toEqual({ url: "/api/media/out/j1.png", kind: "image" });
     expect(jobMedia(job({ status: "running", outputs: [] }))).toBeNull();
     expect(jobMedia(job({ status: "failed", outputs: [] }))).toBeNull();
+  });
+});
+
+describe("preview of a preset", () => {
+  const preset: PresetInfo = {
+    id: "say-it", title: "Say it!", tagline: "Your photo speaks your line", category: "viral", needs: "photo", badge: "top",
+    preview: { video: "/presets/say-it.mp4", poster: "/presets/say-it.webp" }, wishHint: null, line: null, credits: 85,
+  };
+
+  it("opens a preset with its tagline and the way to try it at its price", () => {
+    expect(presetEntry(preset)).toMatchObject({
+      url: "/presets/say-it.mp4", kind: "video", poster: "/presets/say-it.webp", chip: "Preset", title: "Say it!", text: "Your photo speaks your line",
+      action: { label: "Try it", href: "/presets/say-it", credits: 85 },
+    });
   });
 });
 

@@ -1,0 +1,6 @@
+/* Giant poster type (poster-letters.tsx): rows step in by --o, the chunks of a row keep the break (0.3em, the GAP in
+   poster-type.ts). Size and colour come from the place that shows it. */
+.poster-letters { display: block; margin: 0; font-family: var(--font-display); font-weight: 600; line-height: 0.84; letter-spacing: -0.04em; text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+.poster-letters__row { display: flex; gap: 0.3em; padding-left: var(--o, 0); }
+.poster-letters__chunk { display: block; overflow: clip; padding: 0.04em 0.02em 0.07em 0; margin-bottom: -0.07em; }
+.poster-letters__chunk > span { display: block; }

@@ -1,0 +1,114 @@
+{
+ "id": "bria/image-edit-replace-background",
+ "version": "401baa98da97",
+ "schema": {
+  "description": "Request body for Bria Background Replace API",
+  "example": {
+   "image": "https://img.freepik.com/free-photo/portrait-woman_395237-33.jpg?w=740&q=80",
+   "prompt": "A sunny beach with palm trees and a clear blue sky"
+  },
+  "not": {
+   "allOf": [
+    {
+     "not": {
+      "required": [
+       "prompt"
+      ]
+     }
+    },
+    {
+     "not": {
+      "allOf": [
+       {
+        "required": [
+         "ref_images"
+        ]
+       },
+       {
+        "properties": {
+         "ref_images": {
+          "not": {
+           "enum": [
+            null
+           ]
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "properties": {
+   "enhance_ref_images": {
+    "description": "When true (default), extra processing of the reference images improves the result.",
+    "type": "boolean"
+   },
+   "force_background_detection": {
+    "description": "When true, forces background detection and removal even if the input image has an alpha channel.",
+    "type": "boolean"
+   },
+   "image": {
+    "description": "The image to edit. Supported input types are Base64-encoded string or URL pointing to a publicly accessible image file. Accepted formats JPEG, JPG, PNG, WEBP.",
+    "type": "string"
+   },
+   "mode": {
+    "description": "The background generation mode, one of \"base\", \"high_control\" (default), or \"fast\". Applies only when prompt is provided.",
+    "type": "string"
+   },
+   "negative_prompt": {
+    "description": "A text prompt specifying concepts, styles, or objects to exclude from the generated background.",
+    "type": "string"
+   },
+   "original_quality": {
+    "description": "When true, the output keeps the original image size. When false (default), the output is scaled to 1MP.",
+    "type": "boolean"
+   },
+   "prompt": {
+    "description": "A text description of the new background. At least one of prompt or ref_images is required; Bria asks that you not send both, and a body carrying both is forwarded for Bria to resolve rather than refused here. A hex color code in the prompt (for example, \"#FF5733\") produces a solid color background.",
+    "type": "string"
+   },
+   "prompt_content_moderation": {
+    "description": "When enabled, applies content moderation to the prompt. Returns 422 if the prompt fails moderation.",
+    "type": "boolean"
+   },
+   "ref_images": {
+    "description": "One reference image or a list of reference images that guide the background generation, each a Base64-encoded string or a URL pointing to a publicly accessible image file. At least one of prompt or ref_images is required; Bria asks that you not send both, and a body carrying both is forwarded for Bria to resolve rather than refused here.",
+    "nullable": true,
+    "oneOf": [
+     {
+      "type": "string"
+     },
+     {
+      "items": {
+       "type": "string"
+      },
+      "type": "array"
+     }
+    ]
+   },
+   "refine_prompt": {
+    "description": "When true (default), the prompt is automatically adjusted for optimal generation results.",
+    "type": "boolean"
+   },
+   "seed": {
+    "description": "Seed for deterministic generation. If omitted, a random seed is used.",
+    "type": "integer"
+   },
+   "sync": {
+    "description": "When false (default), the request is processed asynchronously. When true, the API holds the connection open until complete. ON COMFY ROUTER that second mode is refused rather than forwarded: Router fixes the return mode before dispatch and polls for the result inside the call, so `POST /v2/models/bria/{model}` answers 422 invalid_input for any `sync` this route carries other than `false` or `null`. The synchronous call is still available on this operation's own `/proxy/` route, which is the surface this schema also describes.",
+    "nullable": true,
+    "type": "boolean"
+   },
+   "visual_output_content_moderation": {
+    "description": "When enabled, applies content moderation to result visual. Returns 422 if the output fails moderation.",
+    "type": "boolean"
+   }
+  },
+  "required": [
+   "image"
+  ],
+  "type": "object"
+ }
+}

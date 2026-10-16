@@ -1,0 +1,120 @@
+{
+ "id": "kling/kling-3.0-turbo",
+ "version": "0d4704f286c5",
+ "schema": {
+  "description": "Request body for a Kling 3.0 Turbo text-to-video generation. `prompt` is the one field Kling requires. The model is named by the route on both surfaces -- the v1 path ends in the model spelling and the Comfy Router path is /v2/models/kling/kling-3.0-turbo -- so the body carries no model field at all and the same `required` list serves both.",
+  "example": {
+   "prompt": "A neon-lit alley in the rain, slow dolly forward.",
+   "settings": {
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "resolution": "1080p"
+   }
+  },
+  "properties": {
+   "aspect_ratio": {
+    "$ref": "#/$defs/KlingVideoGenAspectRatio"
+   },
+   "duration": {
+    "$ref": "#/$defs/KlingVideoGenDuration"
+   },
+   "options": {
+    "$ref": "#/$defs/KlingV2Options"
+   },
+   "prompt": {
+    "description": "Prompt that may include both positive and negative descriptions. Recommended length under 2500 characters. Multi-shot videos use the format \"shot n, m, words; shot n, m, words;\".",
+    "maxLength": 3072,
+    "type": "string"
+   },
+   "settings": {
+    "description": "Output configuration such as resolution, aspect ratio and duration.",
+    "properties": {
+     "aspect_ratio": {
+      "description": "Aspect ratio (width:height) of the generated frames. One of \"16:9\", \"9:16\" or \"1:1\". Default \"16:9\".",
+      "enum": [
+       "16:9",
+       "9:16",
+       "1:1"
+      ],
+      "type": "string"
+     },
+     "duration": {
+      "description": "Video length in seconds. Supported values 3 through 15. Default 5.",
+      "maximum": 15,
+      "minimum": 3,
+      "type": "integer"
+     },
+     "resolution": {
+      "description": "Clarity of the generated video. One of \"720p\" or \"1080p\". Default \"720p\".",
+      "enum": [
+       "720p",
+       "1080p"
+      ],
+      "type": "string"
+     }
+    },
+    "type": "object"
+   }
+  },
+  "required": [
+   "prompt"
+  ],
+  "type": "object",
+  "$defs": {
+   "KlingVideoGenAspectRatio": {
+    "default": "16:9",
+    "description": "Video aspect ratio",
+    "enum": [
+     "16:9",
+     "9:16",
+     "1:1"
+    ],
+    "type": "string"
+   },
+   "KlingVideoGenDuration": {
+    "default": "5",
+    "description": "Video length in seconds",
+    "enum": [
+     "3",
+     "4",
+     "5",
+     "6",
+     "7",
+     "8",
+     "9",
+     "10",
+     "11",
+     "12",
+     "13",
+     "14",
+     "15"
+    ],
+    "type": "string"
+   },
+   "KlingV2Options": {
+    "description": "General configuration such as callback address and watermark options.",
+    "properties": {
+     "callback_url": {
+      "description": "Callback notification URL for task results. The server notifies when the task status changes.",
+      "type": "string"
+     },
+     "external_task_id": {
+      "description": "Customized Task ID. Does not overwrite the system-generated task ID but can be used for queries. Must be unique within a single user account.",
+      "type": "string"
+     },
+     "watermark_info": {
+      "description": "Whether to generate watermarked results simultaneously. Custom watermarks are not supported.",
+      "properties": {
+       "enabled": {
+        "description": "true means generate watermarked result, false means do not generate. Default false.",
+        "type": "boolean"
+       }
+      },
+      "type": "object"
+     }
+    },
+    "type": "object"
+   }
+  }
+ }
+}

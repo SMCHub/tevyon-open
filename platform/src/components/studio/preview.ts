@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { PresetInfo } from "./presets-data";
 import type { Job } from "./studio-context";
 
 /** What the preview plays. `audio`: known to have sound (true) or not (false); left out, the file itself tells. */
@@ -8,7 +9,7 @@ export type PreviewMedia = { url: string; kind: "image" | "video"; poster?: stri
 export type PreviewAction = { label: string; href?: string; run?: () => void; credits?: number | null; disabled?: boolean };
 
 /**
- * One result, example or upload in the preview, with what its side panel shows. `extra`: further buttons
+ * One result, example, preset or upload in the preview, with what its side panel shows. `extra`: further buttons
  * beside the main action (a public creation: like, the creator's page, "Report").
  */
 export type PreviewEntry = PreviewMedia & {
@@ -22,6 +23,19 @@ export function jobMedia(job: Job): PreviewMedia | null {
   if (!out.contentType.startsWith("video/")) return { url: out.url, kind: "image" };
   const audio = job.params.generate_audio;
   return { url: out.url, kind: "video", ...(typeof audio === "boolean" ? { audio } : {}) };
+}
+
+/** A preset's example clip with its tagline; the action opens the preset at its price. */
+export function presetEntry(p: PresetInfo): PreviewEntry {
+  return {
+    url: p.preview.video,
+    kind: "video",
+    poster: p.preview.poster,
+    chip: "Preset",
+    title: p.title,
+    text: p.tagline,
+    action: { label: "Try it", href: `/presets/${p.id}`, credits: p.credits },
+  };
 }
 
 /** The index one step away, or null past either end (the preview does not wrap around). */

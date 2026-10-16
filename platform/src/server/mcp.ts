@@ -4,6 +4,8 @@ import type { createCommunity } from "../core/community";
 import type { CreditStatement } from "../core/credits";
 import type { createJobs, JobView } from "../core/jobs";
 import { publicParams, type JobTypeDef, type Register } from "../core/register";
+import type { MarketingProposal } from "../core/marketing-agent";
+import type { Recipe } from "../core/recipes";
 import type { ConsentRequestResult } from "./person-consent";
 import { collectTurn, parseDirectorInput, type ClientEvent, type DirectorInput, type DirectorKey, type DirectorStart, type ModelChoice } from "./director";
 
@@ -12,6 +14,22 @@ import { collectTurn, parseDirectorInput, type ClientEvent, type DirectorInput, 
  * One instance per request and account. Everything an agent receives is in Tachyon terms: job types, model names,
  * credits, our own error codes and signed links to our own media. Never a purchase route or vendor detail.
  */
+/** A preset as agents see it: what it does, what the user brings, and what one run costs. */
+export type McpPreset = {
+  id: string;
+  title: string;
+  tagline: string;
+  category: string;
+  /** What the user's photo has to show (recipes.ts). */
+  needs: Recipe["needs"];
+  badge: string | null;
+  /** What fits as the optional wish of this preset. */
+  wishHint: string | null;
+  /** Set when the preset speaks a line: then wish is required and is the exact spoken words. */
+  line: { label: string; placeholder: string } | null;
+  credits: number | null;
+};
+
 /** A Director turn as ask_director sees it: running (its events, and a way to stop it), or refused with a reply for the user. */
 export type McpDirectorStart =
   | { ok: true; model: { name: string }; events: AsyncIterable<ClientEvent>; stop(reason?: "left" | "failed"): void }
@@ -66,6 +84,31 @@ export type McpDeps = {
     deadlineMs?: number;
   };
   /**
+   * Presets (list_presets, run_preset), the same as GET /api/presets and POST /api/presets/{id}: public fields and the
+   * price of one run, and the job a run is. A recipe prompt never reaches the agent.
+   */
+  /**
+   * Marketing Agent (list_marketing_styles, run_marketing_style, continue_marketing_ugc), the same as GET/POST
+   * /api/marketing and POST /api/marketing/ugc. Style prompts never reach the agent.
+   */
+  marketing?: {
+    overview(): { categories: unknown[]; styles: Array<Record<string, unknown>>; templates: Array<Record<string, unknown>> };
+    start(accountId: string, body: Record<string, unknown>, opts: Record<string, unknown>): Promise<
+      | { ok: true; jobs: JobView[]; partial?: string; next?: { styleId: string; wish: string; duration: number; aspect: string; credits: number } }
+      | { ok: false; error: string; credits?: number; limit?: number; used?: number; issues?: string[] }
+    >;
+    continueUgc(accountId: string, body: Record<string, unknown>, opts: Record<string, unknown>): Promise<
+      { ok: true; job: JobView } | { ok: false; error: string; credits?: number; limit?: number; used?: number }
+    >;
+  };
+  presets?: {
+    list(): McpPreset[];
+    /** Errors: unknown_recipe, image_required, line_required, unknown_job_type. */
+    build(id: string, inputs: { image: string; wish?: string }):
+      | { ok: true; jobType: string; params: Record<string, unknown>; recipe: { id: string; title: string; wish?: string } }
+      | { ok: false; error: string };
+  };
+  /**
    * The community (set_visibility), the same as PUT/DELETE /api/publications/{jobId}: one of the account's finished
    * results public or private again. The profile it needs is set up by a person in the Studio.
    */
@@ -107,6 +150,15 @@ const POLL_MS = 1500;
 const LINK_DAYS = 7;
 const DAY_MS = 24 * 3600_000;
 
+/** A Marketing Agent creative as MCP tools see it, ready for run_marketing_style. */
+function creativeOut(p: MarketingProposal) {
+  return {
+    type: "marketing", style_id: p.styleId, title: p.title, category: p.category, kind: p.kind,
+    ...(p.wish ? { wish: p.wish } : {}), aspect: p.aspect, ...(p.duration !== undefined ? { duration: p.duration } : {}),
+    ...(p.caption ? { caption: p.caption } : {}), why: p.why, needs: p.needs, credits: p.credits, start: "run_marketing_style",
+  };
+}
+
 const INSTRUCTIONS = `Tevyon creates images and videos with leading models (FLUX, MiniMax, LTX, Kling, Veo and more) in one account. Jobs are paid in credits.
 - Start with list_models. Before generate, call get_price, tell the user what the job costs and pass those credits to generate as max_credits. Never start a job the user has not seen the price of. Credits are reserved when a job starts and refunded in full if it fails or is blocked.
 - Every start carries its own idempotency_key: a new one per intended job, the same one only to retry that job, so nothing is started or charged twice.
@@ -118,6 +170,7 @@ const INSTRUCTIONS = `Tevyon creates images and videos with leading models (FLUX
 - Images usually take under 30 seconds, videos take minutes. Pass wait_seconds to generate, or call get_job with wait_seconds until the status is succeeded or failed.
 - Results are links valid for ${LINK_DAYS} days. Show or download them for the user. reuse_result turns one into an upload for the next job.
 - When the user is unsure what to make, ask_director turns their wish into priced proposals. It never starts a job; the user chooses.
+- For marketing (product shots, ads, posters, shop images, UGC, motion) ask_marketing_agent plans a priced campaign from a brief; run_marketing_style starts a creative.
 - Results are private. Only when the user asks, set_visibility shares a finished one in the Tevyon community (or makes it private again).`;
 
 /** What an agent reads when a job that shows real people cannot start yet (core/consent.ts). */
@@ -179,6 +232,21 @@ type Progress = (job: JobView, waited: number, total: number) => Promise<void>;
  * request's _meta). Videos take minutes and a call waits at most 50 s; this way a client sees the job move instead of
  * polling get_job blindly. Progress only ever grows; a notification that fails never fails the tool.
  */
+/**
+ * A Marketing Agent template as list_marketing_styles sends it: id, base and title, plus only what differs from its
+ * style. The full list repeated every field of the style for about a hundred templates (some 17,000 tokens per call);
+ * style plus differences still give every field of the template (mcp.test.ts). Without its style it goes out whole.
+ */
+export function compactTemplate(t: Record<string, unknown>, style: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!style) return t;
+  const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  // A field the template leaves empty where its style has one goes out as null: JSON would drop undefined, and the
+  // agent would take the style's value.
+  return Object.fromEntries(
+    Object.entries(t).filter(([k, v]) => k === "id" || k === "base" || k === "title" || !same(v, style[k])).map(([k, v]) => [k, v ?? null]),
+  );
+}
+
 function progressFor(ctx: unknown): Progress | undefined {
   type Req = { _meta?: { progressToken?: string | number }; notify?: (n: { method: string; params: Record<string, unknown> }) => Promise<void> };
   const req = (ctx as { mcpReq?: Req } | undefined)?.mcpReq;
@@ -615,6 +683,211 @@ export function createTachyonMcpServer(deps: McpDeps): McpServer {
     );
   }
 
+  if (deps.presets) {
+    const presets = deps.presets;
+
+    server.registerTool(
+      "list_presets",
+      {
+        title: "List presets",
+        description:
+          "Tevyon's presets: one click and one photo of the user give a finished clip. Tevyon fixes model, format, " +
+          "length, sound and prompt; the user may add a short wish (wishHint shows what fits). A preset with line speaks the " +
+          "user's words in the clip: ask the user for them and pass them as wish. needs: photo (a person), product (or a dish) " +
+          "or place (a room). Each preset with the credits of one run. Start one with run_preset.",
+        inputSchema: z.object({}),
+        annotations: readOnly,
+      },
+      safe(async () => {
+        const list = presets.list();
+        return ok({ presets: list }, `${list.length} presets. Tell the user the price before you call run_preset with max_credits.`);
+      }),
+    );
+
+    server.registerTool(
+      "run_preset",
+      {
+        title: "Run a preset",
+        description:
+          "Starts a preset on the user's photo and reserves its credits; they are refunded in full if the job fails or is blocked. " +
+          "The photo must be the user's own upload (create_upload or import_image). If people are shown in it, ask the user first " +
+          "whether everyone shown agreed to appear in the clip; pass consent true only then (it is always required). Pass max_credits (the credits from list_presets " +
+          "or ask_director) so the job only starts at the price you showed. idempotency_key is required: a new unique string per " +
+          "intended run, the same one only to retry it. Pass wait_seconds or poll get_job; clips take minutes.",
+        inputSchema: z.object({
+          preset_id: z.string().describe("From list_presets or a preset proposal of ask_director."),
+          image: z.string().describe("The user's photo: the path from create_upload or import_image (/api/media/uploads/…)."),
+          wish: z.string().max(200).optional().describe(
+            "A short extra wish in the user's words, e.g. “with a red cape”. Required for a preset with line: the exact words spoken in the clip (up to 120 characters).",
+          ),
+          consent: z.boolean().describe("true only if the user confirmed that everyone shown in the photo agreed to appear in the clip (or nobody is shown)."),
+          max_credits: z.number().int().min(0).optional().describe("The credits from list_presets. The job does not start if it now costs more."),
+          idempotency_key: z.string().min(1).max(200).describe("A new unique string per intended run, e.g. a UUID. Reuse it only to retry that run."),
+          wait_seconds: waitSchema,
+        }),
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+      },
+      safe(async ({ preset_id, image, wish, consent, max_credits, idempotency_key, wait_seconds }, ctx) => {
+        // Real people only with their consent.
+        if (!consent) {
+          return toolError("consent_required", "If people are shown in the photo, ask the user whether everyone shown agreed to appear in the clip. Then call run_preset with consent true.");
+        }
+        // Only the caller's own uploads can be the photo.
+        if (!image.startsWith(`/api/media/uploads/${account.id}/`)) {
+          return toolError("invalid_params", "image must be the user's own upload: the path from create_upload or import_image.");
+        }
+        const tidy = wish?.trim().replace(/\s+/g, " ").slice(0, 200);
+        const built = presets.build(preset_id, { image, ...(tidy ? { wish: tidy } : {}) });
+        if (!built.ok) {
+          if (built.error === "unknown_recipe") return toolError("unknown_preset", `There is no preset "${preset_id}". Call list_presets for the available presets.`);
+          if (built.error === "image_required") return toolError("image_required", "This preset needs the user's photo as image.");
+          if (built.error === "line_required") return toolError("line_required", "This preset speaks a line in the clip. Ask the user for the exact words and pass them as wish.");
+          return toolError("unknown_preset", `The preset "${preset_id}" cannot run on this server. Pick another one from list_presets.`);
+        }
+        // Recipe prompts are written for their model: the prompt skill only tidies up (promptMode exact, no extra LLM call).
+        // The job carries its preset, so every view shows the preset and never the recipe prompt.
+        const res = await jobs.start(account.id, built.jobType, built.params, {
+          promptMode: "exact",
+          idempotencyKey: idempotency_key,
+          recipe: built.recipe,
+          ...startedBy(),
+          ...(max_credits !== undefined ? { maxCredits: max_credits } : {}),
+        });
+        if (!res.ok) return startFailed(res, built.jobType, built.params, max_credits, "run_preset");
+        const job = wait_seconds > 0 ? ((await settle(res.job.id, wait_seconds, progressFor(ctx))) ?? res.job) : res.job;
+        return jobResult(job, { balance: await deps.balance(account.id) });
+      }),
+    );
+  }
+
+  if (deps.marketing) {
+    const marketing = deps.marketing;
+    const MS_TEXT: Record<string, string> = {
+      unknown_style: "There is no such style. Call list_marketing_styles.",
+      style_unavailable: "This style is not available at the moment. Pick another one from list_marketing_styles.",
+      product_image_required: "This style needs the product photo as product (the user's upload).",
+      avatar_required: "UGC needs a photo of the person as avatar (the user's upload).",
+      avatar_not_supported: "This style takes no avatar. Leave avatar out.",
+      ad_reference_not_supported: "This style takes no ad_reference. Leave it out.",
+      poster_content_required: "A poster needs the product photo or a description in wish.",
+      line_required: "UGC speaks a line: ask the user for the exact words and pass them as wish.",
+      aspect_ratio_invalid: "This format is not offered for the style; use one of its aspects from list_marketing_styles.",
+      duration_invalid: "This length is not offered for the style; see its duration in list_marketing_styles.",
+      batch_size_invalid: "count must be 1 to 4, and 1 for styles without batch.",
+      consent_required: "An avatar shows a real person: ask the user whether that person agreed, then pass consent true.",
+      invalid_params: "Files must be the user's own uploads (create_upload or import_image).",
+      not_found: "That still is not a UGC still of this style in this account.",
+      frame_not_ready: "The still is not done yet. Wait with get_job, then call continue_marketing_ugc again.",
+      insufficient_credits: "The account has too few credits. Credits can be topped up in Tevyon Studio.",
+      model_paused: "The model of this style is paused for the moment. Try again later.",
+      model_retired: "This style cannot run any more. Pick another one.",
+    };
+    const refuse = (r: { error: string; credits?: number; limit?: number; used?: number }, tool: string): CallToolResult => {
+      if (r.error === "key_limit_reached") return keyLimitError(r.limit ?? account.dailyLimit ?? "its", r.used ?? "all");
+      if (r.error === "price_changed") return toolError("price_changed", `This now costs ${r.credits ?? "more"} credits. Tell the user the new price and call ${tool} again with max_credits ${r.credits ?? "from the price"}.`);
+      return toolError(r.error, MS_TEXT[r.error] ?? "Could not start. Call list_marketing_styles and try again.");
+    };
+
+    server.registerTool(
+      "list_marketing_styles",
+      {
+        title: "List Marketing Agent styles",
+        description:
+          "Tevyon's Marketing Agent turns a product photo into ready-to-post content in six categories: ugc (a person holds the product " +
+          "and talks about it, video), product (product shots, with or without a model), motion (animated product clip), ads, posters and " +
+          "marketplace (shop images). Each style lists what it needs (product, avatar, ad_reference), its formats (aspects), length (duration), " +
+          "whether count 1–4 works (batch), and the credits of one run at its defaults. templates are concrete scenes of a style " +
+          "(base) with their own look, run with the same rules as their style; a template lists only what differs from its style " +
+          "(title, cover, look), every other field and the price are its style's. Start a style or a template by its id with run_marketing_style.",
+        inputSchema: z.object({ category: z.enum(["ugc", "product", "motion", "ads", "posters", "marketplace"]).optional() }),
+        annotations: readOnly,
+      },
+      safe(async ({ category }) => {
+        const o = marketing.overview();
+        const styles = o.styles.filter((s) => s.available && (!category || s.category === category));
+        const byId = new Map(o.styles.map((s) => [String(s.id), s]));
+        const templates = o.templates
+          .filter((t) => t.available && (!category || t.category === category))
+          .map((t) => compactTemplate(t, byId.get(String(t.base))));
+        return ok(
+          { categories: o.categories, styles, templates },
+          `${styles.length} styles, ${templates.length} templates. Tell the user the price before you call run_marketing_style with max_credits.`,
+        );
+      }),
+    );
+
+    server.registerTool(
+      "run_marketing_style",
+      {
+        title: "Run a Marketing Agent style",
+        description:
+          "Starts a Marketing Agent style on the user's product photo and reserves its credits (refunded in full if it fails). Files must be " +
+          "the user's own uploads (create_upload or import_image). An avatar is a real person: ask whether they agreed and pass consent true. " +
+          "Pass max_credits (the price you showed, per run) and a new idempotency_key per intended run. count 1–4 starts separate jobs for " +
+          "styles with batch. UGC runs in two steps: this call makes the still (the person holding the product) and returns next; when that " +
+          "job has succeeded, call continue_marketing_ugc with its job id, which makes the talking video (already included in the price).",
+        inputSchema: z.object({
+          style_id: z.string().describe("From list_marketing_styles."),
+          product: z.string().optional().describe("Path of the product photo (/api/media/uploads/…)."),
+          avatar: z.string().optional().describe("Path of a photo of the person (styles with avatar)."),
+          ad_reference: z.string().optional().describe("Path of an ad whose layout and look to follow (styles with adReference)."),
+          wish: z.string().max(200).optional().describe("Scene wish, the lettering for text styles, a description for posters without photo, or the spoken words for UGC."),
+          aspect: z.string().optional().describe("One of the style's aspects."),
+          duration: z.number().int().optional().describe("Seconds, for video styles within the style's duration."),
+          count: z.number().int().min(1).max(4).optional(),
+          consent: z.boolean().optional().describe("true only if the person in avatar agreed."),
+          max_credits: z.number().int().min(0).optional().describe("The credits of one run you showed. Nothing starts if it now costs more."),
+          idempotency_key: z.string().min(1).max(200),
+          wait_seconds: waitSchema,
+        }),
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+      },
+      safe(async ({ style_id, product, avatar, ad_reference, wish, aspect, duration, count, consent, max_credits, idempotency_key, wait_seconds }, ctx) => {
+        const res = await marketing.start(account.id, {
+          styleId: style_id, product, avatar, adReference: ad_reference, wish, aspect, duration, count, consent,
+        }, { idempotencyKey: idempotency_key, ...startedBy(), ...(max_credits !== undefined ? { maxCredits: max_credits } : {}) });
+        if (!res.ok) return refuse(res, "run_marketing_style");
+        const first = res.jobs[0]!;
+        const job = wait_seconds > 0 && res.jobs.length === 1 ? ((await settle(first.id, wait_seconds, progressFor(ctx))) ?? first) : first;
+        const extra = {
+          ...(res.jobs.length > 1 ? { job_ids: res.jobs.map((j) => j.id) } : {}),
+          ...(res.partial ? { partial: res.partial } : {}),
+          ...(res.next ? { next: { tool: "continue_marketing_ugc", frame_job_id: first.id, style_id: res.next.styleId, wish: res.next.wish, duration: res.next.duration, aspect: res.next.aspect, max_credits: res.next.credits } } : {}),
+          balance: await deps.balance(account.id),
+        };
+        return jobResult(job, extra);
+      }),
+    );
+
+    server.registerTool(
+      "continue_marketing_ugc",
+      {
+        title: "UGC step 2: make the still talk",
+        description:
+          "Second step of a UGC style: once the still from run_marketing_style has succeeded, this turns it into the talking video. Pass the " +
+          "values from that call's next. Idempotent per still: calling it again returns the same video job, never a second charge.",
+        inputSchema: z.object({
+          frame_job_id: z.string(),
+          style_id: z.string(),
+          wish: z.string().max(200).describe("The spoken words (as in step 1)."),
+          duration: z.number().int().optional(),
+          aspect: z.string().optional(),
+          max_credits: z.number().int().min(0).optional(),
+          wait_seconds: waitSchema,
+        }),
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      },
+      safe(async ({ frame_job_id, style_id, wish, duration, aspect, max_credits, wait_seconds }, ctx) => {
+        const res = await marketing.continueUgc(account.id, { frameJobId: frame_job_id, styleId: style_id, wish, duration, aspect }, {
+          ...startedBy(), ...(max_credits !== undefined ? { maxCredits: max_credits } : {}),
+        });
+        if (!res.ok) return refuse(res, "continue_marketing_ugc");
+        const job = wait_seconds > 0 ? ((await settle(res.job.id, wait_seconds, progressFor(ctx))) ?? res.job) : res.job;
+        return jobResult(job, { balance: await deps.balance(account.id) });
+      }),
+    );
+  }
+
   if (deps.director) {
     const director = deps.director;
     /** Paid Director messages count against the key's daily limit like jobs (the Director checks it). */
@@ -626,9 +899,10 @@ export function createTachyonMcpServer(deps: McpDeps): McpServer {
         title: "Ask the Director",
         description:
           "Tevyon's Director is a creative planner: it turns the user's wish into 2–3 concrete, priced proposals, either a " +
-          "generation with a model, a prompt and settings. It never starts a job. Show its reply (written in German for the " +
-          "user) and the proposals with their credits. Start a proposal with generate (its job_type and params, max_credits = " +
-          "credits) only after the user chose it. suggestions (if any) are short replies the user might send " +
+          "custom generation (model, prompt and settings) or a one-click preset. It never starts a job. Show its reply (written in " +
+          "the user's language) and the proposals with their credits. Start a custom proposal with generate (its job_type and " +
+          'params, max_credits = credits) only after the user chose it; proposals with start "run_preset" are presets: start them ' +
+          "with run_preset (the user's photo and their consent needed). suggestions (if any) are short replies the user might send " +
           "next: offer them, never send one on your own. Continue a conversation by passing the earlier messages as history. The default model plans " +
           "for free within a daily budget; the strongest models (list_director_models) cost credits per message, so never retry " +
           "a call on your own.",
@@ -662,9 +936,13 @@ export function createTachyonMcpServer(deps: McpDeps): McpServer {
         }
         if (turn.error) return toolError("director_unavailable", "The Director could not finish its answer. A paid message is refunded. Try again in a moment.");
 
-        const proposals = turn.proposals.map((p) => (
-          { type: "custom", job_type: p.jobType, kind: p.kind, model: p.model, prompt: p.prompt, params: p.params, why: p.why, credits: p.credits, start: "generate" }
-        ));
+        const proposals = turn.proposals.map((p) =>
+          p.type === "custom"
+            ? { type: "custom", job_type: p.jobType, kind: p.kind, model: p.model, prompt: p.prompt, params: p.params, why: p.why, credits: p.credits, start: "generate" }
+            : p.type === "preset"
+              ? { type: "preset", preset_id: p.presetId, title: p.title, why: p.why, ...(p.wish ? { wish: p.wish } : {}), credits: p.credits, start: deps.presets ? "run_preset" : "studio" }
+              : creativeOut(p),
+        );
         const cost = turn.charged !== undefined
           ? ` This message cost ${turn.charged} credits.`
           : turn.budget ? ` Free Director turns left today with this model: ${turn.budget.turnsLeft}.` : "";
@@ -707,6 +985,67 @@ export function createTachyonMcpServer(deps: McpDeps): McpServer {
         return ok({ share_left: o.share, paying: o.paying, models }, `${usable} of ${models.length} Director models are available to this account today.`);
       }),
     );
+
+    if (deps.marketing) {
+      server.registerTool(
+        "ask_marketing_agent",
+        {
+          title: "Ask the Marketing Agent",
+          description:
+            "Tevyon's Marketing Agent plans a small campaign: from the user's brief (product, goal, channels, audience, offer) it proposes up " +
+            "to four ready-to-post creatives, each a Marketing Agent style or template with its lettering or spoken line, format, length, a " +
+            "post caption and the credits of one run. It never starts a job. Show its reply (in the user's language) and the creatives with their credits; " +
+            "start a chosen one with run_marketing_style (style_id, wish, aspect, duration, the product photo, max_credits = credits). " +
+            "`needs` lists inputs still missing (product photo). Pass the product photo as photo so it plans for that product. It shares " +
+            "the Director's daily budget and models (list_director_models).",
+          inputSchema: z.object({
+            message: z.string().min(1).max(2000).describe("The brief in the user's words, e.g. “launch of my organic lemonade on Instagram, young urban audience”."),
+            history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).max(20).optional()
+              .describe("Earlier messages of this conversation with the agent, oldest first."),
+            model: z.string().optional().describe("A model id from list_director_models. Default: the free standard model."),
+            photo: z.string().optional().describe("The product photo from create_upload or import_image (/api/media/uploads/…)."),
+            has_avatar: z.boolean().optional().describe("True if the user has a photo of a person for UGC and people styles."),
+            product_name: z.string().max(120).optional(),
+            product_description: z.string().max(400).optional(),
+          }),
+          annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+        },
+        safe(async ({ message, history, model, photo, has_avatar, product_name, product_description }, ctx) => {
+          const body = {
+            history: [...(history ?? []), { role: "user", content: message }], agent: "marketing", hasAvatar: has_avatar === true,
+            ...(model ? { model } : {}), ...(photo ? { photo } : {}),
+            ...(product_name || product_description ? { product: { name: product_name, description: product_description } } : {}),
+          };
+          const started = await director.start(account.id, body, ctx.mcpReq.signal, key);
+          if (!started.ok) {
+            if (started.error === "key_limit_reached") return keyLimitError(started.limit ?? account.dailyLimit ?? "its", started.used ?? "all");
+            return toolError(started.error, started.reply);
+          }
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          const late = new Promise<"late">((resolve) => (timer = setTimeout(() => resolve("late"), director.deadlineMs ?? DIRECTOR_DEADLINE_MS)));
+          const collecting = collectTurn(started.events);
+          collecting.catch(() => {});
+          const turn = await Promise.race([collecting, late]).finally(() => clearTimeout(timer));
+          if (turn === "late") {
+            started.stop("failed");
+            return toolError("director_timeout", "The Marketing Agent took too long and was stopped. Nothing was charged for this message. Try again in a moment.");
+          }
+          if (turn.error) return toolError("director_unavailable", "The Marketing Agent could not finish its answer. A paid message is refunded. Try again in a moment.");
+          const creatives = turn.proposals.flatMap((p) => (p.type === "marketing" ? [creativeOut(p)] : []));
+          const cost = turn.charged !== undefined
+            ? ` This message cost ${turn.charged} credits.`
+            : turn.budget ? ` Free turns left today with this model: ${turn.budget.turnsLeft}.` : "";
+          return ok(
+            {
+              reply: turn.reply, model: started.model.name, creatives,
+              ...(turn.charged !== undefined ? { charged: turn.charged } : {}),
+              ...(turn.budget ? { budget: { allowed: turn.budget.allowed, turns_left: turn.budget.turnsLeft, share_left: turn.budget.share } } : {}),
+            },
+            `The Marketing Agent (${started.model.name}) planned ${creatives.length} creative(s). Show the reply, the captions and the prices to the user.${cost}`,
+          );
+        }),
+      );
+    }
   }
 
   return server;

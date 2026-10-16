@@ -16,7 +16,7 @@ export function GpModes<T extends string>({ modes, value, onChange, label }: {
   modes: { id: T; label: string; icon: React.ReactNode }[]; value: T; onChange: (id: T) => void; label: string;
 }) {
   return (
-    <div className="gp-modes" role="tablist" aria-label={label} style={{ "--n": modes.length } as React.CSSProperties}>
+    <div className={modes.length > 3 ? "gp-modes gp-modes--dense" : "gp-modes"} role="tablist" aria-label={label} style={{ "--n": modes.length } as React.CSSProperties}>
       {modes.map((m) => (
         <button key={m.id} type="button" role="tab" aria-selected={value === m.id} className="gp-modes__btn" onClick={() => onChange(m.id)}>
           {m.icon}

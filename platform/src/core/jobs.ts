@@ -57,6 +57,12 @@ function withoutRecipe(params: Record<string, unknown>): Record<string, unknown>
 }
 
 /** What the vendor gets: the job type's own mapping (recipe prompt, our-only fields dropped), else the params as they are. */
+/** Sends a job to the vendor id its params pick (routeFor), else the job type's own route. */
+function submit(provider: Provider, def: JobTypeDef, params: Record<string, unknown>, signal: AbortSignal) {
+  const providerModel = def.routeFor?.(params as never) ?? def.route.providerModel;
+  return provider.submit({ kind: def.kind, providerModel, params: toVendor(def, params) }, signal);
+}
+
 function toVendor(def: JobTypeDef, params: Record<string, unknown>): Record<string, unknown> {
   return def.vendorParams ? def.vendorParams(params) : params;
 }
@@ -469,7 +475,7 @@ export function createJobs(deps: {
     try {
       return await Promise.race([
         submitting
-          ? provider.submit({ kind: def.kind, providerModel: def.route.providerModel, params: toVendor(def, r.providerParams ?? withoutRecipe(r.params)) }, controller.signal)
+          ? submit(provider, def, r.providerParams ?? withoutRecipe(r.params), controller.signal)
           : provider.poll(r.handle!, controller.signal),
         limit,
       ]);

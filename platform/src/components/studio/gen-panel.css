@@ -9,6 +9,8 @@
 .gp-modes { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; margin: 0 -12px; padding: 12px 12px 10px; background: linear-gradient(180deg, var(--surface) 78%, transparent); }
 .gp-modes::before { content: ""; position: absolute; inset: 12px 12px 10px; z-index: -1; border: 1px solid var(--line); border-radius: 14px; background: rgb(var(--fg) / 0.03); }
 .gp-modes__btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; margin: 3px 0; border: 1px solid transparent; border-radius: 11px; background: none; color: var(--ash); font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.2s ease, background 0.25s ease; }
+/* Four or more modes: icon above the label, so every label fits its fixed column. */
+.gp-modes--dense .gp-modes__btn { flex-direction: column; gap: 3px; height: 50px; min-width: 0; font-size: 11px; }
 .gp-modes__btn:first-child { margin-left: 3px; }
 .gp-modes__btn:last-child { margin-right: 3px; }
 .gp-modes__btn svg { width: 15px; height: 15px; opacity: 0.8; }

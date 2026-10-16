@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity, ChevronDown, Clapperboard, FolderOpen, ImagePlus, Images, KeyRound, LogOut, Menu as MenuIcon, Receipt,
-  Search, ShieldCheck, UserRound, Users, Wand2, X,
+  LayoutGrid, Megaphone, Search, ShieldCheck, UserRound, Users, Wand2, X,
 } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { CommandPalette, useCommandShortcut } from "./command-palette";
@@ -139,13 +139,15 @@ function AccountMenu() {
 }
 
 /** Pages that open on a dark full-bleed picture: at the top the bar lies transparent over it, in light type. */
-const HERO_PAGES = new Set<string>();
+const HERO_PAGES = new Set(["/presets"]);
 
 const NAV: { href: string; label: string; icon: React.ReactNode; mega?: Menu }[] = [
   { href: "/community", label: "Community", icon: <Users aria-hidden="true" /> },
   { href: "/image", label: "Image", icon: <ImagePlus aria-hidden="true" />, mega: "image" },
   { href: "/video", label: "Video", icon: <Clapperboard aria-hidden="true" />, mega: "video" },
   { href: "/director", label: "Director", icon: <Wand2 aria-hidden="true" /> },
+  { href: "/presets", label: "Presets", icon: <LayoutGrid aria-hidden="true" />, mega: "presets" },
+  { href: "/marketing", label: "Marketing Agent", icon: <Megaphone aria-hidden="true" /> },
   { href: "/assets", label: "Assets", icon: <Images aria-hidden="true" /> },
 ];
 
@@ -225,7 +227,7 @@ function MenuSheet({ activeHref, onClose, onSearch }: { activeHref?: string; onC
 /**
  * The header, a resizable glass bar: at the top it spans the page, once the page moves it draws in to a floating pill.
  * A pill of light glides under the hovered area, a lamp marks the page you are on; search (⌘K) and account on
- * the right. Image and Video open their menu (mega-menu.tsx) on hover or keyboard focus.
+ * the right. Image, Video and Presets open their menu (mega-menu.tsx) on hover or keyboard focus.
  */
 export function TopNav() {
   const pathname = usePathname();

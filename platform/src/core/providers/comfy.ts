@@ -40,17 +40,32 @@ function failure(errorType: string): ProviderFailure {
   return "provider_error";
 }
 
+/** The markers catalog.ts puts where a model wants a file in another shape than a data URL. */
+const MARKERS = { $inlineBase64: "veo", $rawBase64: "raw", $inlineData: "gemini", $assetLink: "asset" } as const;
+
 /** Our own files live behind the account; the router gets them inline. */
 const OWN_MEDIA = /^\/api\/media\//;
 /** A result field that names a file to keep. */
 const MEDIA_URL = /^https:\/\/\S+$/;
-/** Fields that name a copy we do not keep: a watermarked version, a cover or thumbnail of the result. */
-const SKIP_KEY = /watermark|thumbnail|cover|poster|preview/i;
+/**
+ * Fields that name a copy we do not keep: a watermarked version, a cover or thumbnail of the result, Wan's separate
+ * audio check track (the video carries the sound).
+ */
+const SKIP_KEY = /watermark|thumbnail|cover|poster|preview|check_audio/i;
 
-/** A file in a result: a link to download, or the bytes themselves (base64, e.g. Veo). */
+/** A file in a result: a link to download, or the bytes themselves (base64: Veo, OpenAI's b64_json, Gemini's inlineData). */
 type Found = { url: string } | { base64: string; contentType: string };
 
-/** Every file a result names, in document order, once each. */
+/** The image type of base64 bytes by their signature (OpenAI's b64_json names no type per image). */
+function imageTypeOf(base64: string): string {
+  const head = Buffer.from(base64.slice(0, 24), "base64");
+  if (head[0] === 0x89 && head[1] === 0x50) return "image/png";
+  if (head[0] === 0xff && head[1] === 0xd8) return "image/jpeg";
+  if (head.subarray(0, 4).toString("latin1") === "RIFF" && head.subarray(8, 12).toString("latin1") === "WEBP") return "image/webp";
+  return "image/png";
+}
+
+/** Every file a result names, in document order, once each. Gemini's thought images (`thought: true`) are drafts. */
 function mediaIn(value: unknown, found: Found[] = []): Found[] {
   if (typeof value === "string") {
     if (MEDIA_URL.test(value) && !found.some((f) => "url" in f && f.url === value)) found.push({ url: value });
@@ -58,10 +73,21 @@ function mediaIn(value: unknown, found: Found[] = []): Found[] {
     for (const v of value) mediaIn(v, found);
   } else if (value && typeof value === "object") {
     const o = value as Record<string, unknown>;
+    if (o.thought === true) return found;
+    const mimeType = typeof o.mimeType === "string" ? o.mimeType : undefined;
+    let bytes: string | undefined;
     if (typeof o.bytesBase64Encoded === "string") {
-      found.push({ base64: o.bytesBase64Encoded, contentType: typeof o.mimeType === "string" ? o.mimeType : "application/octet-stream" });
+      bytes = "bytesBase64Encoded";
+      found.push({ base64: o.bytesBase64Encoded, contentType: mimeType ?? "application/octet-stream" });
+    } else if (typeof o.b64_json === "string") {
+      bytes = "b64_json";
+      found.push({ base64: o.b64_json, contentType: imageTypeOf(o.b64_json) });
+    } else if (typeof o.data === "string" && mimeType && /^(image|video|audio)\//.test(mimeType)) {
+      // Gemini's inlineData: { mimeType, data }
+      bytes = "data";
+      found.push({ base64: o.data, contentType: mimeType });
     }
-    for (const [k, v] of Object.entries(o)) if (k !== "bytesBase64Encoded" && !SKIP_KEY.test(k)) mediaIn(v, found);
+    for (const [k, v] of Object.entries(o)) if (k !== bytes && !SKIP_KEY.test(k)) mediaIn(v, found);
   }
   return found;
 }
@@ -118,8 +144,10 @@ export function createComfyProvider(opts: {
   }
 
   /**
-   * The params with each of our media URLs as a data URL, and each `{ $inlineBase64: url }` marker (catalog.ts
-   * inlineBase64) as `{ bytesBase64Encoded, mimeType }`. Throws if a file cannot be loaded.
+   * The params with each of our media URLs as a data URL (videos as a signed asset link), and each marker from
+   * catalog.ts filled from the file: `{ $inlineBase64 }` → `{ bytesBase64Encoded, mimeType }` (Veo), `{ $rawBase64 }` →
+   * the bare base64 string (FLUX.2, Kling), `{ $inlineData }` → `{ inlineData: { mimeType, data } }` (Gemini),
+   * `{ $assetLink }` → a signed link from the asset store (Bria). Throws if a file cannot be loaded.
    */
   async function inline(value: unknown): Promise<unknown> {
     if (typeof value === "string" && OWN_MEDIA.test(value)) {
@@ -127,13 +155,19 @@ export function createComfyProvider(opts: {
       return file.mimeType.startsWith("video/") ? asset(value, file) : `data:${file.mimeType};base64,${file.base64}`;
     }
     if (Array.isArray(value)) return Promise.all(value.map(inline));
-    const marker = (value as { $inlineBase64?: unknown } | null)?.$inlineBase64;
-    if (typeof marker === "string" && OWN_MEDIA.test(marker)) {
-      const file = await load(marker);
-      return { bytesBase64Encoded: file.base64, mimeType: file.mimeType };
-    }
     if (value && typeof value === "object") {
-      return Object.fromEntries(await Promise.all(Object.entries(value).map(async ([k, v]) => [k, await inline(v)] as const)));
+      const o = value as Record<string, unknown>;
+      const [key, url] = Object.entries(o)[0] ?? [];
+      if (Object.keys(o).length === 1 && key && key in MARKERS && typeof url === "string" && OWN_MEDIA.test(url)) {
+        const file = await load(url);
+        switch (MARKERS[key as keyof typeof MARKERS]) {
+          case "veo": return { bytesBase64Encoded: file.base64, mimeType: file.mimeType };
+          case "raw": return file.base64;
+          case "gemini": return { inlineData: { mimeType: file.mimeType, data: file.base64 } };
+          case "asset": return asset(url, file);
+        }
+      }
+      return Object.fromEntries(await Promise.all(Object.entries(o).map(async ([k, v]) => [k, await inline(v)] as const)));
     }
     return value;
   }

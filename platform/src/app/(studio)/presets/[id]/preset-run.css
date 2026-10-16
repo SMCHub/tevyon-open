@@ -1,0 +1,52 @@
+/* Preset page: the chosen run large with its details beside it, all runs as a strip below; panel head with poster. */
+
+.prp-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 14px; padding: 4px; }
+.prp-head__poster { width: 64px; height: 86px; border: 1px solid var(--line); border-radius: 12px; object-fit: cover; background: var(--surface-2); }
+.prp-head__text { display: grid; gap: 5px; min-width: 0; }
+.prp-head__text .preset-panel__name { font-size: 22px; }
+.prp-head__tagline { color: rgb(var(--fg) / 0.62); font-size: 12.5px; line-height: 1.4; }
+
+.prp-wish { position: relative; display: block; }
+.prp-wish .wish { width: 100%; padding-right: 58px; }
+.prp-wish__count { position: absolute; top: 50%; right: 12px; color: rgb(var(--ash-rgb) / 0.8); font-size: 11px; font-variant-numeric: tabular-nums; transform: translateY(-50%); pointer-events: none; }
+.prp-hint { margin-top: -4px; color: rgb(var(--ash-rgb) / 0.85); font-size: 11.5px; }
+
+.prun { display: grid; grid-template-columns: auto minmax(240px, 300px); align-items: center; justify-content: center; gap: 28px; width: 100%; }
+.preset-stage .prun__frame { width: auto; height: clamp(320px, 60vh, 620px); max-width: 100%; }
+.prun__info { display: grid; gap: 18px; align-content: center; padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: rgb(var(--fg) / 0.03); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.prun__status { display: inline-flex; align-items: center; gap: 8px; justify-self: start; height: 26px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.prun__status--succeeded { border-color: rgb(var(--hi) / calc(0.3 * var(--hi-k))); background: linear-gradient(180deg, rgb(var(--hi) / calc(0.14 * var(--hi-k))), rgb(var(--hi) / calc(0.04 * var(--hi-k)))); }
+.prun__status--failed { border-color: rgb(var(--danger-rgb) / 0.45); color: var(--danger-soft); }
+.prun__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin: 0; }
+.prun__fact { display: grid; gap: 3px; min-width: 0; }
+.prun__fact--wide { grid-column: 1 / -1; }
+.prun__fact dt { color: var(--ash); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.prun__fact dd { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.prun__fact--wide dd { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.prun__fact dd svg { width: 13px; height: 13px; }
+.prun__actions { display: grid; gap: 8px; }
+.prun__btn { justify-content: flex-start; width: 100%; height: 42px; font-size: 13.5px; }
+
+.prun__strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
+.prun__thumb { display: grid; place-items: center; width: 52px; aspect-ratio: 9 / 16; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ash); cursor: pointer; opacity: 0.7; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s var(--ease); }
+.prun__thumb:hover { opacity: 1; transform: translateY(-2px); }
+.prun__thumb.is-on { border-color: var(--photon); opacity: 1; }
+.prun__thumb video, .prun__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.prun__thumb svg { width: 16px; height: 16px; }
+.prun__thumb--failed { border-style: dashed; }
+
+@media (max-width: 1100px) {
+  .prun { grid-template-columns: 1fr; justify-items: center; }
+  .prun__info { width: min(100%, 420px); }
+}
+
+.prun__status .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--photon); animation: prun-pulse 1.4s ease-in-out infinite; }
+@keyframes prun-pulse { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .prun__status .live-dot { animation: none; } }
+
+.prp-top { display: flex; align-items: center; justify-content: space-between; }
+.prp-dice { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 11px; background: rgb(var(--fg) / 0.04); color: var(--ash); cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease; }
+.prp-dice:hover { border-color: var(--line-strong); color: var(--photon); }
+.prp-dice svg { width: 16px; height: 16px; transition: transform 0.6s var(--ease); }
+.prp-dice:hover svg { transform: rotate(200deg); }
+.gp .prp-head { padding: 2px 2px 4px; }

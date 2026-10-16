@@ -4,7 +4,8 @@
  */
 
 export type Proposal =
-  { type: "custom"; jobType: string; kind: "image" | "video"; model: string; prompt: string; params: Record<string, unknown>; why: string; credits: number | null };
+  | { type: "preset"; presetId: string; title: string; why: string; wish?: string; credits: number | null }
+  | { type: "custom"; jobType: string; kind: "image" | "video"; model: string; prompt: string; params: Record<string, unknown>; why: string; credits: number | null };
 
 export type Msg =
   | { role: "user"; content: string; image?: string }
@@ -36,7 +37,9 @@ const short = (s: string) => (s.length > PROMPT_CHARS ? `${s.slice(0, PROMPT_CHA
 
 /** One proposal as the model reads it back: what it was, and whether the user started it and how that ended. */
 function line(p: Proposal, i: number, job: string | undefined, statusOf: (jobId: string) => JobStatus | undefined): string {
-  const what = `${p.model}${typeof p.params.aspect_ratio === "string" ? `, ${p.params.aspect_ratio}` : ""}${typeof p.params.duration === "number" ? `, ${p.params.duration} s` : ""}: ${short(p.prompt)}`;
+  const what = p.type === "preset"
+    ? `Preset ${p.title}${p.wish ? `, wish: ${p.wish}` : ""}`
+    : `${p.model}${typeof p.params.aspect_ratio === "string" ? `, ${p.params.aspect_ratio}` : ""}${typeof p.params.duration === "number" ? `, ${p.params.duration} s` : ""}: ${short(p.prompt)}`;
   const outcome = job ? OUTCOME[statusOf(job) ?? "running"] : undefined;
   return `${i + 1}) ${what}${job ? ` (started${outcome ? `, ${outcome}` : ""})` : ""}`;
 }
@@ -59,12 +62,12 @@ export function toHistory(msgs: Msg[], statusOf: (jobId: string) => JobStatus | 
 
 /**
  * A chat saved in the middle of an answer comes back as a stopped answer, never as one still waiting. Proposals of a
- * kind this version no longer has (presets of older chats) are dropped, with their started jobs.
+ * kind this version does not know are dropped, with their started jobs.
  */
 export function restore(msgs: Msg[]): Msg[] {
   return msgs.flatMap((m): Msg[] => {
     if (m.role !== "assistant") return [m];
-    const kept = m.proposals.map((p, i) => ({ p, i })).filter(({ p }) => p.type === "custom");
+    const kept = m.proposals.map((p, i) => ({ p, i })).filter(({ p }) => p.type === "custom" || p.type === "preset");
     const started = Object.fromEntries(kept.flatMap(({ i }, k) => (m.started[i] ? [[k, m.started[i]]] : [])));
     const clean = kept.length === m.proposals.length ? m : { ...m, proposals: kept.map(({ p }) => p), started };
     if (m.state !== "waiting" && m.state !== "streaming") return [clean];

@@ -3,6 +3,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { catalog } from "../core/catalog";
+import { MS_STYLES, publicStyle, publicTemplates } from "../core/marketing";
 import { createConsent, createMemoryConsentStore } from "../core/consent";
 import { createCredits } from "../core/credits";
 import { createJobs } from "../core/jobs";
@@ -16,7 +17,7 @@ import { defineSkills } from "../core/skills";
 import { createFakeProvider } from "../core/testing/fake-provider";
 import { TOOL_CARDS } from "../app/(studio)/settings/api/tool-cards";
 import type { ClientEvent, ModelChoice } from "./director";
-import { createTachyonMcpServer, directorForMcp, type McpDeps, type McpDirectorStart } from "./mcp";
+import { compactTemplate, createTachyonMcpServer, directorForMcp, type McpDeps, type McpDirectorStart } from "./mcp";
 import { requestConsent } from "./person-consent";
 import { loadSkills, SKILLS_DIR } from "./skill-files";
 
@@ -85,6 +86,22 @@ function turn(events: ClientEvent[], onStop?: (reason: string) => void): McpDire
   return { ok: true, model: { name: "Claude Sonnet 5.5" }, events: replay(events), stop: (reason) => onStop?.(reason ?? "left") };
 }
 
+// A preset as the server builds it: the recipe prompt goes to the model, never to the agent.
+const RECIPE_PROMPT = "SECRET RECIPE PROMPT: the camera pulls back into space";
+const fakePresets: NonNullable<McpDeps["presets"]> = {
+  list: () => [
+    { id: "earth-zoom", title: "Earth zoom", tagline: "From you into space", category: "viral", needs: "photo", badge: "top", wishHint: null, line: null, credits: 12 },
+  ],
+  build(id, { image, wish }) {
+    if (id === "gone") return { ok: false, error: "unknown_job_type" };
+    if (id !== "earth-zoom") return { ok: false, error: "unknown_recipe" };
+    return {
+      ok: true, jobType: "test_video", params: { prompt: RECIPE_PROMPT + (wish ? ` Additional wish: ${wish}` : ""), duration: 4, image },
+      recipe: { id, title: "Earth zoom", ...(wish ? { wish } : {}) },
+    };
+  },
+};
+
 async function setup({ credits = 50, account = ACC_1, dailyLimit = null, director = fakeDirector().dep }: { credits?: number; account?: string; dailyLimit?: number | null; director?: McpDeps["director"] | null } = {}) {
   const repo = createMemoryRepository();
   await repo.grant(ACC_1, credits, "grant_1");
@@ -133,6 +150,8 @@ async function setup({ credits = 50, account = ACC_1, dailyLimit = null, directo
     },
     ...(director ? { director } : {}),
     community,
+    presets: fakePresets,
+    marketing: fakeMarketing,
   };
 
   const results: unknown[] = [];
@@ -144,6 +163,33 @@ async function setup({ credits = 50, account = ACC_1, dailyLimit = null, directo
   }
   return { call, client, jobs, repo, fake, results, community, hooks };
 }
+
+/** The Marketing Agent as the route wires it, reduced to what the tools pass through (logic tested in marketing.test.ts). */
+const marketingCalls: { tool: string; accountId: string; body: Record<string, unknown>; opts: Record<string, unknown> }[] = [];
+const MS_JOB = { id: "00000000-0000-4000-8000-0000000000f1", jobType: "test_image", model: "Test Image 1", status: "queued", credits: 9, outputs: [], params: { recipe: { id: "ms:ugc-x", title: "Marketing · UGC" } }, createdAt: 0 };
+const fakeMarketing: NonNullable<McpDeps["marketing"]> = {
+  overview: () => ({
+    categories: [{ id: "ugc", label: "UGC" }],
+    styles: [
+      { id: "ugc-x", category: "ugc", available: true, credits: 30, prompt: undefined },
+      { id: "soon", category: "ugc", available: false, credits: null },
+    ],
+    templates: [
+      { id: "tpl-ugc-x", base: "ugc-x", category: "ugc", available: true, credits: 30 },
+      { id: "tpl-ad", base: "ad-x", category: "ads", available: true, credits: 10 },
+      { id: "tpl-soon", base: "soon", category: "ugc", available: false, credits: null },
+    ],
+  }),
+  async start(accountId, body, opts) {
+    marketingCalls.push({ tool: "start", accountId, body, opts });
+    if (body.styleId !== "ugc-x") return { ok: false, error: "unknown_style" };
+    return { ok: true, jobs: [MS_JOB as never], next: { styleId: "ugc-x", wish: String(body.wish), duration: 8, aspect: "9:16", credits: 21 } };
+  },
+  async continueUgc(accountId, body, opts) {
+    marketingCalls.push({ tool: "continue", accountId, body, opts });
+    return { ok: true, job: { ...MS_JOB, id: "00000000-0000-4000-8000-0000000000f2" } as never };
+  },
+};
 
 async function connect(server: ReturnType<typeof createTachyonMcpServer>) {
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
@@ -160,10 +206,10 @@ describe("tachyon mcp server", () => {
     const { client } = await setup();
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(
-      ["ask_director", "create_upload", "generate", "get_account", "get_credits", "get_job", "get_price", "import_image", "list_director_models", "list_jobs", "list_models", "request_consent", "reuse_result", "set_visibility"],
+      ["ask_director", "ask_marketing_agent", "continue_marketing_ugc", "create_upload", "generate", "get_account", "get_credits", "get_job", "get_price", "import_image", "list_director_models", "list_jobs", "list_marketing_styles", "list_models", "list_presets", "request_consent", "reuse_result", "run_marketing_style", "run_preset", "set_visibility"],
     );
     const readOnly = tools.filter((t) => t.annotations?.readOnlyHint).map((t) => t.name).sort();
-    expect(readOnly).toEqual(["get_account", "get_credits", "get_job", "get_price", "list_director_models", "list_jobs", "list_models"]);
+    expect(readOnly).toEqual(["get_account", "get_credits", "get_job", "get_price", "list_director_models", "list_jobs", "list_marketing_styles", "list_models", "list_presets"]);
     expect(client.getInstructions()).toMatch(/get_price/);
   });
 
@@ -504,13 +550,128 @@ describe("tachyon mcp server", () => {
     expect(text(await call("reuse_result", { job_id: "00000000-0000-4000-8000-0000000000f9" }))).toMatch(/^not_found/);
   });
 
+  it("sends a marketing template as its differences from its style, from which every field of it follows", () => {
+    // The real styles and templates (core/marketing.ts): the full list repeated every field of the style for about a
+    // hundred templates, some 17,000 tokens per call.
+    const all = () => true;
+    const styles = new Map(MS_STYLES.map((st) => [st.id, publicStyle(st, all) as Record<string, unknown>]));
+    const templates = publicTemplates(all) as Record<string, unknown>[];
+    expect(templates.length).toBeGreaterThan(50);
+    let full = 0;
+    let compact = 0;
+    for (const t of templates) {
+      const style = styles.get(String(t.base));
+      // As the agent receives it: through JSON, where undefined fields vanish.
+      const sent = JSON.parse(JSON.stringify(compactTemplate(t, style))) as Record<string, unknown>;
+      expect(sent, String(t.id)).toMatchObject({ id: t.id, base: t.base });
+      const rebuilt: Record<string, unknown> = { ...JSON.parse(JSON.stringify(style)), ...sent };
+      for (const key of Object.keys(t)) expect(rebuilt[key] ?? null, `${String(t.id)}.${key}`).toEqual(t[key] ?? null);
+      full += JSON.stringify(t).length;
+      compact += JSON.stringify(sent).length;
+    }
+    expect(compact).toBeLessThan(full / 2);
+  });
+
+  describe("marketing agent", () => {
+    it("lists only available styles and starts one with the key's limits and the price guarantee", async () => {
+      const { call } = await setup();
+      const list = await call("list_marketing_styles", { category: "ugc" });
+      expect((list.structuredContent?.styles as unknown[]).length).toBe(1);
+      // Templates (concrete scenes of a style): available ones of the category, runnable by their id, each with only
+      // what differs from its style (here nothing).
+      expect(list.structuredContent?.templates).toEqual([{ id: "tpl-ugc-x", base: "ugc-x" }]);
+      const res = await call("run_marketing_style", { style_id: "ugc-x", product: "/api/media/uploads/p.png", wish: "Hello", max_credits: 30, idempotency_key: "k-ms" });
+      expect(res.isError).toBeFalsy();
+      expect(res.structuredContent?.next).toMatchObject({ tool: "continue_marketing_ugc", frame_job_id: MS_JOB.id, max_credits: 21 });
+      const started = marketingCalls.find((c) => c.tool === "start")!;
+      expect(started.opts).toMatchObject({ origin: "mcp", apiKeyId: KEY_ID, maxCredits: 30, idempotencyKey: "k-ms" });
+      const cont = await call("continue_marketing_ugc", { frame_job_id: MS_JOB.id, style_id: "ugc-x", wish: "Hello", max_credits: 21 });
+      expect(cont.isError).toBeFalsy();
+      expect(marketingCalls.find((c) => c.tool === "continue")!.opts).toMatchObject({ origin: "mcp", maxCredits: 21 });
+    });
+
+    it("explains a refusal in its own words", async () => {
+      const { call } = await setup();
+      const res = await call("run_marketing_style", { style_id: "nope", idempotency_key: "k2" });
+      expect(res.isError).toBe(true);
+      expect(text(res)).toMatch(/list_marketing_styles/);
+    });
+  });
+
+  describe("presets", () => {
+    const photo = `/api/media/uploads/${ACC_1}/me.png`;
+    const run = (over: Record<string, unknown> = {}) => ({ preset_id: "earth-zoom", image: photo, consent: true, max_credits: 12, idempotency_key: crypto.randomUUID(), ...over });
+
+    it("lists the presets with the price of one run and never a recipe prompt", async () => {
+      const { call } = await setup();
+      const res = await call("list_presets");
+      expect(res.structuredContent).toEqual({ presets: fakePresets.list() });
+      expect(JSON.stringify(res)).not.toContain("SECRET");
+    });
+
+    it("starts a preset with the user's photo at the price shown, recorded for the key, showing the preset but not its prompt", async () => {
+      const { call, repo, fake } = await setup();
+      fake.next({ state: "completed", outputs: [{ contentType: "video/mp4", data: PNG }] });
+      const res = await call("run_preset", run({ wish: "red cape", wait_seconds: 5 }));
+      expect(res.isError).toBeFalsy();
+      const job = res.structuredContent?.job as Record<string, any>;
+      expect(job).toMatchObject({ job_type: "test_video", status: "succeeded", credits: 12, params: { recipe: { id: "earth-zoom", title: "Earth zoom", wish: "red cape" }, image: photo } });
+      expect(JSON.stringify(res)).not.toContain("SECRET");
+      const [record] = await repo.list(ACC_1);
+      expect(record).toMatchObject({ origin: "mcp", apiKeyId: KEY_ID });
+      expect(JSON.stringify(await call("list_jobs"))).not.toContain("SECRET");
+      // The model gets the whole recipe prompt with the wish, the preset marker stays at home.
+      expect(fake.requests[0]?.params.prompt).toBe(`${RECIPE_PROMPT} Additional wish: red cape`);
+      expect(fake.requests[0]?.params).not.toHaveProperty("recipe");
+    });
+
+    it("starts nothing without the consent of the people in the photo", async () => {
+      const { call, repo } = await setup();
+      const res = await call("run_preset", run({ consent: false }));
+      expect(res.isError).toBe(true);
+      expect(res.content[0]!.text).toMatch(/^consent_required: /);
+      expect(await repo.list(ACC_1)).toEqual([]);
+    });
+
+    it("takes only the caller's own uploads as the photo", async () => {
+      const { call, repo } = await setup();
+      for (const image of [`/api/media/uploads/${ACC_2}/them.png`, "https://example.com/me.png"]) {
+        const res = await call("run_preset", run({ image }));
+        expect(res.content[0]!.text).toMatch(/^invalid_params: /);
+      }
+      expect(await repo.list(ACC_1)).toEqual([]);
+    });
+
+    it("keeps the price: a higher price starts nothing", async () => {
+      const { call, repo } = await setup();
+      const res = await call("run_preset", run({ max_credits: 10 }));
+      expect(res.content[0]!.text).toMatch(/^price_changed: This job now costs 12 credits/);
+      expect(await repo.list(ACC_1)).toEqual([]);
+    });
+
+    it("explains an unknown preset or one whose model is missing", async () => {
+      const { call } = await setup();
+      expect((await call("run_preset", run({ preset_id: "nope" }))).content[0]!.text).toMatch(/^unknown_preset: .*list_presets/);
+      expect((await call("run_preset", run({ preset_id: "gone" }))).content[0]!.text).toMatch(/^unknown_preset: The preset "gone" .*list_presets/);
+    });
+
+    it("starts a retried call only once", async () => {
+      const { call, repo } = await setup();
+      const args = run();
+      await call("run_preset", args);
+      await call("run_preset", args);
+      expect(await repo.list(ACC_1)).toHaveLength(1);
+    });
+  });
+
   describe("director", () => {
     const CUSTOM = { type: "custom" as const, jobType: "test_image", kind: "image" as const, model: "Test Image 1", prompt: "Tokyo in the rain, neon, 16:9", params: { prompt: "Tokyo in the rain, neon, 16:9", aspect_ratio: "16:9" }, why: "Kinolook in einem Bild.", credits: 4 };
+    const PRESET = { type: "preset" as const, presetId: "superhero-pet", title: "Superhero", why: "Your dog flies.", wish: "red cape", credits: 45 };
 
     it("plans with the Director and hands back its reply and priced proposals, without starting anything", async () => {
       const director = fakeDirector(() => turn([
         { type: "text", delta: "Two ideas" },
-        { type: "proposals", proposals: [CUSTOM] },
+        { type: "proposals", proposals: [CUSTOM, PRESET] },
         { type: "done", reply: "Two ideas for you." },
         { type: "budget", allowed: true, turnsLeft: 13, share: 0.75 },
       ]));
@@ -525,6 +686,7 @@ describe("tachyon mcp server", () => {
         model: "Claude Sonnet 5.5",
         proposals: [
           { type: "custom", job_type: "test_image", kind: "image", model: "Test Image 1", prompt: CUSTOM.prompt, params: CUSTOM.params, why: CUSTOM.why, credits: 4, start: "generate" },
+          { type: "preset", preset_id: "superhero-pet", title: "Superhero", why: PRESET.why, wish: "red cape", credits: 45, start: "run_preset" },
         ],
         budget: { allowed: true, turns_left: 13, share_left: 0.75 },
       });
@@ -642,11 +804,31 @@ describe("tachyon mcp server", () => {
       expect(director.overviews).toEqual([{ accountId: ACC_1, key: { id: KEY_ID, dailyLimit: 300 } }]);
     });
 
+    it("plans a campaign with the Marketing Agent: the brief goes to the agent, creatives come back ready for run_marketing_style", async () => {
+      const CREATIVE = {
+        type: "marketing" as const, styleId: "ad-claim", title: "Big claim", category: "ads" as const, kind: "image" as const, cover: "/marketing/x.webp",
+        wish: "Fresher than ever", aspect: "9:16", caption: "New on the shelf #lemonade", why: "A clear claim for Stories", needs: [], lettering: true, spoken: false, credits: 12,
+      };
+      const director = fakeDirector(() => turn([{ type: "proposals", proposals: [CREATIVE, PRESET] }, { type: "done", reply: "Your plan." }]));
+      const { call, repo } = await setup({ director: director.dep });
+      const photo = `/api/media/uploads/${ACC_1}/lemonade.png`;
+      const res = await call("ask_marketing_agent", { message: "Launch on Instagram", photo, has_avatar: false, product_name: "Organic lemonade" });
+      expect(director.calls[0]!.body).toEqual({
+        history: [{ role: "user", content: "Launch on Instagram" }], agent: "marketing", hasAvatar: false, photo, product: { name: "Organic lemonade", description: undefined },
+      });
+      expect(res.structuredContent).toMatchObject({
+        reply: "Your plan.",
+        creatives: [{ type: "marketing", style_id: "ad-claim", wish: "Fresher than ever", aspect: "9:16", caption: "New on the shelf #lemonade", needs: [], credits: 12, start: "run_marketing_style" }],
+      });
+      expect(await repo.list(ACC_1)).toEqual([]);
+    });
+
     it("leaves the Director tools out when the server has no Director", async () => {
       const { client } = await setup({ director: null });
       const names = (await client.listTools()).tools.map((t) => t.name);
       expect(names).not.toContain("ask_director");
       expect(names).not.toContain("list_director_models");
+      expect(names).not.toContain("ask_marketing_agent");
     });
   });
 

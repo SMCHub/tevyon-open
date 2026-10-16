@@ -1,5 +1,7 @@
 import { catalog } from "./catalog";
 import { createStreamSanitizer, matchCount, scrubRoute, type ModelEvent, type ToolCall } from "./director-stream";
+import type { MarketingProposal } from "./marketing-agent";
+import { LISTED_RECIPES, RECIPES } from "./recipes";
 
 /**
  * Tevyon Director: a chat agent that turns a wish into two or three concrete, priced proposals.
@@ -14,11 +16,14 @@ export type ChatModel = (messages: ChatMessage[], tools: ToolSpec[], signal?: Ab
 export type ToolSpec = { name: string; description: string; parameters: Record<string, unknown> };
 
 export type Proposal =
-  { type: "custom"; jobType: string; kind: "image" | "video"; model: string; prompt: string; params: Record<string, unknown>; why: string; credits: number | null };
+  | { type: "preset"; presetId: string; title: string; why: string; wish?: string; credits: number | null }
+  | { type: "custom"; jobType: string; kind: "image" | "video"; model: string; prompt: string; params: Record<string, unknown>; why: string; credits: number | null }
+  | MarketingProposal;
 
 /**
  * Who answers a turn: the system prompt, the tools the model may call and how a call becomes a checked, priced
- * proposal. The Director is the default; another agent can reuse the same streaming, budget and sanitizing.
+ * proposal. The Director is the default; the Marketing Agent (marketing-agent.ts) plans campaigns with the same
+ * streaming, budget and sanitizing.
  */
 export type AgentSpec = {
   system(hasPhoto: boolean, seesPhoto: boolean): string;
@@ -66,6 +71,19 @@ function toReplies(v: unknown): string[] {
 
 export const DIRECTOR_TOOLS: ToolSpec[] = [
   {
+    name: "propose_preset",
+    description: "Propose one of Tevyon's one-click presets. Best when the user has a photo and wants something viral fast.",
+    parameters: {
+      type: "object",
+      properties: {
+        preset_id: { type: "string", description: "Preset id from the list" },
+        wish: { type: "string", description: "Optional short extra wish for the preset, max 200 characters, English" },
+        why: { type: "string", description: "One short sentence in the user's language (English by default) on why this works" },
+      },
+      required: ["preset_id", "why"],
+    },
+  },
+  {
     name: "propose_custom",
     description: "Propose a custom generation with a model from the catalog and a ready prompt (English, concrete: subject, action, camera, light).",
     parameters: {
@@ -94,6 +112,7 @@ export const DIRECTOR_TOOLS: ToolSpec[] = [
 ];
 
 function systemPrompt(hasPhoto: boolean, seesPhoto: boolean): string {
+  const presets = LISTED_RECIPES.map((r) => `- ${r.id}: ${r.title} – ${r.tagline} (needs ${r.needs === "photo" ? "a photo" : r.needs === "product" ? "a product photo" : "a room photo"})`).join("\n");
   // Job types that need files without a default cannot be proposed from a chat: they stay out.
   const models = catalog.list().filter((d) => !d.sample).map((d) => `- ${d.jobType}: ${d.model} (${d.kind === "video" ? "video" : "image"}) – ${d.tagline}`).join("\n");
   return `You are the Tevyon Director, an AI director for viral short videos and images (TikTok, Reels, Shorts, ads). You propose; the user starts a job with a click.
@@ -101,13 +120,17 @@ Language: always reply in the language of the user's last message (German stays 
 How you talk: first person, present tense, calm and concrete, without praise ("Great idea!"), filler or exclamation marks. At most 3 short sentences.
 Your first sentence says what you make of the wish: subject, format and look, e.g. "I'm turning your dog into a portrait clip: he jumps through a portal." Seconds and models are on the cards, not in the text. After that at most one sentence (what you see in the photo, what you do differently, or one question).
 Always text first, then the tools. The cards appear under your text on their own: no "Here are my ideas". Never state how many proposals you make, the text is written before the cards. why: what the result shows and why it works, one sentence.
-Concrete wish (topic, product, idea or photo): 2 to 3 clearly different proposals via propose_custom. Without a concrete wish (greeting, small talk, "help me") no proposals: greet briefly and ask in one sentence what should be made and what for. Otherwise at most one question, only when needed.
+Concrete wish (topic, product, idea or photo): 2 to 3 clearly different proposals via propose_preset or propose_custom. Without a concrete wish (greeting, small talk, "help me") no proposals: greet briefly and ask in one sentence what should be made and what for. Otherwise at most one question, only when needed.
 Always finish with suggest_replies: after proposals, next steps ("Make it darker", "16:9 for YouTube instead"), after a question its most likely answers.
 Your earlier proposals stand in square brackets after your replies; "started" ones the user ran: build on them instead of starting over.
+Ads for a brand, a product or a campaign: make your proposals and mention once in the conversation, in half a sentence, the Marketing Agent (in the menu at the top), which plans whole campaigns with claim and caption from a product photo and a brief.
 Regulated areas (gambling, alcohol, tobacco, financial products, health): no promises of winnings, returns or cures, nothing aimed at minors, a short note on the country's advertising rules (age limit, mandatory notices).
-Virality: hook in the first second, surprising transformation, 9:16, short clips (4 to 6 s). Every proposal with a finished English prompt.
+Virality: hook in the first second, surprising transformation, 9:16, short clips (4 to 6 s). Presets when a photo is there and one fits; without a photo custom generations with a finished English prompt. Mention a missing photo only when a preset needs one.
 Real people in photos: kindly remind the user of their consent. No celebrities, no brands, nothing offensive. Only model names, never providers, routers, IDs or prices.
 Photo attached: ${hasPhoto ? "yes" : "no"}${seesPhoto ? "\nYou can see the photo. Say in half a sentence what you see in it, and shape the proposals around it." : ""}
+
+Presets:
+${presets}
 
 Models (job_type):
 ${models}`;
@@ -120,6 +143,15 @@ function str(v: unknown): string | undefined {
 }
 
 function toProposal(call: ToolCall, quote: (jobType: string, params: Record<string, unknown>) => number | null): Proposal | null {
+  if (call.name === "propose_preset") {
+    const recipe = RECIPES.find((r) => r.id === str(call.args.preset_id));
+    if (!recipe) return null;
+    const wish = str(call.args.wish)?.slice(0, 200);
+    return {
+      type: "preset", presetId: recipe.id, title: recipe.title, why: str(call.args.why) ?? recipe.tagline,
+      ...(wish ? { wish } : {}), credits: quote(recipe.jobType, { ...recipe.params, prompt: recipe.prompt }),
+    };
+  }
   if (call.name === "propose_custom") {
     const def = catalog.get(str(call.args.job_type) ?? "");
     const prompt = str(call.args.prompt);
@@ -143,7 +175,7 @@ function toProposal(call: ToolCall, quote: (jobType: string, params: Record<stri
   return null;
 }
 
-/** The Director: viral clips and images as custom jobs. */
+/** The Director: viral clips and images from presets or custom jobs. */
 export function directorAgent(quote: TurnInput["quote"]): AgentSpec {
   return {
     system: systemPrompt, tools: DIRECTOR_TOOLS, propose: (call) => toProposal(call, quote), max: MAX_PROPOSALS,

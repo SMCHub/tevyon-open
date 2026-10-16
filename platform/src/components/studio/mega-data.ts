@@ -1,10 +1,10 @@
 /**
  * What the header's mega menus show and where they open, without React, so it is tested on its own. Models come from
- * the register (/api/catalog), prices from /api/prices; only the tools are written down here (a new model shows up
- * in the menu by itself).
+ * the register (/api/catalog), prices from /api/prices; only the tools are written down here (a new model or preset
+ * shows up in the menu by itself).
  */
 export type Kind = "image" | "video";
-export type Menu = Kind;
+export type Menu = Kind | "presets";
 export type Badge = "neu" | "top";
 /** A way into the studio. */
 export type MenuTool = { title: string; desc: string; href: string; badge?: Badge };
@@ -18,12 +18,28 @@ const TOOLS: Record<Kind, MenuTool[]> = {
     { title: "Director", desc: "Develop an idea in conversation, it writes the prompts", href: "/director" },
     { title: "Image → Video", desc: "Your image as the start frame of a clip", href: "/video?mode=image" },
     { title: "My images", desc: "All results, ready to reuse", href: "/assets" },
+    { title: "Marketing Agent", desc: "Plan a campaign: product shots, ads, posters and shop images from one product photo", href: "/marketing", badge: "neu" },
   ],
   video: [
     { title: "Create video", desc: "A clip from one sentence, with sound", href: "/video", badge: "top" },
     { title: "Image → Video", desc: "Set a still image in motion", href: "/video?mode=image" },
+    { title: "Presets", desc: "One photo, one finished clip, one click", href: "/presets" },
     { title: "Director", desc: "Plan a scene, draft and final in one conversation", href: "/director" },
+    { title: "Marketing Agent", desc: "UGC clips and motion from one product photo", href: "/marketing?category=ugc", badge: "neu" },
   ],
+};
+
+/**
+ * Job types in the register that are a tool built on a model: they join the tools with their name and badge from the
+ * register (only while the register has them) and never stand in the model list.
+ */
+const TOOL_JOBS: Record<string, { href: string; desc: string }> = {
+  cutout: { href: "/image/tools?tool=cutout", desc: "Remove the background, PNG with transparency" },
+  upscale: { href: "/image/tools?tool=upscale", desc: "Sharper and larger, 2× or 4×" },
+  relight: { href: "/image/tools?tool=relight", desc: "New light on a photo: time of day, direction" },
+  replace_background: { href: "/image/tools?tool=background", desc: "Keep the subject, describe a new setting" },
+  video_edit: { href: "/video/tools?tool=edit", desc: "Change, remove or replace something in your own video" },
+  video_upscale: { href: "/video/tools?tool=upscale", desc: "Your video larger and sharper, up to 4K" },
 };
 
 /** Not built yet: named, never linked. */
@@ -32,11 +48,17 @@ export const SOON: Record<Kind, string[]> = {
   video: [],
 };
 
-const ORDER: Menu[] = ["image", "video"];
+const ORDER: Menu[] = ["image", "video", "presets"];
 
-/** The fixed tools of a menu. */
-export function kindTools(kind: Kind): MenuTool[] {
-  return TOOLS[kind];
+/** The fixed tools of a menu plus the register's tools of that kind that take jobs. */
+export function kindTools(kind: Kind, catalog: Entry[]): MenuTool[] {
+  const fromRegister = catalog
+    .filter((c) => c.kind === kind && TOOL_JOBS[c.jobType] && c.status !== "paused")
+    .map((c): MenuTool => {
+      const t = TOOL_JOBS[c.jobType]!;
+      return { title: c.model, desc: t.desc, href: t.href, ...(c.badge ? { badge: c.badge } : {}) };
+    });
+  return [...TOOLS[kind], ...fromRegister];
 }
 
 /** "ByteDance · photorealistic, 4K" → maker and description; a tagline without " · " has no maker. */
@@ -65,7 +87,7 @@ export function menuFamilies<E extends Entry>(catalog: E[], kind: Kind): MenuFam
   const seen = new Set<string>();
   const groups = new Map<string, E[]>();
   for (const c of catalog) {
-    if (c.kind !== kind || seen.has(c.model)) continue;
+    if (c.kind !== kind || TOOL_JOBS[c.jobType] || seen.has(c.model)) continue;
     seen.add(c.model);
     const key = c.family ?? familyName(c.model).toLowerCase();
     groups.set(key, [...(groups.get(key) ?? []), c]);

@@ -19,7 +19,13 @@ export const TOOL_CARDS: { name: string; text: string; effect: ToolEffect }[] = 
   { name: "import_image", text: "Fetches a public image from the web as a start image.", effect: "upload" },
   { name: "reuse_result", text: "Turns one of your finished results into an upload for a reference or start image.", effect: "upload" },
   { name: "request_consent", text: "Jobs with real people: asks for your confirmation in the studio before starting.", effect: "plan" },
+  { name: "list_presets", text: "The presets with the price of one run. One photo, one finished clip.", effect: "read" },
+  { name: "run_preset", text: "Starts a preset with the photo and the consent of the people shown.", effect: "spend" },
+  { name: "list_marketing_styles", text: "The Marketing Agent's styles with what they need, their formats and the price of one run.", effect: "read" },
+  { name: "run_marketing_style", text: "Turns a product photo into UGC, product shots, motion, ads, posters or shop images.", effect: "spend" },
+  { name: "continue_marketing_ugc", text: "UGC step 2: the finished still speaks. Included in the price of step 1.", effect: "spend" },
   { name: "ask_director", text: "The Director turns a wish into two or three priced proposals. Starts nothing.", effect: "plan" },
+  { name: "ask_marketing_agent", text: "The Marketing Agent plans up to four creatives with caption and price from a brief. Starts nothing.", effect: "plan" },
   { name: "list_director_models", text: "The Director's language models and what a message costs today.", effect: "read" },
 ];
 

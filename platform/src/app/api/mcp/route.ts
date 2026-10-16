@@ -8,6 +8,8 @@ import { director } from "@/server/director-deps";
 import { verifyBearer } from "@/server/keys";
 import { createTachyonMcpServer, directorForMcp } from "@/server/mcp";
 import { createMcpEndpoint } from "@/server/mcp-http";
+import { presetsForMcp } from "@/server/mcp-presets";
+import { continueUgc, marketingOverview, startMarketing } from "@/server/marketing";
 import { countedNetwork } from "@/server/network-limits";
 import { mediaLinks, publicBase } from "@/server/media-links";
 import { checkImageUrl, fetchRemoteImage } from "@/server/remote-image";
@@ -71,7 +73,19 @@ const serve = createMcpEndpoint({
         ? { wait: (ms: number) => Promise.race([rt.jobs.tick(), new Promise((r) => setTimeout(r, ms))]).then(() => undefined) }
         : {}),
       director: directorForMcp(async () => (await director()).service, countedNetwork(principal.kind, req.headers)),
+      marketing: {
+        overview: () => marketingOverview(rt),
+        start: (accountId, body, opts) => startMarketing(rt, accountId, body, opts),
+        continueUgc: (accountId, body, opts) => continueUgc(rt, accountId, body, opts),
+      },
       community: await community(),
+      presets: presetsForMcp({
+        register: catalog,
+        quote: (jobType, params) => {
+          const q = rt.jobs.quote(jobType, params);
+          return q.ok ? q.credits : null;
+        },
+      }),
       // Jobs that show real people: the user confirms on /consent/<id> before an agent's job starts (core/consent.ts).
       consent: {
         request: (accountId, jobType, params) => requestConsent(catalog, rt.consent, accountId, jobType, params),

@@ -59,8 +59,18 @@ describe("menu families", () => {
 
 describe("tools of a menu", () => {
   it("lists the fixed tools of each kind, every one a link into the studio", () => {
-    expect(kindTools("image").map((t) => t.title)).toEqual(["Create image", "Director", "Image → Video", "My images"]);
-    expect(kindTools("video").map((t) => t.href)).toEqual(["/video", "/video?mode=image", "/director"]);
+    expect(kindTools("image", []).map((t) => t.title)).toEqual(["Create image", "Director", "Image → Video", "My images", "Marketing Agent"]);
+    expect(kindTools("video", []).map((t) => t.href)).toEqual(["/video", "/video?mode=image", "/presets", "/director", "/marketing?category=ugc"]);
+  });
+
+  it("adds the register's tools of that kind with their badge, and keeps them out of the model list", () => {
+    const catalog = [entry("cutout", "Background Remover", undefined, "Clean edges, PNG", "image", "neu"), entry("flux_3_image", "FLUX.3", "flux", "Black Forest Labs · up to 4K", "image")];
+    expect(kindTools("image", catalog).find((t) => t.title === "Background Remover")).toMatchObject({ href: "/image/tools?tool=cutout", badge: "neu" });
+    expect(kindTools("video", catalog).map((t) => t.title)).not.toContain("Background Remover");
+    expect(menuFamilies(catalog, "image").flatMap((g) => g.models.map((m) => m.jobType))).toEqual(["flux_3_image"]);
+    const more = [entry("relight", "Relight", undefined, "New light", "image"), entry("replace_background", "Replace Background", undefined, "New setting", "image")];
+    expect(kindTools("image", more).map((t) => t.href)).toEqual(expect.arrayContaining(["/image/tools?tool=relight", "/image/tools?tool=background"]));
+    expect(menuFamilies(more, "image")).toEqual([]);
   });
 });
 

@@ -65,12 +65,13 @@ describe("Director thread", () => {
     ]);
   });
 
-  it("drops proposals of an older version (presets) from a saved chat, keeping the started jobs of the others", () => {
-    const old = { type: "preset", presetId: "sag-es", title: "Sag es!", why: "x", credits: 85 } as unknown as typeof custom;
+  it("drops proposals of a kind it does not know from a saved chat, keeping presets and the started jobs of the others", () => {
+    const old = { type: "legacy", id: "x", why: "x", credits: 85 } as unknown as typeof custom;
+    const preset = { type: "preset" as const, presetId: "say-it", title: "Say it!", why: "x", credits: 85 };
     const [, answer] = restore([
       { role: "user", content: "a" },
-      { role: "assistant", content: "Zwei Ideen", proposals: [old, custom], started: { 0: "job-0", 1: "job-1" } },
+      { role: "assistant", content: "Two ideas", proposals: [old, custom, preset], started: { 0: "job-0", 1: "job-1" } },
     ]);
-    expect(answer).toMatchObject({ proposals: [custom], started: { 0: "job-1" } });
+    expect(answer).toMatchObject({ proposals: [custom, preset], started: { 0: "job-1" } });
   });
 });

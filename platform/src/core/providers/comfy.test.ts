@@ -61,6 +61,37 @@ describe("Comfy Router provider", () => {
     expect(r.calls).toHaveLength(1);
   });
 
+  it("fills a raw-base64 marker with the bare bytes (FLUX.2 input_image, Kling image_url) and a Gemini marker with inlineData", async () => {
+    const r = router({ [`POST ${BASE}`]: () => json({ request_id: "req-1" }, 202) });
+    const comfy = createComfyProvider({
+      apiKey: "k", fetch: r.fetch,
+      loadMedia: async (url) => (url === "/api/media/uploads/acc/a.png" ? { data: new Uint8Array([1, 2]), contentType: "image/png" } : undefined),
+    });
+    await comfy.submit({
+      ...img,
+      params: { input_image: { $rawBase64: "/api/media/uploads/acc/a.png" }, contents: [{ parts: [{ text: "x" }, { $inlineData: "/api/media/uploads/acc/a.png" }] }] },
+    });
+    expect(JSON.parse(r.calls[0]!.body!)).toEqual({
+      input_image: "AQI=",
+      contents: [{ parts: [{ text: "x" }, { inlineData: { mimeType: "image/png", data: "AQI=" } }] }],
+    });
+
+    const missing = await comfy.submit({ ...img, params: { input_image: { $rawBase64: "/api/media/uploads/acc/gone.png" } } });
+    expect(missing).toMatchObject({ state: "failed", reason: "invalid_request" });
+  });
+
+  it("sends an image behind an asset marker as a signed link from the asset store (Bria takes links)", async () => {
+    const BRIA = "https://api.comfy.org/v2/models/bria/image-edit-remove-background/requests";
+    const r = router({
+      ["POST https://cloud.comfy.org/api/v2/assets"]: () => json({ id: "a2", url: "https://storage.test/a2.png?sig=y" }, 201),
+      [`POST ${BRIA}`]: () => json({ request_id: "req-3" }, 202),
+    });
+    const comfy = createComfyProvider({ apiKey: "k", fetch: r.fetch, loadMedia: async () => ({ data: new Uint8Array([1]), contentType: "image/png" }) });
+    const res = await comfy.submit({ kind: "image", providerModel: "bria/image-edit-remove-background", params: { image: { $assetLink: "/api/media/uploads/acc/a.png" } } });
+    expect(res).toEqual({ state: "pending", handle: "bria/image-edit-remove-background:req-3" });
+    expect(JSON.parse(r.calls.find((c) => c.url === BRIA)!.body!)).toEqual({ image: "https://storage.test/a2.png?sig=y" });
+  });
+
   it("sends our own videos as a signed link from Comfy's asset store (the router takes videos only as links)", async () => {
     const SD = "https://api.comfy.org/v2/models/byteplus/seedance/requests";
     const r = router({
@@ -129,6 +160,57 @@ describe("Comfy Router provider", () => {
       state: "completed",
       outputs: [{ contentType: "video/mp4", data: new Uint8Array([1, 2, 3]) }, { contentType: "video/mp4", data: new Uint8Array([9]) }],
     });
+  });
+
+  it("keeps OpenAI's b64_json images, typed by their bytes", async () => {
+    const png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const jpeg = [0xff, 0xd8, 0xff, 0xe0];
+    const b64 = (b: number[]) => Buffer.from(b).toString("base64");
+    const r = router({
+      [`GET ${BASE}/req-1/status`]: () => json({ status: "COMPLETED" }),
+      [`GET ${BASE}/req-1`]: () => json({ created: 1, output_format: "png", data: [{ b64_json: b64(png), revised_prompt: "a fox" }, { b64_json: b64(jpeg) }] }),
+    });
+    const res = await createComfyProvider({ apiKey: "k", fetch: r.fetch }).poll("bfl/flux-3:req-1");
+    expect(res).toEqual({
+      state: "completed",
+      outputs: [{ contentType: "image/png", data: new Uint8Array(png) }, { contentType: "image/jpeg", data: new Uint8Array(jpeg) }],
+    });
+  });
+
+  it("keeps Gemini's image parts (inline or linked) and skips its thought images and text", async () => {
+    const r = router({
+      [`GET ${BASE}/req-1/status`]: () => json({ status: "COMPLETED" }),
+      [`GET ${BASE}/req-1`]: () => json({
+        candidates: [{
+          content: {
+            role: "model",
+            parts: [
+              { thought: true, inlineData: { mimeType: "image/png", data: "CQk=" } },
+              { thought: true, fileData: { mimeType: "image/png", fileUri: "https://cdn.test/draft.png" } },
+              { text: "Here is your image." },
+              { inlineData: { mimeType: "image/png", data: "AQID" } },
+              { fileData: { mimeType: "image/png", fileUri: "https://cdn.test/final.png" } },
+            ],
+          },
+        }],
+      }),
+      ["GET https://cdn.test/final.png"]: () => bytes([4], "image/png"),
+    });
+    const res = await createComfyProvider({ apiKey: "k", fetch: r.fetch }).poll("bfl/flux-3:req-1");
+    expect(res).toEqual({
+      state: "completed",
+      outputs: [{ contentType: "image/png", data: new Uint8Array([1, 2, 3]) }, { contentType: "image/png", data: new Uint8Array([4]) }],
+    });
+  });
+
+  it("skips Wan's separate audio check track: the video already carries the sound", async () => {
+    const r = router({
+      [`GET ${BASE}/req-1/status`]: () => json({ status: "COMPLETED" }),
+      [`GET ${BASE}/req-1`]: () => json({ output: { task_status: "SUCCEEDED", video_url: "https://cdn.test/w.mp4", check_audio: "https://cdn.test/w.mp3" } }),
+      ["GET https://cdn.test/w.mp4"]: () => bytes([5], "video/mp4"),
+    });
+    const res = await createComfyProvider({ apiKey: "k", fetch: r.fetch }).poll("bfl/flux-3:req-1");
+    expect(res).toEqual({ state: "completed", outputs: [{ contentType: "video/mp4", data: new Uint8Array([5]) }] });
   });
 
   it("turns a completion with an error into our own failure codes", async () => {

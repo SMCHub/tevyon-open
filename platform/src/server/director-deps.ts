@@ -5,6 +5,7 @@ import { createPgDb } from "./db";
 import { createDirectorService } from "./director";
 import { createDirectorModel } from "./director-llm";
 import { visionDataUrl } from "./director-photo";
+import { marketingQuote, offers } from "./marketing";
 import { createNetworkLimits } from "./network-limits";
 import { rateLimiter } from "./rate-limits";
 import { runtime } from "./runtime";
@@ -52,6 +53,13 @@ export function director() {
       quote: (jobType, params) => {
         const q = rt.jobs.quote(jobType, params);
         return q.ok ? q.credits : null;
+      },
+      marketing: {
+        has: (jobType) => offers(rt)(jobType),
+        quote: (styleId, shape) => {
+          const q = marketingQuote(rt, styleId, shape);
+          return q.ok ? q.credits : null;
+        },
       },
       photo: async (path) => {
         const file = await rt.media.read(path.replace(/^\/api\/media\//, ""));

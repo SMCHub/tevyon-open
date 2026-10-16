@@ -17,7 +17,7 @@ type Script = { events?: ModelEvent[]; failAtStart?: boolean; failAfterText?: bo
  * The account holds `credits` (bought, if `paying`), so the strongest models can be tried with real bookings.
  */
 function setup(opts: {
-  scripts?: Script[]; dailyUsd?: number; demo?: boolean; paying?: boolean; credits?: number; owed?: number; standingFails?: number;
+  scripts?: Script[]; dailyUsd?: number; demo?: boolean; paying?: boolean; credits?: number; owed?: number; standingFails?: number; noMarketing?: boolean;
   freeTurns?: DirectorDeps["freeTurns"];
 } = {}) {
   const scripts = [...(opts.scripts ?? [])];
@@ -54,6 +54,7 @@ function setup(opts: {
     },
     budget,
     quote: (jobType) => (jobType ? 45 : null),
+    ...(opts.noMarketing ? {} : { marketing: { has: () => true, quote: (styleId: string) => (styleId ? 30 : null) } }),
     photo: async (url) => {
       photos.push(url);
       return "data:image/jpeg;base64,/9j/AAAA";
@@ -373,9 +374,44 @@ describe("Director service", () => {
     expect((await director.overview(ACC, { ...key, dailyLimit: null })).models.find((m) => m.id === "claude-fable-5-1")).toMatchObject({ allowed: true });
   });
 
-  it("refuses an agent other than the Director", () => {
+  it("refuses an agent other than the Director or the Marketing Agent", () => {
     expect(parseDirectorInput(ACC, ask("x", { agent: "sales" }))).toMatchObject({ ok: false, error: "invalid_params" });
-    expect(parseDirectorInput(ACC, ask("x", { agent: "marketing" }))).toMatchObject({ ok: false, error: "invalid_params" });
     expect(parseDirectorInput(ACC, ask("x", { agent: "director" }))).toMatchObject({ ok: true });
+  });
+
+  describe("as Marketing Agent", () => {
+    const UPLOAD = `/api/media/uploads/${ACC}/product.jpg`;
+
+    it("plans with the agent's prompt and tool, sees the product photo and prices its creatives", async () => {
+      const { director, asked, photos } = setup({
+        scripts: [{
+          events: [
+            { type: "text", delta: LONG },
+            { type: "tool_call", call: { name: "propose_creative", args: { style_id: "ad-claim", wish: "Fresh", why: "A clear claim" } } },
+            { type: "tool_call", call: { name: "propose_preset", args: { preset_id: "say-it", why: "does not belong here" } } },
+            { type: "usage", costUsd: 0.002 },
+          ],
+        }],
+      });
+      const res = await director.respond(ACC, ask("Launch on Instagram", { agent: "marketing", photo: UPLOAD, hasAvatar: false, product: { name: "Organic lemonade" } }));
+      const list = await events(res);
+      const proposals = list.find((e) => e.type === "proposals")!.proposals as Record<string, unknown>[];
+      expect(proposals).toEqual([expect.objectContaining({ type: "marketing", styleId: "ad-claim", wish: "Fresh", credits: 30 })]);
+      expect(String(asked[0]!.messages[0]!.content)).toContain("Marketing Agent");
+      expect(String(asked[0]!.messages[0]!.content)).toContain("Organic lemonade");
+      expect(photos).toEqual([UPLOAD]);
+    });
+
+    it("refuses the agent without the marketing wiring", async () => {
+      const { director } = setup({ noMarketing: true });
+      const res = await director.respond(ACC, ask("x", { agent: "marketing" }));
+      expect(res.status).toBe(503);
+    });
+
+    it("keeps the brief within bounds", () => {
+      const parsed = parseDirectorInput(ACC, ask("x", { agent: "marketing", hasAvatar: true, product: { name: "n".repeat(500), description: 7 } }));
+      if (!parsed.ok) throw new Error(parsed.error);
+      expect(parsed.input.agent).toEqual({ kind: "marketing", hasAvatar: true, product: { name: "n".repeat(120) } });
+    });
   });
 });

@@ -1,4 +1,5 @@
 import type { Availability } from "../core/availability";
+import { resolveRecipeModel } from "../core/recipes";
 import { publicParams, type JobTypeDef, type Register } from "../core/register";
 
 /** Lifecycle as the public catalog shows it; retired job types are not shown at all. */
@@ -27,6 +28,15 @@ export function publicCatalog(register: Register, availability: (jobType: string
       ...life,
     }];
   });
+}
+
+/** The job a preset runs today: its recipe's job, as long as the register has the job type. */
+export function presetRun(
+  job: { jobType: string; params: Record<string, unknown> },
+  register: Pick<Register, "get">,
+): { ok: true; jobType: string; params: Record<string, unknown> } | { ok: false; reason: "unknown" } {
+  const r = resolveRecipeModel(job.jobType, register);
+  return r.ok ? { ok: true, jobType: r.jobType, params: job.params } : r;
 }
 
 /** The register as agents should see it: retired job types left out of list(), still known to get() for running jobs. */

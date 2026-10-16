@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { streamDirectorTurn, type ChatModel, type DirectorEvent, type Proposal } from "@/core/director";
+import { marketingAgent, type MarketingShape } from "@/core/marketing-agent";
 import type { BudgetStatus } from "@/core/director-usage";
 import type { JobRepository } from "@/core/repository";
 import {
@@ -26,6 +27,8 @@ export type DirectorDeps = {
   ledger: Pick<JobRepository, "debit" | "settleDebit" | "voidDebit" | "spentByKey" | "voidStaleHolds">;
   balance(accountId: string): Promise<number>;
   quote(jobType: string, params: Record<string, unknown>): number | null;
+  /** The Marketing Agent's view of the register: which job types run today, and the price of one run of a style. */
+  marketing?: { has(jobType: string): boolean; quote(styleId: string, shape: MarketingShape): number | null };
   /** One of the caller's uploads as a data URL fit for a vision model, or undefined if it cannot be read. */
   photo(url: string): Promise<string | undefined>;
   /**
@@ -62,6 +65,11 @@ export type DirectorInput = {
   /** One of the caller's uploads (/api/media/uploads/<account>/…). */
   photo?: string;
   model: TextModelDef;
+  /**
+   * Who answers: the Director (default) or the Marketing Agent, which plans a campaign of Marketing Agent creatives.
+   * For the agent the photo is the product photo; hasAvatar and the product's name and description brief it further.
+   */
+  agent?: { kind: "marketing"; hasAvatar: boolean; product?: { name?: string; description?: string } };
 };
 
 type Refusal = { ok: false; status: number; error: DirectorError; reply: string; limit?: number; used?: number };
@@ -132,8 +140,17 @@ export function parseDirectorInput(accountId: string, body: unknown): { ok: true
     photo = b.photo as string;
   }
   const hasPhoto = b.hasPhoto === true || Boolean(photo);
-  if (b.agent !== undefined && b.agent !== null && b.agent !== "director") return refuse(400, "invalid_params");
-  return { ok: true, input: { history, hasPhoto, ...(photo ? { photo } : {}), model } };
+  let agent: DirectorInput["agent"];
+  if (b.agent === "marketing") {
+    const p = (b.product && typeof b.product === "object" ? b.product : {}) as Record<string, unknown>;
+    const field = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
+    const name = field(p.name, 120);
+    const description = field(p.description, 400);
+    agent = { kind: "marketing", hasAvatar: b.hasAvatar === true, ...(name || description ? { product: { ...(name ? { name } : {}), ...(description ? { description } : {}) } } : {}) };
+  } else if (b.agent !== undefined && b.agent !== null && b.agent !== "director") {
+    return refuse(400, "invalid_params");
+  }
+  return { ok: true, input: { history, hasPhoto, ...(photo ? { photo } : {}), model, ...(agent ? { agent } : {}) } };
 }
 
 export function createDirectorService(deps: DirectorDeps) {
@@ -166,6 +183,10 @@ export function createDirectorService(deps: DirectorDeps) {
       if (!model) {
         release();
         return refuse(503, "director_demo");
+      }
+      if (input.agent && !deps.marketing) {
+        release();
+        return refuse(503, "director_unavailable");
       }
       const name = input.model.name;
       // The strongest models cost credits per message: held at the cap now, settled to what the turn cost at the end.
@@ -223,9 +244,12 @@ export function createDirectorService(deps: DirectorDeps) {
       };
       const onAbort = () => stop("left");
       signal?.addEventListener("abort", onAbort, { once: true });
+      const agent = input.agent && deps.marketing
+        ? marketingAgent({ hasProduct: input.hasPhoto, hasAvatar: input.agent.hasAvatar, ...(input.agent.product ? { product: input.agent.product } : {}) }, deps.marketing.has, deps.marketing.quote)
+        : undefined;
       const turn = streamDirectorTurn({
         history: input.history, hasPhoto: input.hasPhoto, ...(photo ? { photo: { dataUrl: photo } } : {}),
-        model, quote: deps.quote, signal: ac.signal,
+        model, quote: deps.quote, signal: ac.signal, ...(agent ? { agent } : {}),
       });
 
       let costUsd: number | null = null;

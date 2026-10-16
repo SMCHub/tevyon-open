@@ -18,6 +18,13 @@ export type JobTypeDef<S extends z.ZodType = z.ZodType> = {
   family?: string;
   route: { provider: string; providerModel: string };
   /**
+   * The vendor id for these params, where one model has an id per input (Wan 2.7 and HappyHorse on the Comfy Router:
+   * text alone, or a start image). Default: route.providerModel. Same provider; the job's handle carries the id it went to.
+   */
+  routeFor?: (params: z.output<S>) => string;
+  /** Every id routeFor can pick, so tools (router schemas, contract test) know them without enumerating params. */
+  routes?: string[];
+  /**
    * What the vendor gets, from the stored params (with the written prompt). Default: the params as they are. Maps our
    * parameter names to the model's own request shape and drops fields that are ours only.
    */

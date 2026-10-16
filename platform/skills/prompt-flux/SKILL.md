@@ -1,18 +1,19 @@
 ---
 name: prompt-flux
-version: 1.0.0
+version: 1.1.0
 kind: prompt
-models: [flux_3_image]
+models: [flux_3_image, flux_2_pro, flux_2_max]
 max_chars: 2000
 min_words: 8
 negations: rephrase
 slots: [subject, setting, composition, light, style, text]
 description: >-
-  Writes the prompt for FLUX 3 images: photoreal or illustrated stills, exact colours, edits with reference images.
+  Writes the prompt for FLUX images (FLUX 3, FLUX.2 Pro and FLUX.2 Max): photoreal or illustrated stills, exact
+  colours, edits with reference images.
   Trigger: FLUX, photoreal image, product shot, poster with lettering, edit with references.
 ---
 
-# FLUX 3 prompt skill
+# FLUX prompt skill
 
 A still image model that follows long, precise descriptions closely. It reads the prompt as a description of the
 finished picture, not as a list of tags.
@@ -36,3 +37,9 @@ Write flowing sentences in this order:
 - With reference images: say what each reference is for ("the person from the first image, wearing the jacket from the
   second"), then describe the new scene.
 - Lettering: short, in quotes, with font character and placement ("bold sans-serif title \"OPEN\" centred at the top").
+
+## Settings the platform fixes
+
+Aspect ratio and resolution come from the job settings; do not name another format. References: up to 10 for FLUX 3,
+up to 8 for FLUX.2 Pro and FLUX.2 Max, in the order of `references`. The prompt goes to the model as written: it is
+not expanded a second time.

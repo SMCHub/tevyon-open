@@ -1,0 +1,94 @@
+{
+ "id": "xai/grok-imagine-image-2.0",
+ "version": "755fafabd68d",
+ "schema": {
+  "description": "Request body for xAI Grok Imagine image generation",
+  "example": {
+   "n": 1,
+   "prompt": "A single red maple leaf on a plain white background."
+  },
+  "properties": {
+   "aspect_ratio": {
+    "default": "auto",
+    "description": "Aspect ratio of the generated image. Defaults to auto for automatically selecting the best ratio for the prompt.",
+    "enum": [
+     "1:1",
+     "3:4",
+     "4:3",
+     "9:16",
+     "16:9",
+     "2:3",
+     "3:2",
+     "9:19.5",
+     "19.5:9",
+     "9:20",
+     "20:9",
+     "1:2",
+     "2:1",
+     "auto"
+    ],
+    "type": "string"
+   },
+   "model": {
+    "default": "grok-imagine-image",
+    "description": "Model to be used. Supported: grok-imagine-image (default), grok-imagine-image-pro, grok-imagine-image-quality, grok-imagine-image-2.0. Deprecated -beta ids are aliased to their GA model.",
+    "nullable": true,
+    "type": "string"
+   },
+   "n": {
+    "default": 1,
+    "description": "Number of images to be generated",
+    "maximum": 10,
+    "minimum": 1,
+    "type": "integer"
+   },
+   "prompt": {
+    "description": "Prompt for image generation",
+    "type": "string"
+   },
+   "quality": {
+    "description": "Quality of the output image. For grok-imagine-image-2.0 this selects the price tier (low/medium; medium is the default); other models currently ignore it.",
+    "enum": [
+     "low",
+     "medium",
+     "high"
+    ],
+    "type": "string"
+   },
+   "resolution": {
+    "default": "1k",
+    "description": "Resolution of the generated image. Defaults to 1k.",
+    "enum": [
+     "1k",
+     "2k"
+    ],
+    "type": "string"
+   },
+   "response_format": {
+    "default": "url",
+    "description": "Response format to return the image in. Can be url or b64_json. Comfy coerces this to `url` on the outbound request — on the Comfy Router dispatch (`POST /v2/models/xai/{model}`) and on this `/proxy/` route too — because image results are served as re-hosted URLs either way. A value IN the enum is therefore accepted and ignored; send `url` or `b64_json` or omit the field, and the answer is the same. A value OUTSIDE the enum — excluding the UNSET spellings each surface recognises, described next — is REJECTED rather than coerced on BOTH surfaces, and only the shape of the refusal differs: this `/proxy/` route answers a `400` at ingress, and the `POST /v2/models/xai/{model}` Router dispatch answers the per-field `422` it owes the enum published here, before any partner call is made. The two surfaces differ on what counts as UNSET. On this `/proxy/` route an omitted field, an explicit `null` and `\"\"` all mean unset and are coerced like any accepted value. The Router dispatch enforces the enum exactly as published, so `null` and `\"\"` are non-members there like any other: OMIT the field to leave it unset on that surface.",
+    "enum": [
+     "url",
+     "b64_json"
+    ],
+    "type": "string"
+   },
+   "size": {
+    "description": "Size of the image (not supported)",
+    "type": "string"
+   },
+   "style": {
+    "description": "Style of the image (not supported)",
+    "type": "string"
+   },
+   "user": {
+    "description": "A unique identifier representing your end-user, which can help xAI to monitor and detect abuse",
+    "type": "string"
+   }
+  },
+  "required": [
+   "prompt"
+  ],
+  "type": "object"
+ }
+}

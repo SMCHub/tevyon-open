@@ -5,10 +5,14 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { modelCover } from "./content";
+import { LoopVideo } from "./loop-video";
 import {
   kindTools, megaPlacement, menuFamilies, menuStep, posterLines, priceText, SOON, splitTagline, stampLines,
   type Badge, type Kind, type Menu, type MenuFamily, type MenuTool, type Placement,
 } from "./mega-data";
+import { PreviewButton, usePreview } from "./media-preview";
+import { presetEntry } from "./preview";
+import { CATEGORY_LABEL, usePresets, type PresetInfo } from "./presets-data";
 import { useStudio, type CatalogEntry } from "./studio-context";
 import { usePrices, type Price } from "./use-prices";
 import "./mega-menu.css";
@@ -16,7 +20,7 @@ import "./mega-menu.css";
 export type { Menu } from "./mega-data";
 
 const BADGE: Record<Badge, string> = { top: "Top", neu: "New" };
-const LABEL: Record<Menu, string> = { image: "Image", video: "Video" };
+const LABEL: Record<Menu, string> = { image: "Image", video: "Video", presets: "Presets" };
 /** As long as the closing blind runs in mega-menu.css (.mg.is-closing). */
 const CLOSE_MS = 380;
 const TRIGGER = '[aria-controls="hd-mega"][aria-expanded="true"]';
@@ -45,6 +49,7 @@ type Props = {
 export function MegaPanel({ menu, header, ref, onEnter, onLeave, onNavigate }: Props) {
   const { catalog } = useStudio();
   const prices = usePrices();
+  const presets = usePresets();
   const [shown, setShown] = useState<Menu | null>(null);
   const [closing, setClosing] = useState(false);
   const [dir, setDir] = useState<-1 | 0 | 1>(0);
@@ -174,7 +179,9 @@ export function MegaPanel({ menu, header, ref, onEnter, onLeave, onNavigate }: P
         <div className="mg__scroll" ref={scroller}>
           <div className="mg__inner">
             <div key={shown} className="mg__content" style={{ "--dir": dir } as React.CSSProperties}>
-              <KindMenu kind={shown} catalog={catalog} prices={prices} onNavigate={onNavigate} />
+              {shown === "presets"
+                ? <PresetsMenu presets={presets} onNavigate={onNavigate} />
+                : <KindMenu kind={shown} catalog={catalog} prices={prices} onNavigate={onNavigate} />}
             </div>
           </div>
         </div>
@@ -189,7 +196,7 @@ type Item = { key: string; title: string; desc: string; href: string; eyebrow: s
 
 /** Image and Video: the tools as a numbered index, the models by family with their price, the poster beside them. */
 function KindMenu({ kind, catalog, prices, onNavigate }: { kind: Kind; catalog: CatalogEntry[]; prices: Map<string, Price> | null; onNavigate: () => void }) {
-  const tools = kindTools(kind);
+  const tools = kindTools(kind, catalog);
   const families = menuFamilies(catalog, kind);
   const count = families.reduce((n, f) => n + f.models.length, 0);
   const base = kind === "image" ? "/image" : "/video";
@@ -343,5 +350,82 @@ function Poster({ items, current, onNavigate }: { items: Item[]; current: Item; 
         </span>
       </span>
     </Link>
+  );
+}
+
+/** Presets: the promise on the left, every preset as a tall poster with its price; the clip plays under the pointer. */
+function PresetsMenu({ presets, onNavigate }: { presets: PresetInfo[]; onNavigate: () => void }) {
+  const preview = usePreview();
+  const [hot, setHot] = useState<string | null>(null);
+  const cats = (Object.keys(CATEGORY_LABEL) as PresetInfo["category"][]).filter((c) => presets.some((p) => p.category === c));
+  return (
+    <>
+      <div className="mg-presets">
+        <section className="mg-col mg-presets__intro" aria-label="Presets">
+          <p className="mg-head">Presets <span className="mg-head__count">{presets.length ? pad(presets.length) : ""}</span></p>
+          <p className="mg-statement">
+            <span><span className="mg-rise">A photo in.</span></span>
+            <span><span className="mg-rise" style={{ "--i": 1 } as React.CSSProperties}>A finished clip out.</span></span>
+          </p>
+          <p className="mg-statement__note">The price is fixed before the start. If a clip fails, the Credits come back.</p>
+          {cats.length > 1 && (
+            <p className="mg-soon">
+              {cats.map((c) => <span key={c}>{CATEGORY_LABEL[c]} <span className="mg-head__count">{pad(presets.filter((p) => p.category === c).length)}</span></span>)}
+            </p>
+          )}
+        </section>
+        <ul className="mg-shelf" onMouseLeave={() => setHot(null)}>
+          {presets.map((p, i) => (
+            <li key={p.id} className="mg-shelf__item" style={{ "--i": i } as React.CSSProperties}>
+              <Link
+                href={`/presets/${p.id}`}
+                className="mg-preset theme-dark"
+                onClick={onNavigate}
+                onMouseEnter={() => setHot(p.id)}
+                onFocus={() => setHot(p.id)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="mg-preset__img" src={p.preview.poster} alt="" decoding="async" />
+                {hot === p.id && <LoopVideo className="mg-preset__clip" src={p.preview.video} poster={p.preview.poster} />}
+                <span className="mg-preset__shade" aria-hidden="true" />
+                <span className="mg-preset__top">
+                  <span>{CATEGORY_LABEL[p.category]}{p.badge && ` · ${BADGE[p.badge]}`}</span>
+                </span>
+                <span className="mg-preset__stamp">{p.tagline}</span>
+                <span className="mg-preset__title">{p.title}</span>
+                <span className="mg-preset__foot">
+                  <span className="mg-preset__price">{p.credits !== null ? `${p.credits.toLocaleString("en-US")} Credits` : ""}</span>
+                  <span className="mg-poster__cta"><ArrowRight aria-hidden="true" /></span>
+                </span>
+              </Link>
+              <PreviewButton
+                onOpen={() => {
+                  preview.openEntries(presets.map(presetEntry), i);
+                  onNavigate();
+                }}
+              />
+            </li>
+          ))}
+          <li className="mg-shelf__item" style={{ "--i": presets.length } as React.CSSProperties}>
+            <Link href="/presets" className="mg-preset mg-preset--all" onClick={onNavigate}>
+              <span className="mg-head">All presets <span className="mg-head__count">{presets.length ? pad(presets.length) : ""}</span></span>
+              <span className="mg-preset__all">View<br />all</span>
+              <span className="mg-preset__foot"><span /><span className="mg-poster__cta"><ArrowRight aria-hidden="true" /></span></span>
+            </Link>
+          </li>
+        </ul>
+      </div>
+
+      <footer className="mg-foot">
+        <p className="mg-foot__note">One photo, one finished clip. New presets appear here automatically.</p>
+        <div className="mg-foot__actions">
+          <Link href="/assets" className="mg-link" onClick={onNavigate}>All results <ArrowUpRight aria-hidden="true" /></Link>
+          <Link href="/presets" className="mg-cta" onClick={onNavigate}>
+            <span className="mg-cta__text">All presets</span>
+            <span className="mg-cta__arrow"><ArrowRight aria-hidden="true" /></span>
+          </Link>
+        </div>
+      </footer>
+    </>
   );
 }

@@ -1,0 +1,75 @@
+/* Shared parts of the editorial pages (Presets): display lines rising out of their mask, link buttons, the bottom bar
+   with dots. Monochrome: sections on a picture are dark islands (`theme-dark`). Colour only comes from the pictures.
+   Display type: Funnel Display in capitals; quiet lines: Inter Tight. */
+
+.studio.xp { --xp-gx: clamp(16px, 2.4vw, 32px); --xp-nav: 72px; padding: 0; overflow-x: clip; }
+
+/* ---------- Shared parts ---------- */
+.xp-label { margin: 0; font-family: var(--font-body); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--fg) / 0.62); }
+.xp-muted { color: rgb(var(--fg) / 0.62); font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+
+/* Lines of display type rising out of their own mask once the block is in view (`.is-in`). */
+.xp-line { display: block; overflow: clip; padding-bottom: 0.07em; margin-bottom: -0.07em; }
+.xp-line > span { display: inline-block; transform: translateY(106%); transition: transform 1.1s var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
+.is-in .xp-line > span { transform: none; }
+.xp-line--muted { color: rgb(var(--fg) / 0.45); }
+
+/* Link button: the label in an outlined pill, the arrow in its own pill; filled while hovered. */
+.xp-btn { display: inline-flex; align-items: stretch; height: 36px; color: var(--photon); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.xp-btn__label, .xp-btn__arrow { display: inline-flex; align-items: center; border: 1px solid rgb(var(--fg) / 0.42); border-radius: 9px; transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.35s var(--ease); }
+.xp-btn__label { padding: 0 16px; }
+.xp-btn__arrow { justify-content: center; width: 36px; margin-left: 2px; }
+.xp-btn__arrow svg { width: 15px; height: 15px; }
+.xp-btn:hover .xp-btn__label, .xp-btn:hover .xp-btn__arrow, .xp-btn:focus-visible .xp-btn__label, .xp-btn:focus-visible .xp-btn__arrow { border-color: var(--photon); background: var(--photon); color: var(--void); }
+.xp-btn:hover .xp-btn__arrow { transform: translateX(3px); }
+.xp-btn:focus-visible { outline: none; }
+.xp-btn:focus-visible .xp-btn__label { outline: 2px solid var(--photon); outline-offset: 3px; }
+/* On pictures: glass instead of a bare outline. */
+.xp-btn--solid .xp-btn__label, .xp-btn--solid .xp-btn__arrow { border-color: rgb(var(--hi) / calc(0.28 * var(--hi-k))); background: rgb(var(--fg) / 0.14); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+
+.xp-pill { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid rgb(var(--hi) / calc(0.24 * var(--hi-k))); border-top-color: rgb(var(--hi) / calc(0.4 * var(--hi-k))); border-radius: 8px; background: rgb(var(--fg) / 0.12); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); color: var(--photon); font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; }
+.xp-pill svg { width: 14px; height: 14px; }
+.xp-pill:hover { background: var(--photon); color: var(--void); }
+.xp-pill:focus-visible { outline: 2px solid var(--photon); outline-offset: 2px; }
+
+/* Bottom bar of the hero and the showcase: who/where on the left, count and progress in the middle, action right. */
+.xp-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; padding: 12px var(--xp-gx) 16px; border-top: 1px solid rgb(var(--fg) / 0.16); }
+.xp-bar__side { display: flex; align-items: center; gap: 12px; min-width: 0; margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; }
+.xp-bar__side--end { justify-content: flex-end; }
+.xp-bar__name { min-width: 0; overflow: clip; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
+.xp-bar__link { display: inline-flex; align-items: center; gap: 6px; padding-bottom: 2px; border-bottom: 1px solid rgb(var(--fg) / 0.4); white-space: nowrap; transition: border-color 0.2s ease; }
+.xp-bar__link svg { width: 14px; height: 14px; }
+.xp-bar__link:hover { border-color: var(--photon); }
+.xp-dots { display: flex; align-items: center; }
+.xp-dots__count { margin-right: 8px; color: rgb(var(--fg) / 0.72); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0.08em; }
+.xp-dot { position: relative; flex: none; width: 26px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; transition: width 0.5s var(--ease); }
+.xp-dot.is-on { width: 60px; }
+.xp-dot > span { position: absolute; inset: 9px 7px; overflow: clip; border: 1px solid rgb(var(--fg) / 0.55); border-radius: 999px; transition: border-color 0.2s ease; }
+.xp-dot > span::before { content: ""; position: absolute; inset: 0; background: var(--photon); transform: scaleX(0); transform-origin: left; }
+.xp-dot.is-on > span { border-color: rgb(var(--fg) / 0.9); }
+.xp-dot.is-on > span::before { animation-name: xp-fill; animation-duration: inherit; animation-play-state: inherit; animation-timing-function: linear; animation-fill-mode: forwards; }
+.xp-dot:hover > span { border-color: var(--photon); }
+.xp-dot:focus-visible { outline: none; }
+.xp-dot:focus-visible > span { outline: 2px solid var(--photon); outline-offset: 2px; }
+
+@keyframes xp-rise { to { transform: none; } }
+@keyframes xp-fill { to { transform: scaleX(1); } }
+@keyframes xp-drift { from { transform: scale(1.08); } to { transform: scale(1); } }
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 860px) {
+  .xp-bar { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+  .xp-bar > :first-child { grid-column: 1 / -1; }
+  .xp-bar .xp-muted { display: none; }
+}
+@media (max-width: 760px) {
+  .xp-bar__name, .xp-dots__count { display: none; }
+  .xp-dot { width: 20px; }
+  .xp-dot > span { inset: 9px 4px; }
+  .xp-dot.is-on { width: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-line > span { animation: none; transform: none; transition: none; }
+  .xp-dot.is-on > span::before { animation: none; transform: scaleX(1); }
+}

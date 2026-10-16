@@ -1,0 +1,35 @@
+{
+ "id": "bfl/video-edit-v1",
+ "version": "6f6d7968d5ed",
+ "schema": {
+  "description": "Request body for the BFL Flux Tools Video Edit v1 API. Charges are based on the delivered output duration; the output length, resolution, aspect ratio and audio come from the source clip.",
+  "example": {
+   "prompt": "Remove the orange bucket.",
+   "video": "https://example.com/clip.mp4"
+  },
+  "properties": {
+   "prompt": {
+    "description": "Edit instruction. Names the objects, setting, style, on-screen text or dialogue to change; everything not named is preserved.",
+    "maxLength": 4096,
+    "minLength": 1,
+    "type": "string"
+   },
+   "safety_tolerance": {
+    "default": 2,
+    "description": "Tolerance level for input and output moderation, 0 being most strict.",
+    "maximum": 4,
+    "minimum": 0,
+    "type": "integer"
+   },
+   "video": {
+    "description": "Video to edit, either an HTTP(S) URL or a base64-encoded MP4. At most 15 seconds of source footage and 50 MiB, with each side at least 160 pixels; sources above 720p are downscaled to 720p.",
+    "type": "string"
+   }
+  },
+  "required": [
+   "video",
+   "prompt"
+  ],
+  "type": "object"
+ }
+}

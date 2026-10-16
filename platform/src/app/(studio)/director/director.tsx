@@ -6,6 +6,8 @@ import { JOB_ERROR } from "@/components/studio/content";
 import { LoopVideo } from "@/components/studio/loop-video";
 import { startErrorText } from "@/components/studio/credits";
 import { usePreview } from "@/components/studio/media-preview";
+import { usePresets } from "@/components/studio/presets-data";
+import { presetEntry } from "@/components/studio/preview";
 import { useStudio, type Job, type StartResult } from "@/components/studio/studio-context";
 import { Mark, TokenGlyph } from "@/components/studio/tachyon-token";
 import { useUpload } from "@/components/studio/upload";
@@ -115,51 +117,60 @@ type Custom = Extract<Proposal, { type: "custom" }>;
 const TAG_KEYS = ["aspect_ratio", "duration", "resolution", "generate_audio"];
 
 function ProposalCard({
-  p, price, balance, schema, startedJob, onStart, onAdjust, busy,
+  p, price, photo, balance, schema, startedJob, onStart, onAttach, onAdjust, busy,
 }: {
-  p: Proposal; price: number | null; balance: number | null;
+  p: Proposal; price: number | null; photo: string | null; balance: number | null;
   /** The model's options, for "Adjust" (custom proposals only). */
   schema?: JsonSchema;
-  startedJob?: Job; onStart: () => void;
+  startedJob?: Job; onStart: () => void; onAttach: () => void;
   /** A changed proposal; requote: its settings changed, so its price must be asked for again. */
   onAdjust?: (next: Custom, requote: boolean) => void;
   busy: boolean;
 }) {
   const preview = usePreview();
+  const presets = usePresets();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const video = p.kind === "video";
-  const aspect = typeof p.params.aspect_ratio === "string" ? p.params.aspect_ratio : "9:16";
-  const duration = typeof p.params.duration === "number" ? p.params.duration : undefined;
-  const tags = TAG_KEYS.filter((k) => p.params[k] !== undefined).map((k) => showValue(k, p.params[k]));
+  const preset = p.type === "preset" ? presets.find((x) => x.id === p.presetId) : undefined;
+  // Presets animate the attached photo; without one, the button attaches it first.
+  const attach = p.type === "preset" && !photo;
+  const video = p.type === "preset" || p.kind === "video";
+  const aspect = p.type === "custom" && typeof p.params.aspect_ratio === "string" ? p.params.aspect_ratio : "9:16";
+  const duration = p.type === "custom" && typeof p.params.duration === "number" ? p.params.duration : undefined;
+  const tags = p.type === "custom" ? TAG_KEYS.filter((k) => p.params[k] !== undefined).map((k) => showValue(k, p.params[k])) : [];
   const out = startedJob?.status === "succeeded" ? startedJob.outputs[0] : undefined;
   const failed = startedJob?.status === "failed";
   const running = startedJob && !out && !failed;
   // Short of credits: say so on the card before the click ("Buy Credits" in the thread).
-  const short = price !== null && balance !== null && price > balance;
-  const label = failed ? "Retry" : "Start";
-  const prompt = p.prompt;
-  const adjustable = Boolean(schema && onAdjust) && !startedJob;
+  const short = !attach && price !== null && balance !== null && price > balance;
+  const label = attach ? "Attach photo" : failed ? "Retry" : "Start";
+  const prompt = p.type === "custom" ? p.prompt : p.type === "preset" && p.wish ? `Wish: ${p.wish}` : null;
+  const adjustable = p.type === "custom" && Boolean(schema && onAdjust) && !startedJob;
   return (
     <article className={`dr-card${startedJob ? " is-started" : ""}${editing && adjustable ? " is-editing" : ""}`}>
       <div className="dr-card__thumb">
         {startedJob ? <ResultThumb job={startedJob} />
+          : preset ? (
+            <button type="button" className="dr-card__play" onClick={() => preview.openEntries([presetEntry(preset)])} aria-label={`View an example of ${preset.title}`}>
+              <LoopVideo src={preset.preview.video} poster={preset.preview.poster} />
+            </button>
+          )
           : <IdeaFrame kind={video ? "video" : "image"} aspect={aspect} duration={duration} />}
       </div>
       <div className="dr-card__body">
         <p className="dr-card__meta">
           {video ? <Film aria-hidden="true" /> : <ImageIcon aria-hidden="true" />}
-          <span>{p.model}</span>
+          <span>{p.type === "preset" ? "Preset" : p.type === "custom" ? p.model : ""}</span>
           {tags.length > 0 && <span>{tags.join(" · ")}</span>}
         </p>
-        <h3 className="dr-card__title">{p.kind === "video" ? "Custom clip" : "Custom image"}</h3>
+        <h3 className="dr-card__title">{p.type === "preset" ? p.title : video ? "Custom clip" : "Custom image"}</h3>
         <p className="dr-card__why">{p.why}</p>
         {prompt && !(editing && adjustable) && (
           <button type="button" className={`dr-card__prompt${open ? " is-open" : ""}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title={open ? "Less" : "Show full prompt"}>
-            {`“${prompt}”`}
+            {p.type === "custom" ? `“${prompt}”` : prompt}
           </button>
         )}
-        {adjustable && (editing ? (
+        {adjustable && p.type === "custom" && (editing ? (
           // An approval card: change prompt and settings before the start, the price follows.
           <div className="dr-card__adjust">
             <textarea
@@ -200,12 +211,12 @@ function ProposalCard({
             {failed && <span className="dr-card__state dr-card__state--err">{JOB_ERROR[startedJob!.error ?? ""] ?? "Failed. Credits refunded."}</span>}
             <button
               type="button"
-              className="go dr-card__go"
+              className={`go dr-card__go${attach ? " go--quiet" : ""}`}
               disabled={busy || price === null}
-              onClick={onStart}
+              onClick={attach ? onAttach : onStart}
               aria-label={price !== null ? `${label}: ${price} Credits` : `${label}: price not available`}
             >
-              <span className="go__label">{label}</span>
+              <span className="go__label">{attach && <ImagePlus aria-hidden="true" />}{label}</span>
               <span className="go__price"><TokenGlyph />{price ?? "…"}</span>
             </button>
           </>
@@ -220,7 +231,8 @@ export function Director() {
   const preview = usePreview();
   /** Image models that take reference images get the attached photo as "image 1". */
   const takesRefs = (jobType: string) => Boolean((catalog.find((c) => c.jobType === jobType)?.params.properties?.references as { maxItems?: number } | undefined)?.maxItems);
-  const usesPhoto = (p: Proposal) => Boolean(up.url) && (p.kind === "video" || (p.kind === "image" && takesRefs(p.jobType)));
+  const usesPhoto = (p: Proposal) => p.type === "custom" && Boolean(up.url) && (p.kind === "video" || (p.kind === "image" && takesRefs(p.jobType)));
+  const presets = usePresets();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<"idle" | "waiting" | "streaming">("idle");
@@ -421,15 +433,33 @@ export function Director() {
 
   async function start(i: number, j: number, p: Proposal, price: number | null) {
     if (busyStart || price === null) return;
-    if (usesPhoto(p) && up.url && !consent) {
+    if ((p.type === "preset" || usesPhoto(p)) && up.url && !consent) {
       setError("Please confirm consent for the photo below.");
       return;
     }
     setBusyStart(true);
     setError(null);
     // The price on the card is the one the user agreed to; a higher server price starts nothing (price_changed).
-    const params = !usesPhoto(p) || !up.url ? p.params : p.kind === "video" ? { ...p.params, image: up.url } : { ...p.params, references: [up.url] };
-    const res: StartResult = await startJob(p.jobType, params, 1, { maxCredits: price });
+    let res: StartResult;
+    if (p.type === "preset") {
+      const r = await fetch(`/api/presets/${p.presetId}`, {
+        method: "POST",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+        body: JSON.stringify({ image: up.url, wish: p.wish, consent, maxCredits: price }),
+      }).catch(() => null);
+      const body = (await r?.json().catch(() => null)) as { ok?: boolean; error?: string; credits?: number; job?: { id: string } } | null;
+      res = body?.ok && body.job
+        ? { ok: true, ids: [body.job.id] }
+        : { ok: false, error: body?.error ?? "unknown", started: 0, ...(typeof body?.credits === "number" ? { credits: body.credits } : {}) };
+      await refresh();
+    } else if (p.type === "custom") {
+      const params = !usesPhoto(p) || !up.url ? p.params : p.kind === "video" ? { ...p.params, image: up.url } : { ...p.params, references: [up.url] };
+      res = await startJob(p.jobType, params, 1, { maxCredits: price });
+    } else {
+      // Marketing creatives start in the Marketing Agent, not here.
+      setBusyStart(false);
+      return;
+    }
     setBusyStart(false);
     if (!res.ok) {
       const now = res.credits;
@@ -668,17 +698,21 @@ export function Director() {
                 {m.proposals.length > 0 && (
                   <div className="dr-cards" aria-label="Proposals">
                     {m.proposals.map((p, j) => {
-                      const price = prices[`${i}:${j}`] ?? p.credits;
+                      const preset = p.type === "preset" ? presets.find((x) => x.id === p.presetId) : undefined;
+                      // Presets cost what the preset list says, like the start.
+                      const price = prices[`${i}:${j}`] ?? (preset ? preset.credits : p.credits);
                       return (
                         <ProposalCard
                           key={j}
                           p={p}
                           price={price}
+                          photo={up.url}
                           balance={me && !me.demo ? me.credits : null}
-                          schema={catalog.find((c) => c.jobType === p.jobType)?.params}
+                          schema={p.type === "custom" ? catalog.find((c) => c.jobType === p.jobType)?.params : undefined}
                           busy={busyStart}
                           startedJob={m.started[j] ? jobs.find((x) => x.id === m.started[j]) : undefined}
                           onStart={() => void start(i, j, p, price)}
+                          onAttach={() => picker.open()}
                           onAdjust={(next, requote) => void adjust(i, j, next, requote)}
                         />
                       );

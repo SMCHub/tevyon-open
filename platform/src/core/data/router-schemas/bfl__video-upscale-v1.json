@@ -1,0 +1,58 @@
+{
+ "id": "bfl/video-upscale-v1",
+ "version": "79bcbc5ec2e5",
+ "schema": {
+  "description": "Request body for the BFL Flux Tools Video Upscale v1 API. Charges are based on the delivered output only; input resolution and upscale factor are not billed separately.",
+  "example": {
+   "input_video": "https://example.com/clip.mp4",
+   "upscale_factor": 2
+  },
+  "properties": {
+   "creativity": {
+    "default": 1,
+    "description": "0 preserves the source precisely and sharpens it; 1 allows creative detail enhancement, which does not strictly preserve faces or products.",
+    "maximum": 1,
+    "minimum": 0,
+    "type": "integer"
+   },
+   "input_video": {
+    "description": "Video to upscale, either an HTTP(S) URL or a base64-encoded MP4. At most 20 seconds of source footage and 50MB.",
+    "type": "string"
+   },
+   "prompt": {
+    "description": "Optional description of the clip's content, steering the enhanced detail. Leave empty for a neutral upscale.",
+    "type": "string"
+   },
+   "safety_tolerance": {
+    "default": 2,
+    "description": "Tolerance level for prompt and output frame moderation, 0 being most strict.",
+    "maximum": 4,
+    "minimum": 0,
+    "type": "integer"
+   },
+   "upscale_factor": {
+    "default": 2,
+    "description": "Output scaling relative to the source resolution. The output preserves the source aspect ratio and is capped at roughly 14.4 megapixels per frame, so very large sources scale by less than the requested factor.",
+    "format": "float",
+    "maximum": 3,
+    "minimum": 1.5,
+    "type": "number"
+   },
+   "webhook_secret": {
+    "description": "Optional secret for webhook signature verification.",
+    "type": "string"
+   },
+   "webhook_url": {
+    "description": "URL to receive webhook notifications.",
+    "format": "uri",
+    "maxLength": 2083,
+    "minLength": 1,
+    "type": "string"
+   }
+  },
+  "required": [
+   "input_video"
+  ],
+  "type": "object"
+ }
+}

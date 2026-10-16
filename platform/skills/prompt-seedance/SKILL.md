@@ -1,20 +1,20 @@
 ---
 name: prompt-seedance
-version: 1.0.0
+version: 1.1.0
 kind: prompt
-models: [seedance_2_5, recast]
+models: [seedance_2_0, seedance_2_5, recast]
 max_chars: 1500
 min_words: 6
 negations: ok
 slots: [subject, setting, style, light, camera]
 description: >-
-  Writes the prompt for Seedance video jobs: Seedance 2.5 shots from text or a start image, and Recast, a new clip
+  Writes the prompt for Seedance video jobs: Seedance 2.0 and 2.5 shots from text or a start image, and Recast, a new clip
   that keeps the motion and camera of the user's reference video. Trigger: Seedance, cinematic shot, recast.
 ---
 
 # Seedance prompt skill
 
-## Seedance 2.5 shots (seedance_2_5)
+## Seedance shots (seedance_2_0, seedance_2_5)
 
 1. **Subject and action**: who or what, and one clear movement with its speed ("slowly turns", "bursts through").
 2. **Setting**: place, time of day, weather.
@@ -22,6 +22,7 @@ description: >-
 4. **Light and look**: light source, colour, film look ("anamorphic, shallow depth of field, film grain").
 5. **Sound** (when on): ambience and effects in one short sentence; spoken lines in quotes.
 With a start image: describe only motion, camera and sound, and refer to its content as "the … in the image".
+With an end frame as well (Seedance 2.0): describe the path from the first frame to the last.
 
 ## Recast (recast)
 
