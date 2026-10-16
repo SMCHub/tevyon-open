@@ -4,7 +4,7 @@ import { SAMPLE_UPLOAD, offeredOptions, paramSpace, standardParams } from "./par
 
 describe("catalog", () => {
   it("offers the first wave of Comfy models", () => {
-    expect(catalog.list().map((d) => d.jobType)).toEqual(["flux_3_image", "minimax_h3", "ltx_2_5_fast", "kling_3_turbo", "veo_3_1_lite", "recast"]);
+    expect(catalog.list().map((d) => d.jobType)).toEqual(["flux_3_image", "minimax_h3", "ltx_2_5_fast", "kling_3_turbo", "veo_3_1_lite", "seedance_2_5", "recast"]);
   });
 
   it("gives every job type a prompt, a public name and a router id of the form provider/model", () => {
@@ -78,5 +78,19 @@ describe("catalog", () => {
       resolution: "480p", ratio: "16:9", duration: 5, generate_audio: false, watermark: false,
     });
     expect(def.params.safeParse({ prompt: "x", video: "https://elsewhere.test/v.mp4" }).success).toBe(false);
+  });
+
+  it("prices Seedance 2.5 by its tokens, the Comfy docs' own example to the credit", () => {
+    const def = catalog.get("seedance_2_5")!;
+    // docs.comfy.org: 5 s, 16:9, 24 fps, 720p without a video input = 348.8 Comfy credits; 480p = 155.1.
+    const p = def.params.parse({ prompt: "x" }) as Record<string, unknown>;
+    expect(p).toMatchObject({ duration: 5, resolution: "720p", aspect_ratio: "16:9", generate_audio: true });
+    expect(def.credits(p)).toBe(349);
+    expect(def.credits({ ...p, resolution: "480p" })).toBe(156);
+    const image = "/api/media/uploads/00000000-0000-4000-8000-000000000000/a.png";
+    expect(def.vendorParams!({ ...p, image })).toEqual({
+      content: [{ type: "text", text: "x" }, { type: "image_url", image_url: { url: image }, role: "first_frame" }],
+      resolution: "720p", ratio: "16:9", duration: 5, generate_audio: true, watermark: false,
+    });
   });
 });

@@ -41,6 +41,13 @@ const SEEDANCE_FRAME = {
   "720p": { "16:9": [1280, 720], "9:16": [720, 1280], "1:1": [960, 960] },
 } as const;
 const SEEDANCE_PER_1K_WITH_VIDEO = 0.996;
+/** Seedance 2.5 renders the listed sizes; per 1K tokens without a video input (docs.comfy.org pricing, 16.10.2026). */
+const SEEDANCE_25_FRAME = {
+  "480p": { "16:9": [854, 480], "9:16": [480, 854], "1:1": [640, 640] },
+  "720p": { "16:9": [1280, 720], "9:16": [720, 1280], "1:1": [960, 960] },
+  "1080p": { "16:9": [1920, 1080], "9:16": [1080, 1920], "1:1": [1440, 1440] },
+} as const;
+const SEEDANCE_25_PER_1K = { "480p": 3.229, "720p": 3.229, "1080p": 3.53 } as const;
 
 const LTX_SIZE = { "720p": { "16:9": "1280x720", "9:16": "720x1280" }, "1080p": { "16:9": "1920x1080", "9:16": "1080x1920" } } as const;
 
@@ -141,6 +148,31 @@ export function createCatalog(): Register {
         parameters: { durationSeconds: p.duration, aspectRatio: p.aspect_ratio, resolution: p.resolution, generateAudio: p.generate_audio, sampleCount: 1 },
       }),
       route: { provider: ROUTER, providerModel: "veo/veo-3.1-lite-generate-001" },
+    }),
+    jobType({
+      jobType: "seedance_2_5",
+      kind: "video",
+      model: "Seedance 2.5",
+      tagline: "ByteDance · cinematic shots with sound, from text or a start image, up to 1080p",
+      badge: "top",
+      family: "seedance",
+      params: z.object({
+        prompt,
+        image: startImage,
+        duration: z.number().int().min(4).max(12).default(5),
+        resolution: z.enum(["480p", "720p", "1080p"]).default("720p"),
+        aspect_ratio: z.enum(["16:9", "9:16", "1:1"]).default("16:9"),
+        generate_audio: z.boolean().default(true),
+      }),
+      credits: (p) => {
+        const [w, h] = SEEDANCE_25_FRAME[p.resolution][p.aspect_ratio];
+        return creditsFromComfy(((p.duration * w * h * 24) / 1024 / 1000) * SEEDANCE_25_PER_1K[p.resolution]);
+      },
+      vendorParams: (p) => ({
+        content: [{ type: "text", text: p.prompt }, ...(p.image ? [{ type: "image_url", image_url: { url: p.image }, role: "first_frame" }] : [])],
+        resolution: p.resolution, ratio: p.aspect_ratio, duration: p.duration, generate_audio: p.generate_audio, watermark: false,
+      }),
+      route: { provider: ROUTER, providerModel: "byteplus/dreamina-seedance-2-5-260628" },
     }),
     jobType({
       jobType: "recast",
